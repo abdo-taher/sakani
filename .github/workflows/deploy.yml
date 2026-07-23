@@ -171,7 +171,7 @@ jobs:
           echo "🗄️ Creating database tables (avoiding proc_open)..."
           
           # First, try Laravel migrations (may fail due to proc_open)
-          php artisan migrate:fresh --force 2>/dev/null || {
+          php artisan migrate --force 2>/dev/null || {
             echo "⚠️ Laravel migrate failed (proc_open disabled), using direct SQL approach..."
             
             # Create a comprehensive database structure using raw SQL

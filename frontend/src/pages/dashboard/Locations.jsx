@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import usePageTitle from "../../hooks/usePageTitle";
 import {
   getLocations,
   deleteLocation,
@@ -13,6 +14,7 @@ import {
 } from "../../utils/toast";
 import { confirmDelete } from "../../utils/confirm";
 function Locations() {
+  usePageTitle("إدارة الأماكن — سكني");
   const [search, setSearch] = useState("");
   const [openForm, setOpenForm] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);

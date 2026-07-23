@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import usePageTitle from "../../hooks/usePageTitle";
 import {
   Mail,
   Phone,
@@ -16,6 +17,7 @@ import {
 } from "../../services/contactMessageService";
 
 function ContactMessages() {
+  usePageTitle("رسائل التواصل — سكني");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState(null);

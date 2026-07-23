@@ -3,6 +3,7 @@ import RentRequestForm from "../components/RentRequestForm";
 import BuyRequestForm from "../components/BuyRequestForm";
 
 import React, { useState } from "react";
+import usePageTitle from "../hooks/usePageTitle";
 import {
   Tag,
   ShoppingBag,
@@ -19,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 /*  صفحة: محتاج؟                                                         */
 /* -------------------------------------------------------------------- */
 function Need() {
+  usePageTitle("محتاج اي؟ — سكني");
   const [openModal, setOpenModal] = useState(false);
 const [requestType, setRequestType] = useState("");
 const navigate = useNavigate();

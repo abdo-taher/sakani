@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import usePageTitle from "../hooks/usePageTitle";
 
 import {
   Phone,
@@ -16,6 +17,7 @@ import { sendContactMessage } from "../services/contactService";
 /*  صفحة: تواصل معنا                                                     */
 /* -------------------------------------------------------------------- */
 function Contact() {
+  usePageTitle("تواصل معنا — سكني");
   const [sent, setSent] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");

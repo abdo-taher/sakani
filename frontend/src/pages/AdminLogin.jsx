@@ -3,11 +3,13 @@ import { ShieldCheck, User, Lock, Eye, EyeOff, AlertCircle } from "lucide-react"
 import { COFFEE } from "../constants/constants";
 import { useNavigate } from "react-router-dom";
 import { login, checkLoginStatus } from "../services/authService";
+import usePageTitle from "../hooks/usePageTitle";
 import { successToast, errorToast } from "../utils/toast";
 /* -------------------------------------------------------------------- */
 /*  صفحة: تسجيل دخول الأدمن                                              */
 /* -------------------------------------------------------------------- */
 function AdminLogin() {
+  usePageTitle("دخول لوحة التحكم — سكني");
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");

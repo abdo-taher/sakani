@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import usePageTitle from "../../hooks/usePageTitle";
 
 import {
   Building2,
@@ -16,6 +17,7 @@ import { COFFEE } from "../../constants/constants";
 import { getDashboardData } from "../../services/dashboardService";
 
 function AdminDashboard() {
+  usePageTitle("لوحة التحكم — سكني");
   const [counts, setCounts] = useState({
     properties: 0,
     reservations: 0,

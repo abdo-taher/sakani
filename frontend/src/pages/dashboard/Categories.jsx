@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import usePageTitle from "../../hooks/usePageTitle";
 
 import CategoryHeader from "../../components/categories/CategoryHeader";
 import CategoryToolbar from "../../components/categories/CategoryItemToolbar";
@@ -8,6 +9,7 @@ import { getCategories } from "../../services/categoryService";
 import { errorToast } from "../../utils/toast";
 
 function Categories() {
+  usePageTitle("إدارة الأقسام — سكني");
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");

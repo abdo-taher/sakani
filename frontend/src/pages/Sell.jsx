@@ -1,6 +1,7 @@
 import React from "react";
 import { Tag } from "lucide-react";
 import ListingPage from "./ListingPage";
+import usePageTitle from "../hooks/usePageTitle";
 
 export default function Sell({
   properties,
@@ -8,6 +9,7 @@ export default function Sell({
   onToggleFav,
   onOpen,
 }) {
+  usePageTitle("بيع عقارات — سكني");
   return (
     <ListingPage
       title="شقق للبيع"

@@ -29,7 +29,7 @@ class MarketingMailController extends Controller
         foreach ($request->recipients as $email) {
             try {
                 Mail::to($email)->send(new MarketingMail(
-                    subject:   $request->subject,
+                    mailSubject: $request->subject,
                     heading:   $request->heading ?? $request->subject,
                     body:      $request->body,
                     buttonText: $request->button_text,

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import usePageTitle from "../../hooks/usePageTitle";
 
 import CategoryDetailsHeader from "../../components/categories/CategoryDetailsHeader";
 import CategoryItemToolbar from "../../components/categories/CategoryItemToolbar";
@@ -19,6 +20,7 @@ import {
 
 import { confirmDelete } from "../../utils/confirm";
 function CategoryDetails() {
+  usePageTitle("تفاصيل القسم — سكني");
   const { id } = useParams();
 
   const [search, setSearch] = useState("");

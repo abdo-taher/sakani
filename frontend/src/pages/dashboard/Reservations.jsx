@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import usePageTitle from "../../hooks/usePageTitle";
 
 import ReservationHeader from "../../components/reservations/ReservationHeader";
 import ReservationToolbar from "../../components/reservations/ReservationToolbar";
@@ -19,6 +20,7 @@ import {
   deleteNeedRequest,
 } from "../../services/needRequestService";
 function Reservations() {
+  usePageTitle("طلبات الحجز — سكني");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
 const [activeTab, setActiveTab] = useState("reservations");

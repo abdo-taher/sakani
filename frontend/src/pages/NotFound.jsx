@@ -2,8 +2,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Home, Mail, ArrowLeft } from "lucide-react";
 import { COFFEE } from "../constants/constants";
+import usePageTitle from "../hooks/usePageTitle";
 
 function NotFound() {
+  usePageTitle("404 — الصفحة غير موجودة");
   const navigate = useNavigate();
 
   return (

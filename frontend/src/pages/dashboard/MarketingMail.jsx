@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import usePageTitle from "../../hooks/usePageTitle";
 import {
   Send,
   Plus,
@@ -17,6 +18,7 @@ import { sendMarketingMail } from "../../services/marketingMailService";
 import { successToast, errorToast } from "../../utils/toast";
 
 function MarketingMail() {
+  usePageTitle("البريد التسويقي — سكني");
   const [recipients, setRecipients] = useState([]);
   const [emailInput, setEmailInput] = useState("");
   const [subject, setSubject] = useState("");

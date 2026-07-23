@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import usePageTitle from "../../hooks/usePageTitle";
 
 import StatisticsHeader from "../../components/statistics/StatisticsHeader";
 import StatisticsCards from "../../components/statistics/StatisticsCards";
@@ -9,6 +10,7 @@ import StatisticsSummary from "../../components/statistics/StatisticsSummary";
 import { getStatisticsData } from "../../services/statisticsService";
 
 function Statistics() {
+  usePageTitle("الإحصائيات — سكني");
   const [cards, setCards] = useState(null);
   const [propertyDistribution, setPropertyDistribution] = useState([]);
   const [reservationStatus, setReservationStatus] = useState([]);

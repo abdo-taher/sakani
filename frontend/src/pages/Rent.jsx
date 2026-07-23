@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { KeyRound } from "lucide-react";
 import PropertyGrid from "../components/PropertyGrid";
 import { COFFEE } from "../constants/constants";
+import usePageTitle from "../hooks/usePageTitle";
 import { getPropertiesByCategory } from "../services/propertyService";
 import PropertySectionByLocation from "../components/PropertySectionByLocation";
 function Rent({ favorites, onToggleFav, onOpen }) {
+  usePageTitle("إيجار عقارات — سكني");
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import usePageTitle from "../../hooks/usePageTitle";
 
 import PropertyHeader from "../../components/properties/PropertyHeader";
 import PropertyToolbar from "../../components/properties/PropertyToolbar";
@@ -20,6 +21,7 @@ import {
 import { getCategories } from "../../services/categoryService";
 import { getLocations } from "../../services/locationService";
 function Properties() {
+  usePageTitle("إدارة العقارات — سكني");
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
   const [status, setStatus] = useState("");

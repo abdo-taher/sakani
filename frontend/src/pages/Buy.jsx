@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { COFFEE } from "../constants/constants";
+import usePageTitle from "../hooks/usePageTitle";
 import { getPropertiesByCategory } from "../services/propertyService";
 import PropertySectionByLocation from "../components/PropertySectionByLocation";
 
 function Buy({ favorites, onToggleFav, onOpen }) {
+  usePageTitle("شراء عقارات — سكني");
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
 

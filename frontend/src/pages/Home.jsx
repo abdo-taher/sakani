@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import usePageTitle from "../hooks/usePageTitle";
 
 import {
   Building2,
@@ -25,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 /*  صفحة: الرئيسية                                                       */
 /* -------------------------------------------------------------------- */
 function Home({ properties = [], favorites, onToggleFav, onOpen }) {
+  usePageTitle("سكني — شريكك العقاري في دمياط الجديدة");
   const heroRef = useRef(null);
   const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 });
   const navigate = useNavigate();
