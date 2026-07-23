@@ -43,7 +43,7 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
+        password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT || 22 }}
         script: |
           echo "🔍 Current user: $(whoami)"
@@ -76,7 +76,7 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
+        password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT || 22 }}
         source: "frontend/dist/*"
         target: "~/public_html/sakani/frontend/"
