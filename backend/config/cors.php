@@ -19,21 +19,13 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => function () {
-        // Dynamic CORS origins
-        if (class_exists(\App\Services\DynamicConfigService::class)) {
-            return \App\Services\DynamicConfigService::getCorsOrigins();
-        }
-        
-        // Fallback origins
-        return [
-            'http://localhost:3000',
-            'http://127.0.0.1:3000',
-            'https://sakani.site',
-            'https://www.sakani.site',
-            'https://api.sakani.site',
-        ];
-    },
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://sakani.site',
+        'https://www.sakani.site',
+        'https://api.sakani.site',
+    ],
 
     'allowed_origins_patterns' => [
         '/^https?:\/\/(.+\.)?sakani\.site$/',

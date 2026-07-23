@@ -62,10 +62,10 @@ php artisan config:clear
 php artisan route:clear
 php artisan view:clear
 php artisan event:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan event:cache
+php artisan config:cache || echo "⚠️  Config cache skipped (closures not serializable)"
+php artisan route:cache || echo "⚠️  Route cache skipped"
+php artisan view:cache || echo "⚠️  View cache skipped"
+php artisan event:cache || echo "⚠️  Event cache skipped"
 
 # Permissions
 echo "🔐 Setting permissions..."
