@@ -19,6 +19,7 @@ import Statistics from "../pages/dashboard/Statistics";
 import Settings from "../pages/dashboard/Settings";
 import ProtectedRoute from "../components/ProtectedRoute";
 import ContactMessages from "../pages/dashboard/ContactMessages";
+import MarketingMail from "../pages/dashboard/MarketingMail";
 import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
 import { Navigate } from "react-router-dom";
 
@@ -158,6 +159,10 @@ function AppRoutes({
 <Route
   path="contact-messages"
   element={<ContactMessages />}
+/>
+<Route
+  path="marketing-mail"
+  element={<MarketingMail />}
 />
 </Route>
 

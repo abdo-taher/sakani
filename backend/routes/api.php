@@ -21,6 +21,7 @@ use App\Http\Controllers\PropertyTypeController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\StatisticsController;
 use App\Http\Controllers\Api\CloudinaryController;
+use App\Http\Controllers\Api\MarketingMailController;
 
 // Health check and configuration - No auth required
 Route::get('/health', [ConfigController::class, 'health']);
@@ -84,6 +85,10 @@ Route::delete('/properties/{property}', [PropertyController::class, 'destroy']);
     Route::get('/statistics', [StatisticsController::class, 'index']);
     Route::post('/cloudinary/signature', [CloudinaryController::class, 'signature']);
     Route::put('/admin/credentials', [AuthController::class, 'updateCredentials']);
+
+    // Marketing emails
+    Route::post('/marketing/send', [MarketingMailController::class, 'send']);
+    Route::post('/marketing/preview', [MarketingMailController::class, 'preview']);
 
     // Video upload routes (Enhanced)
     Route::prefix('videos/enhanced')->group(function () {

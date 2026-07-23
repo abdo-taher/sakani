@@ -12,6 +12,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  Mail,
 } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 
@@ -46,6 +47,11 @@ const menuItems = [
   icon: MessageSquare,
   path: "/dashboard/contact-messages",
 },
+  {
+    title: "البريد التسويقي",
+    icon: Mail,
+    path: "/dashboard/marketing-mail",
+  },
 
   {
     title: "الإحصائيات",
