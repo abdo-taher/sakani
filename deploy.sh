@@ -98,12 +98,11 @@ if command -v node &> /dev/null && command -v npm &> /dev/null; then
 
     echo "🏗️  Building frontend..."
     npm run build
-else
-    echo "⚠️  Node.js not available — skipping build"
-fi
-
-# SPA .htaccess
-cat > dist/.htaccess << 'HTACCESS'
+    
+    # Create .htaccess for SPA routing (only if build succeeded)
+    if [ -d "dist" ]; then
+        echo "📝 Creating .htaccess for SPA routing..."
+        cat > dist/.htaccess << 'HTACCESS'
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)/$ /$1 [L,R=301]
@@ -124,6 +123,41 @@ RewriteRule ^ index.html [L]
     ExpiresByType font/* "access plus 1 year"
 </IfModule>
 HTACCESS
+        echo "✅ Frontend built successfully"
+    else
+        echo "❌ Frontend build failed - dist directory not created"
+    fi
+else
+    echo "⚠️  Node.js not available on server"
+    echo "💡 Frontend will be built by GitHub Actions and uploaded"
+    
+    # Create a placeholder message if no dist exists
+    if [ ! -d "dist" ]; then
+        mkdir -p dist
+        cat > dist/index.html << 'HTML'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sakani - Deployment in Progress</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .loading { color: #6F4E37; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Sakani</h1>
+        <p class="loading">Frontend deployment in progress...</p>
+        <p>The application is being deployed. Please check back in a few minutes.</p>
+    </div>
+</body>
+</html>
+HTML
+        echo "📝 Created temporary frontend placeholder"
+    fi
+fi
 
 echo "✅ Frontend done"
 cd ..

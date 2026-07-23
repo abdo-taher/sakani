@@ -43,21 +43,44 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: ${{ secrets.PORT }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.PORT || 22 }}
         script: |
-          cd ${{ secrets.PROJECT_PATH }}
-          if [ ! -d .git ]; then
-            git init
-            git remote add origin https://github.com/${{ github.repository }}.git
-            git fetch origin main
-            git reset --hard origin/main
+          echo "🔍 Current user: $(whoami)"
+          echo "🏠 Home directory: $HOME"
+          
+          # Navigate to web root
+          cd ~/public_html || cd /home/$(whoami)/public_html
+          
+          # Create sakani directory if it doesn't exist
+          if [ ! -d "sakani" ]; then
+            mkdir -p sakani
+          fi
+          
+          cd sakani
+          
+          # Clone or update repository
+          if [ ! -d ".git" ]; then
+            git clone https://github.com/${{ github.repository }}.git .
           else
             git fetch origin main
             git reset --hard origin/main
           fi
+          
           chmod +x deploy.sh
-          bash deploy.sh
+          ./deploy.sh
+
+    - name: 📤 Upload Frontend Build
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.PORT || 22 }}
+        source: "frontend/dist/*"
+        target: "~/public_html/sakani/frontend/"
+        strip_components: 2
 
     - name: 📧 Notify on Failure
       if: failure()
