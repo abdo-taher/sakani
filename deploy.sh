@@ -1,140 +1,126 @@
 #!/bin/bash
 
-# Sakani Project Deployment Script for Hostinger
-# Fully automated production deployment
-
 set -e
 
-echo "🚀 Starting Sakani deployment..."
-echo "📍 Current directory: $(pwd)"
-echo "📅 Deployment time: $(date)"
+echo "🚀 Sakani deployment starting..."
+echo "📅 $(date)"
 
 if [ ! -f "deploy.sh" ]; then
-    echo "❌ Error: Not in project root directory"
+    echo "❌ Not in project root directory"
     exit 1
 fi
 
 # ── Backend ──────────────────────────────────────────────
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📦 Deploying Laravel Backend..."
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "━━━━ 📦 Backend ━━━━"
 cd backend
 
-# Install composer dependencies
-echo "🔧 Installing composer dependencies..."
-rm -f composer.lock
-rm -rf vendor/
-composer update --optimize-autoloader --no-interaction --no-audit
+# Dependencies
+if [ -d "vendor" ]; then
+    echo "✅ vendor/ exists — installing updates only"
+    composer install --no-interaction --no-audit --optimize-autoloader
+else
+    echo "📥 vendor/ missing — fresh install"
+    composer update --no-interaction --no-audit --optimize-autoloader
+fi
 
-# Create .env if not exists
+# .env
 if [ ! -f .env ]; then
     echo "📝 Creating .env from .env.example..."
     cp .env.example .env
     sed -i "s/APP_ENV=local/APP_ENV=production/" .env
     sed -i "s/APP_DEBUG=true/APP_DEBUG=false/" .env
     sed -i "s|APP_URL=http://localhost|APP_URL=https://api.sakani.site|" .env
-    sed -i "s/APP_KEY=/APP_KEY=/" .env
 fi
 
-# Generate APP_KEY if empty
+# APP_KEY
 if grep -q "^APP_KEY=$" .env; then
     echo "🔑 Generating application key..."
     php artisan key:generate --force
 fi
 
-# Create SQLite database if using sqlite
+# SQLite database
 DB_CONN=$(grep "^DB_CONNECTION=" .env | cut -d'=' -f2 | tr -d ' ')
 if [ "$DB_CONN" = "sqlite" ]; then
     DB_PATH=$(grep "^DB_DATABASE=" .env | cut -d'=' -f2 | tr -d ' ')
     if [ -n "$DB_PATH" ] && [ ! -f "$DB_PATH" ]; then
-        echo "🗄️  Creating SQLite database: $DB_PATH"
+        echo "🗄️  Creating SQLite database..."
         touch "$DB_PATH"
     fi
 fi
 
-# Run migrations
-echo "🗄️  Running database migrations..."
+# Migrations — always run
+echo "🗄️  Running migrations..."
 php artisan migrate --force
 
-# Cache everything
-echo "⚡ Caching configuration..."
+# Cache clear + rebuild
+echo "⚡ Clearing and rebuilding cache..."
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan event:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
-# Set permissions for shared hosting
-echo "🔐 Setting file permissions..."
-find storage -type f -exec chmod 644 {} \; 2>/dev/null || true
-find storage -type d -exec chmod 755 {} \; 2>/dev/null || true
-find bootstrap/cache -type f -exec chmod 644 {} \; 2>/dev/null || true
-find bootstrap/cache -type d -exec chmod 755 {} \; 2>/dev/null || true
-chmod -R 775 storage/ 2>/dev/null || true
-chmod -R 775 bootstrap/cache/ 2>/dev/null || true
+# Permissions
+echo "🔐 Setting permissions..."
+find storage -type d -exec chmod 775 {} \; 2>/dev/null || true
+find bootstrap/cache -type d -exec chmod 775 {} \; 2>/dev/null || true
+find storage -type f -exec chmod 664 {} \; 2>/dev/null || true
 
-echo "✅ Backend deployment completed!"
-
+echo "✅ Backend done"
 cd ..
 
 # ── Frontend ─────────────────────────────────────────────
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🎨 Deploying React Frontend..."
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "━━━━ 🎨 Frontend ━━━━"
 cd frontend
 
 if command -v node &> /dev/null && command -v npm &> /dev/null; then
-    echo "🟢 Node.js version: $(node --version)"
-    npm ci || npm install
+    echo "🟢 Node.js: $(node --version)"
+
+    if [ -d "node_modules" ]; then
+        echo "✅ node_modules/ exists — npm ci only"
+        npm ci || npm install
+    else
+        echo "📥 node_modules/ missing — fresh install"
+        npm install
+    fi
+
+    echo "🏗️  Building frontend..."
     npm run build
-    echo "✅ Frontend build completed!"
 else
-    echo "⚠️  Node.js/npm not available - frontend build skipped"
+    echo "⚠️  Node.js not available — skipping build"
 fi
 
-# Create .htaccess for SPA routing
+# SPA .htaccess
 cat > dist/.htaccess << 'HTACCESS'
 RewriteEngine On
-
-# Redirect Trailing Slashes
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)/$ /$1 [L,R=301]
-
-# Handle Front Controller (SPA routing)
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.html [L]
-
-# Security Headers
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
-
-# Cache static assets
 <IfModule mod_expires.c>
     ExpiresActive On
     ExpiresByType text/css "access plus 1 year"
     ExpiresByType application/javascript "access plus 1 year"
-    ExpiresByType image/png "access plus 1 year"
-    ExpiresByType image/jpg "access plus 1 year"
-    ExpiresByType image/jpeg "access plus 1 year"
-    ExpiresByType image/gif "access plus 1 year"
-    ExpiresByType image/svg+xml "access plus 1 year"
-    ExpiresByType image/webp "access plus 1 year"
-    ExpiresByType font/woff "access plus 1 year"
-    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType image/* "access plus 1 year"
+    ExpiresByType font/* "access plus 1 year"
 </IfModule>
 HTACCESS
 
+echo "✅ Frontend done"
 cd ..
 
 echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ Deployment completed at $(date)"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "📍 Domain setup on Hostinger:"
-echo "  Main domain    → public_html/sakani/frontend/dist"
-echo "  api subdomain  → public_html/sakani/backend/public"
+echo "━━━━ ✅ Deployment complete ━━━━"
+echo "📅 $(date)"
