@@ -16,15 +16,9 @@ echo "📦 Deploying Laravel Backend..."
 cd backend
 
 # Install/update composer dependencies
-if [ -f "composer.phar" ]; then
-    php composer.phar update --optimize-autoloader --no-dev
-elif command -v composer &> /dev/null; then
-    composer update --optimize-autoloader --no-dev
-else
-    echo "📦 Installing Composer..."
-    curl -sS https://getcomposer.org/installer | php
-    php composer.phar update --optimize-autoloader --no-dev
-fi
+echo "🔧 Setting up backend dependencies..."
+chmod +x setup-dependencies.sh
+./setup-dependencies.sh
 
 # Clear and cache Laravel configs (skip if artisan not available)
 if php artisan --version &> /dev/null; then
