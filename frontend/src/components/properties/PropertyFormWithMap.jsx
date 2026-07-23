@@ -73,6 +73,7 @@ function PropertyFormWithMap({
     bathrooms: "",
     floor: "",
     finishing: "",
+    furnishing: "",
     status: "available",
     features: [],
     images: [],
@@ -85,10 +86,7 @@ function PropertyFormWithMap({
         category: property.category_id || property.category?.id || "",
         section: property.property_type_id || property.propertyType?.id || "",
         location: property.location_id || property.location?.id || "",
-        coordinates: {
-          latitude: property.location?.latitude || null,
-          longitude: property.location?.longitude || null,
-        },
+
         title: property.title || "",
         description: property.description || "",
         price: property.price || "",
@@ -97,6 +95,7 @@ function PropertyFormWithMap({
         bathrooms: property.bathrooms || "",
         floor: property.floor || "",
         finishing: property.finishing || "",
+        furnishing: property.furnishing || "",
         status: property.status || "available",
         features: property.amenities
           ? property.amenities.map(item => item.id)
@@ -238,6 +237,7 @@ function PropertyFormWithMap({
         bathrooms: parseInt(propertyData.bathrooms),
         floor: propertyData.floor ? parseInt(propertyData.floor) : null,
         finishing: propertyData.finishing || null,
+        furnishing: propertyData.furnishing || null,
         status: propertyData.status,
         featured: false,
         amenities: propertyData.features,
@@ -526,6 +526,21 @@ function PropertyFormWithMap({
               </select>
             </div>
 
+            {/* Furnishing */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">التأثيث</label>
+              <select
+                name="furnishing"
+                value={propertyData.furnishing}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              >
+                <option value="">اختر حالة التأثيث</option>
+                <option value="furnished">مؤثث</option>
+                <option value="unfurnished">غير مؤثث</option>
+              </select>
+            </div>
+
             {/* Amenities */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-4">المميزات المتاحة</label>
@@ -613,6 +628,7 @@ function PropertyFormWithMap({
               <div><strong>المساحة:</strong> {propertyData.area} متر مربع</div>
               <div><strong>الغرف:</strong> {propertyData.rooms} | <strong>الحمامات:</strong> {propertyData.bathrooms}</div>
               {propertyData.finishing && <div><strong>التشطيب:</strong> {propertyData.finishing}</div>}
+              {propertyData.furnishing && <div><strong>التأثيث:</strong> {propertyData.furnishing === "furnished" ? "مؤثث" : "غير مؤثث"}</div>}
               <div><strong>عدد المميزات:</strong> {propertyData.features.length}</div>
               <div><strong>عدد الصور:</strong> {propertyData.images.length}</div>
               {propertyData.video && <div><strong>فيديو:</strong> تم إرفاق فيديو</div>}

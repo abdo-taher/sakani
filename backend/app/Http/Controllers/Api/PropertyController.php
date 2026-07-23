@@ -85,6 +85,7 @@ class PropertyController extends Controller
             'floor' => 'nullable|integer',
             'balconies' => 'nullable|integer',
             'finishing' => 'nullable|in:super_lux,lux,semi_finished,red_brick',
+            'furnishing' => 'nullable|in:furnished,unfurnished',
             'video' => 'nullable|file|mimes:mp4,mpeg,quicktime,avi,webm,flv,3gp,wmv|max:' . (config('video_upload.max_size', 104857600) / 1024),
             'video_url' => 'nullable|string',
             'video_public_id' => 'nullable|string',
@@ -164,6 +165,7 @@ class PropertyController extends Controller
                 'floor' => $request->floor,
                 'balconies' => $request->balconies,
                 'finishing' => $request->finishing,
+                'furnishing' => $request->furnishing,
                 'status' => $request->status ?? 'available',
                 'featured' => $request->featured ?? false,
             ];
@@ -331,6 +333,7 @@ class PropertyController extends Controller
             'floor' => 'sometimes|nullable|integer|min:0',
             'balconies' => 'sometimes|nullable|integer|min:0',
             'finishing' => 'sometimes|nullable|in:super_lux,lux,semi_finished,red_brick',
+            'furnishing' => 'sometimes|nullable|in:furnished,unfurnished',
             'video' => 'sometimes|file|mimes:mp4,mpeg,quicktime,avi,webm,flv,3gp,wmv|max:' . (config('video_upload.max_size', 104857600) / 1024),
             'video_url' => 'sometimes|nullable|string|max:500',
             'video_public_id' => 'sometimes|nullable|string|max:200',
@@ -346,7 +349,7 @@ class PropertyController extends Controller
         $updateData = $request->only([
             'title', 'description', 'price', 'property_type_id', 'category_id', 
             'location_id', 'area', 'rooms', 'bathrooms', 'floor', 'balconies', 
-            'finishing', 'status', 'featured'
+            'finishing', 'furnishing', 'status', 'featured'
         ]);
 
         // Handle video removal

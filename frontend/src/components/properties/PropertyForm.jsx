@@ -71,6 +71,7 @@ function PropertyForm({
     bathrooms: "",
     floor: "",
     finishing: "",
+    furnishing: "",
     status: "available",
     features: [],
     images: [],
@@ -94,6 +95,7 @@ function PropertyForm({
         floor: property.floor || "",
 
         finishing: property.finishing || "",
+        furnishing: property.furnishing || "",
         status: property.status || "available",
 
         features: property.amenities
@@ -168,6 +170,11 @@ function PropertyForm({
     { value: "red_brick", label: "طوب أحمر" },
   ];
 
+  const furnishingOptions = [
+    { value: "furnished", label: "مؤثث" },
+    { value: "unfurnished", label: "غير مؤثث" },
+  ];
+
   const goNext = () => {
     if (step === 1) {
       if (!propertyData.category) {
@@ -233,6 +240,7 @@ function PropertyForm({
   floor: propertyData.floor,
   balconies: 0,
   finishing: propertyData.finishing || null,
+  furnishing: propertyData.furnishing || null,
   status: "available",
   featured: false,
 
@@ -308,6 +316,10 @@ function PropertyForm({
 
   const finishingLabel = finishingOptions.find(
     (f) => f.value === propertyData.finishing
+  )?.label;
+
+  const furnishingLabel = furnishingOptions.find(
+    (f) => f.value === propertyData.furnishing
   )?.label;
 
   const selectedCategory = categories.find(
@@ -645,6 +657,32 @@ function PropertyForm({
                     })}
                   </div>
                 </div>
+
+                <div className="mt-6">
+                  <div className={labelClass} style={{ color: COFFEE.dark }}>
+                    <Paintbrush size={16} /> التأثيث
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {furnishingOptions.map((opt) => {
+                      const selected = propertyData.furnishing === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setField("furnishing", opt.value)}
+                          className="px-5 py-2.5 rounded-full font-bold text-sm transition-all border-2"
+                          style={{
+                            borderColor: selected ? COFFEE.gold : COFFEE.line,
+                            background: selected ? COFFEE.gold : "white",
+                            color: selected ? COFFEE.dark : COFFEE.stone,
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -739,6 +777,7 @@ function PropertyForm({
                   <ReviewCard title="الغرف / الحمامات" value={`${propertyData.rooms || "—"} / ${propertyData.bathrooms || "—"}`} color={COFFEE} />
                   <ReviewCard title="الدور" value={propertyData.floor || "—"} color={COFFEE} />
                   <ReviewCard title="التشطيب" value={finishingLabel || "—"} color={COFFEE} />
+                  <ReviewCard title="التأثيث" value={furnishingLabel || "—"} color={COFFEE} />
                   <ReviewCard title="الصور / الفيديو" value={`${propertyData.images.length} صورة${propertyData.video ? " + فيديو" : ""}`} color={COFFEE} />
                 </div>
 
