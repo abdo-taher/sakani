@@ -18,12 +18,19 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort(),
-        // Sanctum::currentRequestHost(),
-    ))),
+    'stateful' => function () {
+        // Dynamic stateful domains
+        if (class_exists(\App\Services\DynamicConfigService::class)) {
+            return \App\Services\DynamicConfigService::getSanctumDomains();
+        }
+        
+        // Fallback domains
+        return explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
+            '%s%s',
+            'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
+            Sanctum::currentApplicationUrlWithPort()
+        )));
+    },
 
     /*
     |--------------------------------------------------------------------------

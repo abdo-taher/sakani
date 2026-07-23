@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\VideoUploadController;
 use App\Http\Controllers\Api\EnhancedVideoUploadController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\NeedRequestController;
+use App\Http\Controllers\Api\ConfigController;
 use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\FavoriteController;
@@ -20,6 +21,10 @@ use App\Http\Controllers\PropertyTypeController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\StatisticsController;
 use App\Http\Controllers\Api\CloudinaryController;
+
+// Health check and configuration - No auth required
+Route::get('/health', [ConfigController::class, 'health']);
+Route::get('/config', [ConfigController::class, 'getConfig']);
 
 /*
 |--------------------------------------------------------------------------

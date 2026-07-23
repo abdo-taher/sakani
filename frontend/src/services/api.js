@@ -1,34 +1,52 @@
 import axios from "axios";
+import dynamicConfig from "../config/dynamic";
+
+// Get API base URL dynamically
+const getApiBaseUrl = () => {
+  return dynamicConfig.getConfigSync().api_url;
+};
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: getApiBaseUrl(),
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
   },
 });
 
-// إرسال الـ Token تلقائياً
-api.interceptors.request.use((config) => {
-const token = sessionStorage.getItem("token");
+// Request interceptor to update baseURL and add auth token
+api.interceptors.request.use(async (config) => {
+  // Ensure we have the latest dynamic config
+  try {
+    const dynamicConf = await dynamicConfig.getConfig();
+    config.baseURL = dynamicConf.api_url;
+  } catch (error) {
+    console.warn('Using fallback API URL:', error);
+    config.baseURL = getApiBaseUrl();
+  }
+  
+  // Add auth token
+  const token = sessionStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
   return config;
 });
+
+// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
-
   (error) => {
     const isLoginRequest = error.config?.url?.includes("/login");
 
-if (error.response?.status === 401 && !isLoginRequest) {
-  sessionStorage.clear();
-  window.location.href = "/admin/login";
-}
+    if (error.response?.status === 401 && !isLoginRequest) {
+      sessionStorage.clear();
+      window.location.href = "/admin/login";
+    }
 
     return Promise.reject(error);
   }
 );
+
 export default api;
