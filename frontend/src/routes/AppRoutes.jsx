@@ -20,6 +20,7 @@ import Settings from "../pages/dashboard/Settings";
 import ProtectedRoute from "../components/ProtectedRoute";
 import ContactMessages from "../pages/dashboard/ContactMessages";
 import MarketingMail from "../pages/dashboard/MarketingMail";
+import NotFound from "../pages/NotFound";
 import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
 import { Navigate } from "react-router-dom";
 
@@ -164,8 +165,9 @@ function AppRoutes({
   path="marketing-mail"
   element={<MarketingMail />}
 />
-</Route>
+      </Route>
 
+      <Route path="*" element={<NotFound />} />
   
     </Routes>
     

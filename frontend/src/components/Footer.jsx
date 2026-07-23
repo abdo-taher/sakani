@@ -102,7 +102,7 @@ const navigate = useNavigate();
               <li className="flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 shrink-0" style={{ color: COFFEE.gold }} />
                 <span className="text-sm sm:text-base break-all" style={{ color: COFFEE.cream }}>
-                  sakani.eg23@gmail.com
+                  info@sakani.site
                 </span>
               </li>
               <li className="flex items-center gap-1.5">
