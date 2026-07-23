@@ -56,16 +56,20 @@ fi
 echo "🗄️  Running migrations..."
 php artisan migrate --force
 
-# Cache clear + rebuild
-echo "⚡ Clearing and rebuilding cache..."
+# Cache clear + rebuild (production optimization)
+echo "⚡ Clearing and optimizing cache..."
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
 php artisan event:clear
-php artisan config:cache || echo "⚠️  Config cache skipped (closures not serializable)"
+
+# For production, we skip config:cache to avoid closure serialization issues
+# This is common in Laravel apps with dynamic configurations
+echo "⚠️  Skipping config cache (using file-based config for compatibility)"
+
+# Cache routes and views for performance
 php artisan route:cache || echo "⚠️  Route cache skipped"
 php artisan view:cache || echo "⚠️  View cache skipped"
-php artisan event:cache || echo "⚠️  Event cache skipped"
 
 # Permissions
 echo "🔐 Setting permissions..."
