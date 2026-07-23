@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Cloudinary\Cloudinary;
+use RuntimeException;
 
 class CloudinaryService
 {
@@ -10,11 +11,21 @@ class CloudinaryService
 
     public function __construct()
     {
+        $cloudName = config('cloudinary.cloud_name');
+        $apiKey    = config('cloudinary.api_key');
+        $apiSecret = config('cloudinary.api_secret');
+
+        if (empty($cloudName) || empty($apiKey) || empty($apiSecret)) {
+            throw new RuntimeException(
+                'Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env file.'
+            );
+        }
+
         $this->cloudinary = new Cloudinary([
             'cloud' => [
-                'cloud_name' => config('cloudinary.cloud_name'),
-                'api_key' => config('cloudinary.api_key'),
-                'api_secret' => config('cloudinary.api_secret'),
+                'cloud_name' => $cloudName,
+                'api_key'    => $apiKey,
+                'api_secret' => $apiSecret,
             ],
             'url' => [
                 'secure' => true,
