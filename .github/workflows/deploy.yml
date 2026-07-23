@@ -147,6 +147,77 @@ jobs:
         strip_components: 2
         overwrite: true
 
+    - name: 🩺 Debug and Fix 500 Errors
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: ${{ secrets.SSH_PORT }}
+        timeout: 60s
+        script: |
+          cd ~/domains/sakani.site/public_html/backend
+          
+          echo "🔍 Debugging 500 errors..."
+          
+          # Check Laravel logs for errors
+          echo "📋 Latest Laravel errors:"
+          if [ -f "storage/logs/laravel.log" ]; then
+            tail -20 storage/logs/laravel.log || echo "No recent Laravel logs"
+          else
+            echo "Laravel log file doesn't exist yet"
+          fi
+          
+          # Check if .env file exists and is readable
+          echo "🔧 Checking .env file:"
+          if [ -f .env ]; then
+            echo "✅ .env exists"
+            # Check if APP_KEY is set
+            if grep -q "^APP_KEY=base64:" .env; then
+              echo "✅ APP_KEY is properly set"
+            else
+              echo "❌ APP_KEY missing or invalid - regenerating..."
+              php artisan key:generate --force
+            fi
+          else
+            echo "❌ .env file missing - creating..."
+            cp .env.example .env
+            php artisan key:generate --force
+          fi
+          
+          # Check database configuration
+          echo "🗄️ Testing database connection:"
+          php artisan migrate:status || echo "❌ Database connection failed"
+          
+          # Check if vendor directory exists
+          echo "📦 Checking composer dependencies:"
+          if [ -d "vendor" ]; then
+            echo "✅ Vendor directory exists"
+          else
+            echo "❌ Vendor missing - reinstalling..."
+            composer install --no-dev --optimize-autoloader
+          fi
+          
+          # Check file permissions
+          echo "🔐 Fixing file permissions:"
+          chmod -R 755 storage
+          chmod -R 755 bootstrap/cache
+          chmod -R 644 .env
+          chown -R $USER:$USER storage bootstrap/cache
+          
+          # Clear all caches to fix potential cache issues
+          echo "🧹 Clearing all caches:"
+          php artisan cache:clear
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+          
+          # Test if Laravel is responding
+          echo "🧪 Testing Laravel installation:"
+          php artisan --version || echo "❌ Laravel not responding"
+          
+          echo "✅ Debugging complete - check logs above for issues"
+
     - name: 🧪 Test Backend Health
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -168,6 +239,20 @@ jobs:
           
           # Check if key routes are working
           php artisan route:list | grep api || echo "API routes check failed"
+          
+          # Check web server error logs
+          echo "🚨 Checking web server error logs:"
+          if [ -f "/home/$USER/domains/sakani.site/logs/error.log" ]; then
+            echo "📋 Recent web server errors:"
+            tail -10 "/home/$USER/domains/sakani.site/logs/error.log" || echo "Cannot read error log"
+          else
+            echo "Web server error log not found at expected location"
+          fi
+          
+          # Test direct PHP execution
+          echo "🐘 Testing PHP execution:"
+          cd public
+          php -r "echo 'PHP is working: ' . phpversion() . PHP_EOL;"
           
           echo "🩺 Health check completed"
 
