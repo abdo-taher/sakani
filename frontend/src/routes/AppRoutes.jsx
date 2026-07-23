@@ -20,6 +20,7 @@ import Settings from "../pages/dashboard/Settings";
 import ProtectedRoute from "../components/ProtectedRoute";
 import ContactMessages from "../pages/dashboard/ContactMessages";
 import MarketingMail from "../pages/dashboard/MarketingMail";
+import Notifications from "../pages/dashboard/Notifications";
 import NotFound from "../pages/NotFound";
 import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
 import { Navigate } from "react-router-dom";
@@ -39,6 +40,7 @@ function AppRoutes({
   addProperty,
   updateProperty,
   deleteProperty,
+  setUnreadCount,
 }) {
   return (
     <Routes>
@@ -164,6 +166,10 @@ function AppRoutes({
 <Route
   path="marketing-mail"
   element={<MarketingMail />}
+/>
+<Route
+  path="notifications"
+  element={<Notifications setUnreadCount={setUnreadCount} />}
 />
       </Route>
 

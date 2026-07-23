@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   Mail,
+  Bell,
 } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 
@@ -51,6 +52,11 @@ const menuItems = [
     title: "البريد التسويقي",
     icon: Mail,
     path: "/dashboard/marketing-mail",
+  },
+  {
+    title: "الإشعارات",
+    icon: Bell,
+    path: "/dashboard/notifications",
   },
 
   {

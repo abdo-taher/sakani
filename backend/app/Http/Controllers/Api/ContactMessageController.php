@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContactMessage;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class ContactMessageController extends Controller
@@ -30,6 +31,13 @@ class ContactMessageController extends Controller
             'subject' => $request->subject,
             'message' => $request->message,
             'status' => 'new'
+        ]);
+
+        Notification::create([
+            'type' => 'contact',
+            'title' => 'رسالة تواصل جديدة',
+            'message' => "{$request->name} أرسل رسالة تواصل",
+            'link' => '/dashboard/contact-messages',
         ]);
 
         return response()->json([

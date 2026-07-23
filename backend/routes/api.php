@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\StatisticsController;
 use App\Http\Controllers\Api\CloudinaryController;
 use App\Http\Controllers\Api\MarketingMailController;
+use App\Http\Controllers\Api\NotificationController;
 
 // Health check and configuration - No auth required
 Route::get('/health', [ConfigController::class, 'health']);
@@ -89,6 +90,13 @@ Route::delete('/properties/{property}', [PropertyController::class, 'destroy']);
     // Marketing emails
     Route::post('/marketing/send', [MarketingMailController::class, 'send']);
     Route::post('/marketing/preview', [MarketingMailController::class, 'preview']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
     // Video upload routes (Enhanced)
     Route::prefix('videos/enhanced')->group(function () {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class ReservationController extends Controller
@@ -36,6 +37,13 @@ class ReservationController extends Controller
             'phone' => $request->phone,
             'message' => $request->message,
             'status' => 'pending'
+        ]);
+
+        Notification::create([
+            'type' => 'reservation',
+            'title' => 'طلب حجز جديد',
+            'message' => "{$request->name} قدم طلب حجز على عقار",
+            'link' => '/dashboard/reservations',
         ]);
 
         return response()->json([

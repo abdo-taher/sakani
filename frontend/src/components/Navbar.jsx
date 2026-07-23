@@ -9,14 +9,16 @@ import {
   ShieldCheck,
   Heart,
   Building2,
+  Bell,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { COFFEE } from "../constants/constants";
+import { getUnreadCount } from "../services/notificationService";
 
 /* -------------------------------------------------------------------- */
 /*  مكون: بار التنقل                                                     */
 /* -------------------------------------------------------------------- */
-function Navbar({ isAdmin, favoritesCount = 0, onOpenFavorites }) {
+function Navbar({ isAdmin, favoritesCount = 0, unreadCount = 0, onOpenFavorites }) {
   const [scrolled, setScrolled] = useState(false);
   const [pulseHeart, setPulseHeart] = useState(false);
   const navigate = useNavigate();
@@ -215,6 +217,24 @@ const page =
               </span>
             )}
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/dashboard/notifications")}
+              className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 hover:scale-110 active:scale-95 transition-transform"
+              style={{ borderColor: COFFEE.gold }}
+              title="الإشعارات"
+            >
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: COFFEE.gold }} />
+              {unreadCount > 0 && (
+                <span
+                  className="animate-fadePop absolute -top-1.5 -left-1.5 min-w-[19px] h-[19px] px-1 rounded-full text-[10px] font-extrabold flex items-center justify-center"
+                  style={{ backgroundColor: "#e0435c", color: "#fff" }}
+                >
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          )}
           {isAdmin && (
             <button
              onClick={() => navigate("/dashboard")}

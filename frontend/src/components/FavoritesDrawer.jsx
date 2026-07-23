@@ -42,10 +42,10 @@ function FavoritesDrawer({ open, properties, favorites, onToggleFav, onOpenPrope
                 onClick={() => { onOpenProperty(p); onClose(); }}
                 className="flex gap-3 items-center bg-stone-50 rounded-xl p-3 cursor-pointer hover:shadow-md transition-shadow"
               >
-                <img src={p.images?.[0] || SAMPLE_IMG(p.id)} className="w-16 h-16 rounded-lg object-cover shrink-0" />
+                <img src={p.images?.[0]?.image_url || SAMPLE_IMG(p.id)} className="w-16 h-16 rounded-lg object-cover shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm truncate" style={{ color: COFFEE.dark }}>{p.title}</p>
-                  <p className="text-xs text-stone-400">{p.location}</p>
+                  <p className="text-xs text-stone-400">{p.location?.name || p.location}</p>
                   <p className="text-sm font-extrabold" style={{ color: COFFEE.gold }}>{fmtPrice(p.price)}</p>
                 </div>
                 <button onClick={(e) => { e.stopPropagation(); onToggleFav(p.id); }} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white transition-colors">
