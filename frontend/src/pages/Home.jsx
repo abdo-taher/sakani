@@ -79,16 +79,16 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
         onMouseLeave={() => setHeroTilt({ x: 0, y: 0 })}
         className="relative w-full h-[46vh] sm:h-[58vh] overflow-hidden"
       >
-        <div className="youtube-embed-container transition-transform duration-300 ease-out"
-             style={{ transform: `scale(1.08) translate(${heroTilt.x * 0.6}px, ${heroTilt.y * 0.6}px)` }}>
-          <iframe
-            src="https://www.youtube.com/embed/FEMHOQd6ss8?autoplay=1&mute=1&loop=1&playlist=FEMHOQd6ss8&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&disablekb=1&fs=0&cc_load_policy=0&playsinline=1&enablejsapi=0&start=0&end=0"
-            title="Property Showcase Video"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-        </div>
+        <video
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out"
+          style={{ transform: `scale(1.08) translate(${heroTilt.x * 0.6}px, ${heroTilt.y * 0.6}px)` }}
+          src="/ytdowncom-shorts-media-femhoqd6ss8-001-720p_d8v8hPP0.mp4"
+          poster="https://picsum.photos/seed/herohouse/1600/900"
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
         <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, rgba(43,27,18,0.35) 0%, rgba(43,27,18,0.75) 100%)` }} />
         <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full blur-3xl opacity-30 animate-blob pointer-events-none" style={{ backgroundColor: COFFEE.gold }} />
         <div className="absolute bottom-0 -left-16 w-72 h-72 rounded-full blur-3xl opacity-20 animate-blob-2 pointer-events-none" style={{ backgroundColor: COFFEE.cream }} />

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none">
+  <circle cx="12" cy="12" r="12" fill="#B08D57"/>
+  <g transform="translate(3,2)">
+    <path d="M6 22V8c0-1.1.9-2 2-2h2c1.1 0 2 .9 2 2v14" stroke="#2B1B12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M18 22V4c0-1.1-.9-2-2-2h-2c-1.1 0-2 .9-2 2v18" stroke="#2B1B12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M6 22h12" stroke="#2B1B12" stroke-width="1.8" stroke-linecap="round"/>
+    <rect x="8.5" y="9.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="10.5" y="9.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="8.5" y="12.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="10.5" y="12.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="8.5" y="15.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="10.5" y="15.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="13.5" y="6.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="15.5" y="6.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="13.5" y="9.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="15.5" y="9.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="13.5" y="12.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="15.5" y="12.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="13.5" y="15.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+    <rect x="15.5" y="15.5" width="1" height="1" rx="0.5" fill="#B08D57"/>
+  </g>
+</svg>
