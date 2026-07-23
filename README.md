@@ -88,37 +88,54 @@ CLOUDINARY_API_SECRET=<your-api-secret>
 
 ## 🚀 Deployment
 
-This project uses **manual deployment** to Hostinger via File Manager for reliability.
+This project uses **GitHub Actions** for automatic deployment to Hostinger.
 
-### Quick Deployment Steps
+### 🔧 Setup GitHub Auto-Deployment
 
-1. **Build Frontend**: `cd frontend && npm run build`
-2. **Upload Package**: Upload `sakani-deployment.zip` to Hostinger File Manager
-3. **Create Subdomains**: 
-   - `api.yourdomain.com` → `/public_html/sakani/backend/public`
-   - `app.yourdomain.com` → `/public_html/sakani/frontend/dist`
-4. **Configure Database**: Set up MySQL database in Hostinger panel
-5. **Run Setup**: SSH to server and run migration commands
+1. **Add GitHub Secrets** at: https://github.com/abdo-taher/sakani/settings/secrets/actions
 
-### Complete Guide
+   | Secret Name | Value |
+   |-------------|-------|
+   | `SSH_HOST` | `92.113.28.185` |
+   | `SSH_USERNAME` | `u467678620` |
+   | `SSH_PASSWORD` | `your_hostinger_password` |
+   | `SSH_PORT` | `65002` |
 
-📖 **See `COMPLETE_DEPLOYMENT_GUIDE.md`** for detailed step-by-step instructions.
+2. **Push to main branch** - Deployment starts automatically!
+3. **Monitor progress**: https://github.com/abdo-taher/sakani/actions
 
-### Domain Structure
+### 🎯 Domain Configuration
 
-Your deployed platform will have:
-- **Frontend**: `https://app.yourdomain.com` (React SPA)
-- **API**: `https://api.yourdomain.com` (Laravel API)
-- **Health Check**: `https://api.yourdomain.com/api/health`
+Set up these subdomains in Hostinger:
 
-### One-Command Local Setup
+| Domain | Points To | Purpose |
+|--------|-----------|---------|
+| `sakani.site` | `/public_html/` | React Frontend |
+| `api.sakani.site` | `/public_html/backend/public` | Laravel API |
+
+### 🏗️ What GitHub Actions Does
+
+1. **Builds frontend** with `npm run build`
+2. **Uploads backend** files via SCP
+3. **Uploads frontend** build files
+4. **Runs Laravel setup** (migrations, cache, permissions)
+5. **Configures domain routing** with `.htaccess`
+6. **Tests backend health** to verify deployment
+
+### 📊 Your Live URLs
+
+- **Frontend**: https://sakani.site
+- **API**: https://api.sakani.site  
+- **Health Check**: https://api.sakani.site/api/health
+
+### 🔄 Manual Deployment (Backup Method)
+
+If GitHub Actions fails, use the `deploy.sh` script on your server:
 
 ```bash
-# Backend
-cd backend && composer install && php artisan migrate --seed && cd ..
-
-# Frontend  
-cd frontend && npm install && npm run build && cd ..
+# On your Hostinger server
+cd ~/domains/sakani.site/public_html/backend
+./deploy.sh
 ```
 
 ## 📁 Project Structure
