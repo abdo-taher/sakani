@@ -89,4 +89,19 @@ public
 
 # Database files
 *.sqlite
-*.db
+*.db# Build outputs
+frontend/dist/
+frontend/node_modules/
+backend/vendor/
+backend/node_modules/
+
+# Environment files
+backend/.env
+.env
+
+# Deployment packages
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
