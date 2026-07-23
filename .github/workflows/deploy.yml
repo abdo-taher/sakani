@@ -36,7 +36,19 @@ jobs:
         npm run build
       working-directory: ./frontend
       
-    - name: 🚀 Deploy to Hostinger
+    - name: 📤 Upload Backend Files
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: ${{ secrets.SSH_PORT }}
+        source: "backend/*"
+        target: "~/domains/sakani.site/public_html/"
+        strip_components: 0
+        overwrite: true
+
+    - name: 🚀 Deploy Backend to Hostinger
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -55,12 +67,7 @@ jobs:
           
           echo "📂 Current directory: $(pwd)"
           
-          # Update from git
-          echo "🔄 Updating from repository..."
-          git fetch origin main
-          git reset --hard origin/main
-          
-          # Backend setup
+          # Backend setup - don't rely on git since files are uploaded directly
           echo "🔧 Setting up backend..."
           composer install --no-dev --optimize-autoloader --no-interaction
           
@@ -108,9 +115,9 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
         source: "frontend/dist/*"
-        target: "~/domains/sakani.site/public_html/sakani/frontend/"
+        target: "~/domains/sakani.site/public_html/frontend/"
         strip_components: 2
-        rm: true
+        overwrite: true
 
     - name: ✅ Deployment Complete
       run: |
