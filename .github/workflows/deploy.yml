@@ -115,9 +115,41 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
         source: "frontend/dist/*"
-        target: "~/domains/sakani.site/public_html/frontend/"
+        target: "~/domains/sakani.site/public_html/"
         strip_components: 2
         overwrite: true
+
+    - name: 🔧 Configure Domain Routing
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: ${{ secrets.SSH_PORT }}
+        timeout: 30s
+        script: |
+          cd ~/domains/sakani.site/public_html/
+          
+          # Create main .htaccess for domain routing
+          echo "# Domain routing for Sakani
+          RewriteEngine On
+          
+          # Force HTTPS
+          RewriteCond %{HTTPS} off
+          RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+          
+          # API subdomain routing (api.sakani.site)
+          RewriteCond %{HTTP_HOST} ^api\.
+          RewriteRule ^(.*)$ backend/public/$1 [L]
+          
+          # Main domain - serve frontend files directly
+          # Handle React Router - redirect all non-file requests to index.html
+          RewriteCond %{REQUEST_FILENAME} !-f
+          RewriteCond %{REQUEST_FILENAME} !-d
+          RewriteRule . /index.html [L]
+          " > .htaccess
+          
+          echo "✅ Domain routing configured"
 
     - name: ✅ Deployment Complete
       run: |
