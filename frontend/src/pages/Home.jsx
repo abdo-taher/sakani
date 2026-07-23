@@ -122,10 +122,10 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
       <section className="py-8 px-4 sm:px-6" style={{ backgroundColor: COFFEE.darkest }} dir="rtl">
         <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
           {[
-            { icon: Building2, value: 250, suffix: "+", label: "عقار تم بيعه" },
-            { icon: Users, value: 1200, suffix: "+", label: "عميل سعيد" },
-            { icon: MapPin, value: 2, suffix: "", label: "مدينة نخدمها" },
-            { icon: Award, value: 8, suffix: "+", label: "سنوات خبرة" },
+            { icon: Building2, value: 3, suffix: "+", label: "عقار تم بيعه" },
+            { icon: Users, value: 3, suffix: "+", label: "عميل سعيد" },
+            { icon: MapPin, value: 1, suffix: "", label: "مدينة نخدمها" },
+            { icon: Award, value: 1, suffix: "+", label: "سنوات خبرة" },
           ].map((s, i) => {
             const Icon = s.icon;
             return (

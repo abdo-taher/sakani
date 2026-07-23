@@ -8,7 +8,7 @@ import { MessageCircle } from "lucide-react";
 function FloatingWhatsApp() {
   const handleClick = (e) => {
     e.preventDefault();
-    const url = "https://wa.me/201000000000";
+    const url = "https://wa.me/201067725976";
     const win = window.open(url, "_blank", "noopener,noreferrer");
     if (!win) {
       window.location.href = url;
@@ -16,7 +16,7 @@ function FloatingWhatsApp() {
   };
   return (
     <a
-      href="https://wa.me/201000000000"
+      href="https://wa.me/201067725976"
       onClick={handleClick}
       target="_blank"
       rel="noreferrer"
