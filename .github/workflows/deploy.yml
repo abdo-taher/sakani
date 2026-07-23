@@ -1,0 +1,119 @@
+name: Deploy Sakani to Hostinger
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📚 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🐘 Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql
+        
+    - name: 📦 Install Backend Dependencies
+      run: composer install --no-dev --optimize-autoloader --no-interaction
+      working-directory: ./backend
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: 🏗️ Build Frontend
+      run: |
+        npm ci
+        npm run build
+      working-directory: ./frontend
+      
+    - name: 🚀 Deploy to Hostinger
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: ${{ secrets.SSH_PORT }}
+        timeout: 60s
+        command_timeout: 10m
+        script: |
+          echo "🔍 Starting deployment..."
+          echo "Current user: $(whoami)"
+          echo "Home directory: $HOME"
+          
+          # Navigate to project directory
+          cd ~/domains/sakani.site/public_html/backend
+          
+          echo "📂 Current directory: $(pwd)"
+          
+          # Update from git
+          echo "🔄 Updating from repository..."
+          git fetch origin main
+          git reset --hard origin/main
+          
+          # Backend setup
+          echo "🔧 Setting up backend..."
+          composer install --no-dev --optimize-autoloader --no-interaction
+          
+          # Check if .env exists, if not copy from example
+          if [ ! -f .env ]; then
+            echo "📝 Creating .env file..."
+            cp .env.example .env
+            sed -i "s/APP_ENV=local/APP_ENV=production/" .env
+            sed -i "s/APP_DEBUG=true/APP_DEBUG=false/" .env
+            sed -i "s|APP_URL=http://localhost|APP_URL=https://api.sakani.site|" .env
+            sed -i "s|FRONTEND_URL=.*|FRONTEND_URL=https://sakani.site|" .env
+            sed -i "s|CORS_ALLOWED_ORIGINS=.*|CORS_ALLOWED_ORIGINS=https://sakani.site|" .env
+          fi
+          
+          # Generate app key if needed
+          if grep -q "^APP_KEY=$" .env; then
+            echo "🔑 Generating application key..."
+            php artisan key:generate --force
+          fi
+          
+          # Run migrations
+          echo "🗄️ Running migrations..."
+          php artisan migrate --force
+          
+          # Clear and optimize cache
+          echo "⚡ Optimizing application..."
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+          php artisan config:cache
+          php artisan route:cache || echo "Route cache skipped"
+          php artisan view:cache || echo "View cache skipped"
+          
+          # Set permissions
+          echo "🔐 Setting permissions..."
+          chmod -R 755 storage bootstrap/cache
+          
+          echo "✅ Backend deployment complete!"
+
+    - name: 📤 Upload Frontend Build
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: ${{ secrets.SSH_PORT }}
+        source: "frontend/dist/*"
+        target: "~/domains/sakani.site/public_html/sakani/frontend/"
+        strip_components: 2
+        rm: true
+
+    - name: ✅ Deployment Complete
+      run: |
+        echo "🎉 Deployment successful!"
+        echo "Frontend: https://sakani.site"
+        echo "API: https://api.sakani.site"
