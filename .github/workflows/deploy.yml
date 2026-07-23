@@ -63,7 +63,15 @@ jobs:
         port: ${{ secrets.PORT }}
         script: |
           cd ${{ secrets.PROJECT_PATH }}
-          git pull origin main
+          if [ ! -d .git ]; then
+            git init
+            git remote add origin https://github.com/${{ github.repository }}.git
+            git fetch origin main
+            git reset --hard origin/main
+          else
+            git pull origin main
+          fi
+          chmod +x deploy.sh
           ./deploy.sh
           
     - name: 📧 Notify on Success
