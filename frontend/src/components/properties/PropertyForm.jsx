@@ -262,7 +262,7 @@ function PropertyForm({
         setSavingMessage("جاري حفظ بيانات العقار...");
         const response = await createProperty(data);
 
-        const propertyId = response.data.id;
+        const propertyId = response.data.property.id;
 
         if (propertyData.images.length > 0) {
           setSavingMessage(`جاري رفع الصور (0/${propertyData.images.length})...`);

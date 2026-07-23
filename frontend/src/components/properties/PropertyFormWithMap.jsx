@@ -250,6 +250,8 @@ function PropertyFormWithMap({
         savedProperty = await createProperty(formData);
       }
 
+      const newPropertyId = savedProperty.data?.property?.id || savedProperty.data?.id;
+
       // Upload images if any
       if (propertyData.images.length > 0) {
         setSavingMessage("جاري رفع الصور...");
@@ -260,7 +262,7 @@ function PropertyFormWithMap({
             const uploadResult = await uploadToCloudinary(image);
             
             await uploadPropertyImage({
-              property_id: savedProperty.data.id,
+              property_id: newPropertyId,
               image_url: uploadResult.secure_url,
               image_public_id: uploadResult.public_id,
             });
@@ -277,7 +279,7 @@ function PropertyFormWithMap({
         try {
           const videoUploadResult = await uploadToCloudinary(propertyData.video, "video");
           
-          await updateProperty(savedProperty.data.id, {
+          await updateProperty(newPropertyId, {
             video_url: videoUploadResult.secure_url,
             video_public_id: videoUploadResult.public_id,
           });
