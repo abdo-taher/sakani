@@ -79,15 +79,14 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
         onMouseLeave={() => setHeroTilt({ x: 0, y: 0 })}
         className="relative w-full h-[46vh] sm:h-[58vh] overflow-hidden"
       >
-        <div className="absolute inset-0 w-full h-full transition-transform duration-300 ease-out"
+        <div className="youtube-embed-container transition-transform duration-300 ease-out"
              style={{ transform: `scale(1.08) translate(${heroTilt.x * 0.6}px, ${heroTilt.y * 0.6}px)` }}>
           <iframe
-            className="w-full h-full object-cover"
-            src="https://www.youtube.com/embed/FEMHOQd6ss8?autoplay=1&mute=1&loop=1&playlist=FEMHOQd6ss8&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1"
+            src="https://www.youtube.com/embed/FEMHOQd6ss8?autoplay=1&mute=1&loop=1&playlist=FEMHOQd6ss8&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&disablekb=1&fs=0&cc_load_policy=0&playsinline=1&enablejsapi=0&start=0&end=0"
             title="Property Showcase Video"
             frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
           />
         </div>
         <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, rgba(43,27,18,0.35) 0%, rgba(43,27,18,0.75) 100%)` }} />
