@@ -2,12 +2,13 @@ import { Outlet, Navigate } from "react-router-dom";
 import Sidebar from "../../components/dashboard/Sidebar";
 import Topbar from "../../components/dashboard/Topbar";
 import useIdleLogout from "../../hooks/useIdleLogout";
+import { ADMIN_LOGIN_TOKEN } from "../../constants/constants";
 function DashboardLayout() {
   useIdleLogout();
   const token = sessionStorage.getItem("token");
 
 if (!token) {
-  return <Navigate to="/admin/login" replace />;
+  return <Navigate to={`/admin/${ADMIN_LOGIN_TOKEN}/login`} replace />;
 }
   return (
     <div

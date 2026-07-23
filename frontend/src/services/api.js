@@ -1,5 +1,6 @@
 import axios from "axios";
 import dynamicConfig from "../config/dynamic";
+import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
 
 // Get API base URL dynamically
 const getApiBaseUrl = () => {
@@ -42,7 +43,7 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !isLoginRequest) {
       sessionStorage.clear();
-      window.location.href = "/admin/login";
+      window.location.href = `/admin/${ADMIN_LOGIN_TOKEN}/login`;
     }
 
     return Promise.reject(error);

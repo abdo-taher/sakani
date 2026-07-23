@@ -11,6 +11,7 @@ const COFFEE = {
 
 const RENT_DURATIONS = ["شهري", "3 شهور", "6 شهور", "سنوي"];
 const FURNISH_TYPES = ["مفروشة", "على البلاط"];
+const ADMIN_LOGIN_TOKEN = import.meta.env.VITE_ADMIN_LOGIN_TOKEN || "sakani2026";
 
 // Dynamic API configuration
 const API_CONFIG = {
@@ -131,5 +132,6 @@ export {
   FURNISH_TYPES, 
   API_CONFIG, 
   UPLOAD_CONFIG, 
-  ENDPOINTS 
+  ENDPOINTS,
+  ADMIN_LOGIN_TOKEN
 };

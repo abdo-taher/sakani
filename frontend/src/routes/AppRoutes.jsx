@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import Home from "../pages/Home";
 import Need from "../pages/Need";
@@ -18,6 +19,16 @@ import Statistics from "../pages/dashboard/Statistics";
 import Settings from "../pages/dashboard/Settings";
 import ProtectedRoute from "../components/ProtectedRoute";
 import ContactMessages from "../pages/dashboard/ContactMessages";
+import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
+import { Navigate } from "react-router-dom";
+
+function AdminLoginGuard({ children }) {
+  const { token } = useParams();
+  if (token !== ADMIN_LOGIN_TOKEN) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
 function AppRoutes({
   properties,
   favorites,
@@ -81,7 +92,11 @@ function AppRoutes({
 
       <Route path="/contact" element={<Contact />} />
 
-      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/:token/login" element={
+        <AdminLoginGuard>
+          <AdminLogin />
+        </AdminLoginGuard>
+      } />
 
       
 <Route

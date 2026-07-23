@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../services/authService";
+import { ADMIN_LOGIN_TOKEN } from "../../constants/constants";
 import {
   LayoutDashboard,
   Building2,
@@ -142,7 +143,7 @@ function Sidebar() {
 
       sessionStorage.clear();
 
-      window.location.href = "/admin/login";
+      window.location.href = `/admin/${ADMIN_LOGIN_TOKEN}/login`;
 
     }
 

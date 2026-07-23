@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
 
 export default function useIdleLogout() {
 
@@ -11,7 +12,7 @@ export default function useIdleLogout() {
         sessionStorage.removeItem("token");
         sessionStorage.removeItem("admin");
 
-        navigate("/admin/login", { replace: true });
+        navigate(`/admin/${ADMIN_LOGIN_TOKEN}/login`, { replace: true });
 
     };
 

@@ -215,16 +215,16 @@ const page =
               </span>
             )}
           </button>
-          <button
-           onClick={() =>
-  navigate(isAdmin ? "/dashboard" : "/admin/login")
-}
-            className={`btn-shimmer flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold border-2 hover:scale-105 active:scale-95 transition-transform whitespace-nowrap ${isAdmin ? "" : "animate-pulseGlow"}`}
-            style={{ borderColor: COFFEE.gold, color: COFFEE.gold }}
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span className="hidden sm:inline">{isAdmin ? "لوحة التحكم" : "دخول الادمن"}</span>
-          </button>
+          {isAdmin && (
+            <button
+             onClick={() => navigate("/dashboard")}
+              className="btn-shimmer flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold border-2 hover:scale-105 active:scale-95 transition-transform whitespace-nowrap"
+              style={{ borderColor: COFFEE.gold, color: COFFEE.gold }}
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span className="hidden sm:inline">لوحة التحكم</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { getUser } from "../services/authService";
+import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
 
 function ProtectedRoute({ children }) {
   const [loading, setLoading] = useState(true);
@@ -45,7 +46,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!authorized) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to={`/admin/${ADMIN_LOGIN_TOKEN}/login`} replace />;
   }
 
   return children;
