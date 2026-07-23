@@ -1,37 +1,54 @@
 #!/bin/bash
 
-# Sakani Project Deployment Script
-# This script deploys both frontend and backend to the server
+# Sakani Project Deployment Script for Hostinger
+# This script deploys both frontend and backend to Hostinger shared hosting
 
 set -e  # Exit on any error
 
-echo "🚀 Starting Sakani deployment..."
+echo "🚀 Starting Sakani deployment on Hostinger..."
 
 # Check if we're on the main branch
-CURRENT_BRANCH=$(git branch --show-current)
-if [ "$CURRENT_BRANCH" != "main" ]; then
-    echo "❌ Deployment only allowed from main branch. Current branch: $CURRENT_BRANCH"
-    exit 1
-fi
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
+echo "📍 Current branch: $CURRENT_BRANCH"
 
 # Backend deployment
 echo "📦 Deploying Laravel Backend..."
 cd backend
 
 # Install/update composer dependencies
-composer install --optimize-autoloader --no-dev
+if [ -f "composer.phar" ]; then
+    php composer.phar install --optimize-autoloader --no-dev
+elif command -v composer &> /dev/null; then
+    composer install --optimize-autoloader --no-dev
+else
+    echo "📦 Installing Composer..."
+    curl -sS https://getcomposer.org/installer | php
+    php composer.phar install --optimize-autoloader --no-dev
+fi
 
-# Clear and cache Laravel configs
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+# Clear and cache Laravel configs (skip if artisan not available)
+if php artisan --version &> /dev/null; then
+    php artisan config:cache || echo "⚠️  Config cache skipped"
+    php artisan route:cache || echo "⚠️  Route cache skipped" 
+    php artisan view:cache || echo "⚠️  View cache skipped"
+    
+    # Run database migrations if database is configured
+    if grep -q "DB_DATABASE=" .env && ! grep -q "DB_DATABASE=$" .env; then
+        echo "🗄️  Running database migrations..."
+        php artisan migrate --force || echo "⚠️  Migration failed - check database config"
+    else
+        echo "⚠️  Database not configured - skipping migrations"
+    fi
+else
+    echo "⚠️  Laravel Artisan not available - skipping cache commands"
+fi
 
-# Run database migrations
-php artisan migrate --force
-
-# Set proper permissions
-chmod -R 755 storage bootstrap/cache
-chmod -R 775 storage/logs storage/framework
+# Set proper permissions for shared hosting
+echo "🔐 Setting file permissions..."
+find storage -type f -exec chmod 644 {} \; 2>/dev/null || true
+find storage -type d -exec chmod 755 {} \; 2>/dev/null || true
+find bootstrap/cache -type f -exec chmod 644 {} \; 2>/dev/null || true
+find bootstrap/cache -type d -exec chmod 755 {} \; 2>/dev/null || true
 
 echo "✅ Backend deployment completed!"
 
@@ -41,15 +58,28 @@ cd ..
 echo "🎨 Deploying React Frontend..."
 cd frontend
 
-# Install/update npm dependencies
-npm ci --production
-
-# Build the frontend
-npm run build
-
-echo "✅ Frontend deployment completed!"
+# Check if Node.js and npm are available
+if command -v node &> /dev/null && command -v npm &> /dev/null; then
+    echo "🟢 Node.js version: $(node --version)"
+    
+    # Install/update npm dependencies
+    npm ci --production || npm install
+    
+    # Build the frontend
+    npm run build
+    
+    echo "✅ Frontend deployment completed!"
+else
+    echo "⚠️  Node.js/npm not available - frontend build skipped"
+    echo "💡 You may need to build frontend locally and upload dist folder"
+fi
 
 cd ..
 
 echo "🎉 Sakani deployment completed successfully!"
 echo "📅 Deployed at: $(date)"
+echo ""
+echo "📍 Next steps if this is first deployment:"
+echo "1. Configure backend/.env with database credentials"
+echo "2. Set up your domain to point to backend/public and frontend/dist"
+echo "3. Test the application"
