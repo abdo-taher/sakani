@@ -27,12 +27,12 @@ class DashboardController extends Controller
             return now()->subMonths($i)->format('Y-m');
         })->values();
 
-        $propertiesMonthly = Property::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as total")
+        $propertiesMonthly = Property::selectRaw("strftime('%Y-%m', created_at) as month, COUNT(*) as total")
             ->where('created_at', '>=', now()->subMonths(5)->startOfMonth())
             ->groupBy('month')
             ->pluck('total', 'month');
 
-        $reservationsMonthly = Reservation::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as total")
+        $reservationsMonthly = Reservation::selectRaw("strftime('%Y-%m', created_at) as month, COUNT(*) as total")
             ->where('created_at', '>=', now()->subMonths(5)->startOfMonth())
             ->groupBy('month')
             ->pluck('total', 'month');

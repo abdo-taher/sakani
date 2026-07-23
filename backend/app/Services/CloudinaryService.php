@@ -8,6 +8,7 @@ use RuntimeException;
 class CloudinaryService
 {
     protected $cloudinary;
+    protected bool $configured = false;
 
     public function __construct()
     {
@@ -16,11 +17,10 @@ class CloudinaryService
         $apiSecret = config('cloudinary.api_secret');
 
         if (empty($cloudName) || empty($apiKey) || empty($apiSecret)) {
-            throw new RuntimeException(
-                'Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env file.'
-            );
+            return;
         }
 
+        $this->configured = true;
         $this->cloudinary = new Cloudinary([
             'cloud' => [
                 'cloud_name' => $cloudName,
@@ -33,8 +33,19 @@ class CloudinaryService
         ]);
     }
 
+    protected function ensureConfigured(): void
+    {
+        if (! $this->configured) {
+            throw new RuntimeException(
+                'Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env file.'
+            );
+        }
+    }
+
     public function uploadImage($file)
     {
+        $this->ensureConfigured();
+
         $uploaded = $this->cloudinary
             ->uploadApi()
             ->upload($file->getRealPath(), [
@@ -46,6 +57,8 @@ class CloudinaryService
 
     public function uploadVideo($file)
     {
+        $this->ensureConfigured();
+
         $uploaded = $this->cloudinary
             ->uploadApi()
             ->upload($file->getRealPath(), [
