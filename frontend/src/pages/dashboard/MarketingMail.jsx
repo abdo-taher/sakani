@@ -12,6 +12,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  RotateCcw,
 } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 import { sendMarketingMail } from "../../services/marketingMailService";
@@ -48,6 +49,18 @@ function MarketingMail() {
 
   const removeEmail = (email) => {
     setRecipients(recipients.filter((e) => e !== email));
+  };
+
+  const resetForm = () => {
+    setRecipients([]);
+    setEmailInput("");
+    setSubject("");
+    setHeading("");
+    setBody("");
+    setButtonText("");
+    setButtonUrl("");
+    setFooter("");
+    setResult(null);
   };
 
   const handleKeyDown = (e) => {
@@ -110,14 +123,24 @@ function MarketingMail() {
             إرسال رسائل تسويقية مخصصة للعملاء
           </p>
         </div>
-        <button
-          onClick={() => setShowPreview(!showPreview)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition hover:scale-105"
-          style={{ borderColor: COFFEE.gold, color: COFFEE.gold }}
-        >
-          <Eye size={18} />
-          {showPreview ? "إخفاء المعاينة" : "معاينة"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition hover:scale-105"
+            style={{ borderColor: COFFEE.gold, color: COFFEE.gold }}
+          >
+            <Eye size={18} />
+            {showPreview ? "إخفاء المعاينة" : "معاينة"}
+          </button>
+          <button
+            onClick={resetForm}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition hover:scale-105"
+            style={{ borderColor: "#E4D9C9", color: COFFEE.stone }}
+          >
+            <RotateCcw size={18} />
+            إعادة تعيين
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
