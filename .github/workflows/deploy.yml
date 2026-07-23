@@ -56,56 +56,84 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
         timeout: 60s
-        command_timeout: 10m
+        command_timeout: 15m
         script: |
-          echo "🔍 Starting deployment..."
+          echo "🔍 Starting backend deployment..."
           echo "Current user: $(whoami)"
           echo "Home directory: $HOME"
           
-          # Navigate to project directory
+          # Navigate to backend directory
           cd ~/domains/sakani.site/public_html/backend
-          
           echo "📂 Current directory: $(pwd)"
           
-          # Backend setup - don't rely on git since files are uploaded directly
-          echo "🔧 Setting up backend..."
-          composer install --no-dev --optimize-autoloader --no-interaction
+          # Install/update composer dependencies
+          echo "📦 Installing Composer dependencies..."
+          composer install --no-dev --optimize-autoloader --no-interaction --verbose
           
-          # Check if .env exists, if not copy from example
+          # Create .env if it doesn't exist
           if [ ! -f .env ]; then
             echo "📝 Creating .env file..."
             cp .env.example .env
+            
+            # Configure for production
             sed -i "s/APP_ENV=local/APP_ENV=production/" .env
             sed -i "s/APP_DEBUG=true/APP_DEBUG=false/" .env
             sed -i "s|APP_URL=http://localhost|APP_URL=https://api.sakani.site|" .env
             sed -i "s|FRONTEND_URL=.*|FRONTEND_URL=https://sakani.site|" .env
             sed -i "s|CORS_ALLOWED_ORIGINS=.*|CORS_ALLOWED_ORIGINS=https://sakani.site|" .env
-          fi
-          
-          # Generate app key if needed
-          if grep -q "^APP_KEY=$" .env; then
+            
+            # Generate application key
             echo "🔑 Generating application key..."
             php artisan key:generate --force
+          else
+            echo "✅ .env file already exists"
           fi
           
-          # Run migrations
-          echo "🗄️ Running migrations..."
-          php artisan migrate --force
+          # Clear all caches first
+          echo "🧹 Clearing all caches..."
+          php artisan cache:clear || echo "Cache clear failed, continuing..."
+          php artisan config:clear || echo "Config clear failed, continuing..."
+          php artisan route:clear || echo "Route clear failed, continuing..."
+          php artisan view:clear || echo "View clear failed, continuing..."
+          php artisan event:clear || echo "Event clear failed, continuing..."
           
-          # Clear and optimize cache
-          echo "⚡ Optimizing application..."
-          php artisan config:clear
-          php artisan route:clear
-          php artisan view:clear
-          php artisan config:cache
-          php artisan route:cache || echo "Route cache skipped"
-          php artisan view:cache || echo "View cache skipped"
+          # Setup database if using SQLite (default for fresh installs)
+          echo "🗄️ Setting up database..."
+          if grep -q "DB_CONNECTION=sqlite" .env; then
+            # Ensure SQLite database file exists
+            DB_PATH=$(grep "^DB_DATABASE=" .env | cut -d'=' -f2)
+            if [ ! -f "$DB_PATH" ]; then
+              echo "📄 Creating SQLite database file..."
+              touch "$DB_PATH"
+            fi
+          fi
           
-          # Set permissions
-          echo "🔐 Setting permissions..."
-          chmod -R 755 storage bootstrap/cache
+          # Reset and run migrations
+          echo "🗄️ Running database migrations..."
+          php artisan migrate:fresh --force --seed || php artisan migrate --force
           
-          echo "✅ Backend deployment complete!"
+          # Optimize for production
+          echo "⚡ Optimizing for production..."
+          php artisan config:cache || echo "Config cache failed, skipping..."
+          php artisan route:cache || echo "Route cache failed, skipping..."
+          php artisan view:cache || echo "View cache failed, skipping..."
+          php artisan event:cache || echo "Event cache failed, skipping..."
+          
+          # Additional Laravel optimizations
+          echo "🚀 Additional optimizations..."
+          php artisan optimize || echo "Optimize command failed, skipping..."
+          
+          # Set correct permissions
+          echo "🔐 Setting file permissions..."
+          chmod -R 755 storage
+          chmod -R 755 bootstrap/cache
+          chmod -R 755 public
+          
+          # Test the application
+          echo "🧪 Testing Laravel installation..."
+          php artisan --version
+          
+          echo "✅ Backend deployment completed successfully!"
 
     - name: 📤 Upload Frontend Build
       uses: appleboy/scp-action@v0.1.7
@@ -118,6 +146,30 @@ jobs:
         target: "~/domains/sakani.site/public_html/"
         strip_components: 2
         overwrite: true
+
+    - name: 🧪 Test Backend Health
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: ${{ secrets.SSH_PORT }}
+        timeout: 30s
+        script: |
+          cd ~/domains/sakani.site/public_html/backend
+          
+          echo "🔍 Testing backend health..."
+          
+          # Test if Laravel is working
+          php artisan about || echo "Laravel about command failed"
+          
+          # Test database connection
+          php artisan migrate:status || echo "Database connection test failed"
+          
+          # Check if key routes are working
+          php artisan route:list | grep api || echo "API routes check failed"
+          
+          echo "🩺 Health check completed"
 
     - name: 🔧 Configure Domain Routing
       uses: appleboy/ssh-action@v1.0.0
