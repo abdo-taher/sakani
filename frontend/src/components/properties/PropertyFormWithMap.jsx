@@ -261,11 +261,12 @@ function PropertyFormWithMap({
           try {
             const uploadResult = await uploadToCloudinary(image);
             
-            await uploadPropertyImage({
-              property_id: newPropertyId,
-              image_url: uploadResult.secure_url,
-              image_public_id: uploadResult.public_id,
-            });
+            await uploadPropertyImage(
+              newPropertyId,
+              uploadResult.secure_url,
+              uploadResult.public_id,
+              i === 0
+            );
           } catch (uploadError) {
             console.error("Error uploading image:", uploadError);
             errorToast(`خطأ في رفع الصورة ${i + 1}`);

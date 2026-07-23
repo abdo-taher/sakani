@@ -279,7 +279,8 @@ function PropertyForm({
           await uploadPropertyImage(
             propertyId,
             uploaded.secure_url,
-            uploaded.public_id
+            uploaded.public_id,
+            uploadedCount === 0
           );
 
           uploadedCount++;
