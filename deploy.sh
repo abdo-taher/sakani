@@ -1,92 +1,105 @@
 #!/bin/bash
 
 # Sakani Project Deployment Script for Hostinger
-# This script deploys both frontend and backend to Hostinger shared hosting
+# Fully automated production deployment
 
-set -e  # Exit on any error
+set -e
 
-echo "🚀 Starting Sakani deployment on Hostinger..."
+echo "🚀 Starting Sakani deployment..."
 echo "📍 Current directory: $(pwd)"
 echo "📅 Deployment time: $(date)"
 
-# Check if we're in the right directory
 if [ ! -f "deploy.sh" ]; then
     echo "❌ Error: Not in project root directory"
     exit 1
 fi
 
-# Check if we're on the main branch
-CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
-echo "📍 Current branch: $CURRENT_BRANCH"
-
-# Backend deployment
+# ── Backend ──────────────────────────────────────────────
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "📦 Deploying Laravel Backend..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 cd backend
 
-# Install/update composer dependencies
-echo "🔧 Setting up backend dependencies..."
-chmod +x setup-dependencies.sh
-./setup-dependencies.sh
+# Install composer dependencies
+echo "🔧 Installing composer dependencies..."
+rm -f composer.lock
+rm -rf vendor/
+composer update --optimize-autoloader --no-interaction --no-audit
 
-# Clear and cache Laravel configs (skip if artisan not available)
-if php artisan --version &> /dev/null; then
-    php artisan config:cache || echo "⚠️  Config cache skipped"
-    php artisan route:cache || echo "⚠️  Route cache skipped" 
-    php artisan view:cache || echo "⚠️  View cache skipped"
-    
-    # Run database migrations if database is configured
-    if grep -q "DB_DATABASE=" .env && ! grep -q "DB_DATABASE=$" .env; then
-        echo "🗄️  Running database migrations..."
-        php artisan migrate --force || echo "⚠️  Migration failed - check database config"
-    else
-        echo "⚠️  Database not configured - skipping migrations"
-    fi
-else
-    echo "⚠️  Laravel Artisan not available - skipping cache commands"
+# Create .env if not exists
+if [ ! -f .env ]; then
+    echo "📝 Creating .env from .env.example..."
+    cp .env.example .env
+    sed -i "s/APP_ENV=local/APP_ENV=production/" .env
+    sed -i "s/APP_DEBUG=true/APP_DEBUG=false/" .env
+    sed -i "s|APP_URL=http://localhost|APP_URL=https://api.sakani.site|" .env
+    sed -i "s/APP_KEY=/APP_KEY=/" .env
 fi
 
-# Set proper permissions for shared hosting
+# Generate APP_KEY if empty
+if grep -q "^APP_KEY=$" .env; then
+    echo "🔑 Generating application key..."
+    php artisan key:generate --force
+fi
+
+# Create SQLite database if using sqlite
+DB_CONN=$(grep "^DB_CONNECTION=" .env | cut -d'=' -f2 | tr -d ' ')
+if [ "$DB_CONN" = "sqlite" ]; then
+    DB_PATH=$(grep "^DB_DATABASE=" .env | cut -d'=' -f2 | tr -d ' ')
+    if [ -n "$DB_PATH" ] && [ ! -f "$DB_PATH" ]; then
+        echo "🗄️  Creating SQLite database: $DB_PATH"
+        touch "$DB_PATH"
+    fi
+fi
+
+# Run migrations
+echo "🗄️  Running database migrations..."
+php artisan migrate --force
+
+# Cache everything
+echo "⚡ Caching configuration..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+
+# Set permissions for shared hosting
 echo "🔐 Setting file permissions..."
 find storage -type f -exec chmod 644 {} \; 2>/dev/null || true
 find storage -type d -exec chmod 755 {} \; 2>/dev/null || true
 find bootstrap/cache -type f -exec chmod 644 {} \; 2>/dev/null || true
 find bootstrap/cache -type d -exec chmod 755 {} \; 2>/dev/null || true
+chmod -R 775 storage/ 2>/dev/null || true
+chmod -R 775 bootstrap/cache/ 2>/dev/null || true
 
 echo "✅ Backend deployment completed!"
 
 cd ..
 
-# Frontend deployment
+# ── Frontend ─────────────────────────────────────────────
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🎨 Deploying React Frontend..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 cd frontend
 
-# Check if Node.js and npm are available
 if command -v node &> /dev/null && command -v npm &> /dev/null; then
     echo "🟢 Node.js version: $(node --version)"
-    
-    # Install/update npm dependencies
-    npm ci --production || npm install
-    
-    # Build the frontend
+    npm ci || npm install
     npm run build
-    
     echo "✅ Frontend build completed!"
 else
     echo "⚠️  Node.js/npm not available - frontend build skipped"
-    echo "💡 You may need to build frontend locally and upload dist folder"
 fi
 
-# Create .htaccess for SPA routing in dist
-echo "📝 Creating frontend .htaccess for SPA routing..."
+# Create .htaccess for SPA routing
 cat > dist/.htaccess << 'HTACCESS'
-# Enable RewriteEngine
 RewriteEngine On
 
 # Redirect Trailing Slashes
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)/$ /$1 [L,R=301]
 
-# Handle Front Controller
+# Handle Front Controller (SPA routing)
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.html [L]
@@ -115,14 +128,13 @@ RewriteRule ^ index.html [L]
 </IfModule>
 HTACCESS
 
-echo "✅ Frontend deployment completed!"
-
 cd ..
 
-echo "🎉 Sakani deployment completed successfully!"
-echo "📅 Deployed at: $(date)"
 echo ""
-echo "📍 Domain setup:"
-echo "  1. Point your main domain document root to: frontend/dist"
-echo "  2. Point api.{domain} subdomain to: backend/public"
-echo "  3. Configure backend/.env with database credentials"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ Deployment completed at $(date)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "📍 Domain setup on Hostinger:"
+echo "  Main domain    → public_html/sakani/frontend/dist"
+echo "  api subdomain  → public_html/sakani/backend/public"

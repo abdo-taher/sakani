@@ -3,8 +3,6 @@ name: Deploy Sakani to Server
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   deploy:
@@ -20,24 +18,13 @@ jobs:
         php-version: '8.2'
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql
         
-    - name: 📦 Get Composer Cache Directory
-      id: composer-cache
-      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-      working-directory: ./backend
-      
-    - name: 🗄️ Cache Composer dependencies
-      uses: actions/cache@v3
-      with:
-        path: ${{ steps.composer-cache.outputs.dir }}
-        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-        restore-keys: ${{ runner.os }}-composer-
-        
-    - name: 📥 Install Backend Dependencies
+    - name: 📦 Install Backend Dependencies
       run: |
-        chmod +x setup-dependencies.sh
-        ./setup-dependencies.sh
+        cd backend
+        rm -f composer.lock
+        composer update --no-interaction --no-audit
       working-directory: ./backend
-      
+
     - name: 🔧 Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -45,12 +32,10 @@ jobs:
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
         
-    - name: 📥 Install Frontend Dependencies
-      run: npm ci
-      working-directory: ./frontend
-      
     - name: 🏗️ Build Frontend
-      run: npm run build
+      run: |
+        npm ci
+        npm run build
       working-directory: ./frontend
       
     - name: 🚀 Deploy to Server
@@ -69,15 +54,12 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
           else
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
           fi
           chmod +x deploy.sh
-          ./deploy.sh
-          
-    - name: 📧 Notify on Success
-      if: success()
-      run: echo "🎉 Deployment completed successfully!"
-      
+          bash deploy.sh
+
     - name: 📧 Notify on Failure
       if: failure()
       run: echo "❌ Deployment failed!"
