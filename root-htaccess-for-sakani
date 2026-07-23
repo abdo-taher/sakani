@@ -1,0 +1,22 @@
+# Root .htaccess for sakani.site domain routing
+# This should be placed in the main domain root (/domains/sakani.site/public_html/)
+
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Main domain routing
+# Direct all traffic to sakani folder structure
+RewriteCond %{HTTP_HOST} ^sakani\.site$ [NC]
+RewriteCond %{REQUEST_URI} !^/sakani/
+RewriteRule ^(.*)$ /sakani/frontend/dist/$1 [L]
+
+# Subdomain routing for API
+RewriteCond %{HTTP_HOST} ^api\.sakani\.site$ [NC]
+RewriteCond %{REQUEST_URI} !^/sakani/
+RewriteRule ^(.*)$ /sakani/backend/public/$1 [L]
+
+# Handle missing files gracefully
+ErrorDocument 404 /sakani/frontend/dist/index.html

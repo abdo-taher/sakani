@@ -15,7 +15,7 @@ Set up these **two subdomains** in Hostinger:
 
 **Example with your domain:**
 - If your domain is `sakani.com`:
-  - Frontend: `app.sakani.com`
+  - Frontend: `app.sakani.com`  
   - API: `api.sakani.com`
 
 ### Option 2: Single Domain Setup
