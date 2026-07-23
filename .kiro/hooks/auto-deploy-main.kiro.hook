@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Auto Deploy on Main Push",
+  "description": "Automatically triggers deployment when changes are pushed to the main branch",
+  "version": "1",
+  "when": {
+    "type": "postToolUse",
+    "toolTypes": [
+      "shell"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "If the last command was 'git push origin main' or similar, remind me that the GitHub Actions deployment will start automatically and provide the repository URL for monitoring"
+  }
+}
