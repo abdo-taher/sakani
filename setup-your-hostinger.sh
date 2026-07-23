@@ -78,6 +78,7 @@ find bootstrap/cache -type f -exec chmod 644 {} \; 2>/dev/null || true
 find bootstrap/cache -type d -exec chmod 755 {} \; 2>/dev/null || true
 
 # Create .htaccess for backend
+mkdir -p public
 cat > public/.htaccess << 'EOF'
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
