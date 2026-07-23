@@ -6,6 +6,14 @@
 set -e  # Exit on any error
 
 echo "🚀 Starting Sakani deployment on Hostinger..."
+echo "📍 Current directory: $(pwd)"
+echo "📅 Deployment time: $(date)"
+
+# Check if we're in the right directory
+if [ ! -f "deploy.sh" ]; then
+    echo "❌ Error: Not in project root directory"
+    exit 1
+fi
 
 # Check if we're on the main branch
 CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
