@@ -88,10 +88,10 @@ jobs:
           sed -i "s/DB_CONNECTION=.*/DB_CONNECTION=sqlite/" .env
           
           # Comment out MySQL settings to avoid confusion
-          sed -i "s/^DB_HOST=/#DB_HOST=/" .env
-          sed -i "s/^DB_PORT=/#DB_PORT=/" .env
-          sed -i "s/^DB_USERNAME=/#DB_USERNAME=/" .env
-          sed -i "s/^DB_PASSWORD=/#DB_PASSWORD=/" .env
+          sed -i "s/^DB_HOST=.*/#&/" .env
+          sed -i "s/^DB_PORT=.*/#&/" .env
+          sed -i "s/^DB_USERNAME=.*/#&/" .env
+          sed -i "s/^DB_PASSWORD=.*/#&/" .env
           
           # Add other production settings
           sed -i "s/LOG_CHANNEL=.*/LOG_CHANNEL=single/" .env
@@ -132,21 +132,18 @@ jobs:
             echo "📝 Switching to SQLite for Hostinger compatibility..."
             # Comment out MySQL settings and enable SQLite
             sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/" .env
-            sed -i "s/^DB_HOST=/#DB_HOST=/" .env
-            sed -i "s/^DB_PORT=/#DB_PORT=/" .env
-            sed -i "s/^DB_USERNAME=/#DB_USERNAME=/" .env
-            sed -i "s/^DB_PASSWORD=/#DB_PASSWORD=/" .env
+            sed -i "s/^DB_HOST=.*/#&/" .env
+            sed -i "s/^DB_PORT=.*/#&/" .env
+            sed -i "s/^DB_USERNAME=.*/#&/" .env
+            sed -i "s/^DB_PASSWORD=.*/#&/" .env
           fi
           
           # Set absolute path for SQLite database (required for Hostinger)
           DB_PATH="${PWD}/database/database.sqlite"
           
-          # Update .env with absolute database path
-          if grep -q "^DB_DATABASE=" .env; then
-            sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_PATH}|" .env
-          else
-            echo "DB_DATABASE=${DB_PATH}" >> .env
-          fi
+          # Update .env with absolute database path (remove any duplicate DB_DATABASE lines)
+          sed -i "/^DB_DATABASE=/d" .env
+          echo "DB_DATABASE=${DB_PATH}" >> .env
           
           # Create database directory if it doesn't exist
           mkdir -p database
