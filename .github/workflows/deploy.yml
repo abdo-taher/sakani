@@ -1,0 +1,81 @@
+name: Deploy Sakani to Server
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📚 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🐘 Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql
+        
+    - name: 📦 Get Composer Cache Directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      working-directory: ./backend
+      
+    - name: 🗄️ Cache Composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+        
+    - name: 📥 Install Backend Dependencies
+      run: composer install --optimize-autoloader --no-dev
+      working-directory: ./backend
+      
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: 📥 Install Frontend Dependencies
+      run: npm ci
+      working-directory: ./frontend
+      
+    - name: 🏗️ Build Frontend
+      run: npm run build
+      working-directory: ./frontend
+      
+    - name: 🧪 Run Backend Tests
+      run: php artisan test
+      working-directory: ./backend
+      env:
+        APP_ENV: testing
+        DB_CONNECTION: sqlite
+        DB_DATABASE: ":memory:"
+        
+    - name: 🚀 Deploy to Server
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.PORT }}
+        script: |
+          cd ${{ secrets.PROJECT_PATH }}
+          git pull origin main
+          ./deploy.sh
+          
+    - name: 📧 Notify on Success
+      if: success()
+      run: echo "🎉 Deployment completed successfully!"
+      
+    - name: 📧 Notify on Failure
+      if: failure()
+      run: echo "❌ Deployment failed!"
