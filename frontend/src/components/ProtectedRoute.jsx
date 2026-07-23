@@ -1,0 +1,54 @@
+import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { getUser } from "../services/authService";
+
+function ProtectedRoute({ children }) {
+  const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = sessionStorage.getItem("token");
+
+      if (!token) {
+        setAuthorized(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const user = await getUser();
+
+        if (user.role === "admin") {
+          setAuthorized(true);
+        } else {
+          sessionStorage.clear();
+          setAuthorized(false);
+        }
+      } catch (error) {
+        sessionStorage.clear();
+        setAuthorized(false);
+      }
+
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-xl">
+        جاري التحقق...
+      </div>
+    );
+  }
+
+  if (!authorized) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  return children;
+}
+
+export default ProtectedRoute;
