@@ -18,10 +18,10 @@ cd backend
 # Dependencies
 if [ -d "vendor" ]; then
     echo "✅ vendor/ exists — installing updates only"
-    composer install --no-interaction --no-audit --optimize-autoloader --no-scripts
+    composer install --no-interaction --optimize-autoloader --no-scripts
 else
     echo "📥 vendor/ missing — fresh install"
-    composer update --no-interaction --no-audit --optimize-autoloader --no-scripts
+    composer update --no-interaction --optimize-autoloader --no-scripts
 fi
 
 # Bootstrap Laravel after install
