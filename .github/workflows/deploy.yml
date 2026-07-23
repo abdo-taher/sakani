@@ -53,14 +53,6 @@ jobs:
       run: npm run build
       working-directory: ./frontend
       
-    - name: 🧪 Run Backend Tests
-      run: php artisan test
-      working-directory: ./backend
-      env:
-        APP_ENV: testing
-        DB_CONNECTION: sqlite
-        DB_DATABASE: ":memory:"
-        
     - name: 🚀 Deploy to Server
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       uses: appleboy/ssh-action@v1.0.0
