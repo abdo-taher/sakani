@@ -73,7 +73,7 @@ composer.lock
 
 # Gatsby files
 .cache/
-/public
+backend/public/
 
 # Serverless directories
 .serverless
