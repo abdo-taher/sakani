@@ -88,47 +88,37 @@ CLOUDINARY_API_SECRET=<your-api-secret>
 
 ## 🚀 Deployment
 
-This project includes automated deployment via GitHub Actions.
+This project uses **manual deployment** to Hostinger via File Manager for reliability.
 
-### Server Setup Requirements
+### Quick Deployment Steps
 
-1. **SSH Access**: Ensure your server has SSH access configured
-2. **Git**: Install Git on your server
-3. **PHP & Composer**: Install PHP 8.2+ and Composer
-4. **Node.js & NPM**: Install Node.js 18+ and NPM
-5. **Web Server**: Configure Apache/Nginx to serve the application
+1. **Build Frontend**: `cd frontend && npm run build`
+2. **Upload Package**: Upload `sakani-deployment.zip` to Hostinger File Manager
+3. **Create Subdomains**: 
+   - `api.yourdomain.com` → `/public_html/sakani/backend/public`
+   - `app.yourdomain.com` → `/public_html/sakani/frontend/dist`
+4. **Configure Database**: Set up MySQL database in Hostinger panel
+5. **Run Setup**: SSH to server and run migration commands
 
-### GitHub Secrets Configuration
+### Complete Guide
 
-Add these secrets to your GitHub repository:
+📖 **See `COMPLETE_DEPLOYMENT_GUIDE.md`** for detailed step-by-step instructions.
 
-- `HOST`: Your server IP address
-- `USERNAME`: SSH username
-- `SSH_KEY`: Private SSH key for server access
-- `PORT`: SSH port (usually 22)
-- `PROJECT_PATH`: Full path to your project on the server
+### Domain Structure
 
-### Deployment Process
+Your deployed platform will have:
+- **Frontend**: `https://app.yourdomain.com` (React SPA)
+- **API**: `https://api.yourdomain.com` (Laravel API)
+- **Health Check**: `https://api.yourdomain.com/api/health`
 
-1. **Push to Main Branch**: 
-   ```bash
-   git add .
-   git commit -m "Your commit message"
-   git push origin main
-   ```
-
-2. **Automatic Deployment**: 
-   - GitHub Actions will automatically trigger
-   - Tests will run
-   - If tests pass, deployment to server begins
-   - The `deploy.sh` script will execute on your server
-
-### Manual Deployment
-
-If you need to deploy manually:
+### One-Command Local Setup
 
 ```bash
-./deploy.sh
+# Backend
+cd backend && composer install && php artisan migrate --seed && cd ..
+
+# Frontend  
+cd frontend && npm install && npm run build && cd ..
 ```
 
 ## 📁 Project Structure
