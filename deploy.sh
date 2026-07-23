@@ -70,18 +70,59 @@ if command -v node &> /dev/null && command -v npm &> /dev/null; then
     # Build the frontend
     npm run build
     
-    echo "✅ Frontend deployment completed!"
+    echo "✅ Frontend build completed!"
 else
     echo "⚠️  Node.js/npm not available - frontend build skipped"
     echo "💡 You may need to build frontend locally and upload dist folder"
 fi
+
+# Create .htaccess for SPA routing in dist
+echo "📝 Creating frontend .htaccess for SPA routing..."
+cat > dist/.htaccess << 'HTACCESS'
+# Enable RewriteEngine
+RewriteEngine On
+
+# Redirect Trailing Slashes
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+# Handle Front Controller
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.html [L]
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Cache static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+HTACCESS
+
+echo "✅ Frontend deployment completed!"
 
 cd ..
 
 echo "🎉 Sakani deployment completed successfully!"
 echo "📅 Deployed at: $(date)"
 echo ""
-echo "📍 Next steps if this is first deployment:"
-echo "1. Configure backend/.env with database credentials"
-echo "2. Set up your domain to point to backend/public and frontend/dist"
-echo "3. Test the application"
+echo "📍 Domain setup:"
+echo "  1. Point your main domain document root to: frontend/dist"
+echo "  2. Point api.{domain} subdomain to: backend/public"
+echo "  3. Configure backend/.env with database credentials"
