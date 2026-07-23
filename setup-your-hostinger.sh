@@ -47,13 +47,13 @@ echo "🐘 PHP Version: $PHP_VERSION"
 
 # Install composer dependencies
 if [ -f "composer.phar" ]; then
-    php composer.phar install --optimize-autoloader --no-dev
+    php composer.phar update --optimize-autoloader --no-dev
 elif command -v composer &> /dev/null; then
-    composer install --optimize-autoloader --no-dev
+    composer update --optimize-autoloader --no-dev
 else
     echo "📦 Installing Composer..."
     curl -sS https://getcomposer.org/installer | php
-    php composer.phar install --optimize-autoloader --no-dev
+    php composer.phar update --optimize-autoloader --no-dev
 fi
 
 # Setup environment file
