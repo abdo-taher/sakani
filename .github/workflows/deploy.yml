@@ -20,7 +20,6 @@ jobs:
         
     - name: 📦 Install Backend Dependencies
       run: |
-        cd backend
         rm -f composer.lock
         composer update --no-interaction --no-audit
       working-directory: ./backend
