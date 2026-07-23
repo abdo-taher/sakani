@@ -88,6 +88,8 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
           muted
           loop
           playsInline
+          preload="metadata"
+          onError={(e) => { e.target.style.display = 'none'; }}
         />
         <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, rgba(43,27,18,0.35) 0%, rgba(43,27,18,0.75) 100%)` }} />
         <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full blur-3xl opacity-30 animate-blob pointer-events-none" style={{ backgroundColor: COFFEE.gold }} />
