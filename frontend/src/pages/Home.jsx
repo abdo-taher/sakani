@@ -120,10 +120,10 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
       </div>
 
       {/* ---------------------------- إحصائيات ----------------------------- */}
-      <section className="relative py-8 px-4 sm:px-6 overflow-hidden" dir="rtl">
+      <section className="relative py-10 sm:py-16 px-4 sm:px-6 overflow-hidden min-h-[180px]" dir="rtl">
         {/* Video Background */}
         <video
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover scale-110"
           src="/stats-bg.mp4"
           autoPlay
           muted
@@ -133,44 +133,85 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
           onError={(e) => { e.target.style.display = "none"; }}
         />
         
-        {/* Overlay */}
-        <div className="absolute inset-0" style={{ backgroundColor: "rgba(43,27,18,0.6)" }} />
+        {/* Multi-layer overlay for better contrast */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70" />
+        <div className="absolute inset-0" style={{ backgroundColor: "rgba(43,27,18,0.75)" }} />
+        
+        {/* Animated background elements */}
+        <div className="absolute top-10 right-10 w-32 h-32 rounded-full blur-2xl opacity-20 animate-pulse pointer-events-none" style={{ backgroundColor: COFFEE.gold }} />
+        <div className="absolute bottom-10 left-10 w-40 h-40 rounded-full blur-3xl opacity-15 animate-pulse pointer-events-none delay-1000" style={{ backgroundColor: COFFEE.cream }} />
         
         {/* Content */}
-        <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
-          {[
-            { icon: Building2, value: 3, suffix: "+", label: "عقار تم بيعه" },
-            { icon: Users, value: 3, suffix: "+", label: "عميل سعيد" },
-            { icon: MapPin, value: 1, suffix: "", label: "مدينة نخدمها" },
-            { icon: Award, value: 1, suffix: "+", label: "سنوات خبرة" },
-            { icon: Tag, value: 5, suffix: "+", label: "عرض متاح" },
-          ].map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <Reveal key={i} delay={i * 110} className="flex flex-col items-center">
-                {/* Play button overlay for video effect */}
-                <div className="relative">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center mb-2 animate-float" style={{ backgroundColor: "rgba(176,141,87,0.15)" }}>
-                    <Icon className="w-4 h-4" style={{ color: COFFEE.gold }} />
-                  </div>
-                  {i === 2 && ( // Add play button on the middle item as example
-                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm hover:bg-black/70 transition-colors cursor-pointer">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                        <path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path>
-                        <circle cx="12" cy="12" r="10"></circle>
-                      </svg>
+        <div className="relative z-10 max-w-7xl mx-auto">
+          {/* Section Header */}
+          <Reveal>
+            <div className="text-center mb-8 sm:mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 backdrop-blur-sm border border-white/20" style={{ backgroundColor: "rgba(176,141,87,0.15)" }}>
+                <Award className="w-4 h-4" style={{ color: COFFEE.gold }} />
+                <span className="text-xs font-extrabold tracking-wider text-white">إحصائياتنا</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-2">
+                أرقام تتحدث عن نجاحنا
+              </h2>
+              <p className="text-sm text-white/80 max-w-lg mx-auto">
+                نفتخر بثقة عملائنا وإنجازاتنا المتميزة في السوق العقاري
+              </p>
+            </div>
+          </Reveal>
+
+          {/* Statistics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8">
+            {[
+              { icon: Building2, value: 3, suffix: "+", label: "عقار تم بيعه", color: "#10B981" },
+              { icon: Users, value: 3, suffix: "+", label: "عميل سعيد", color: "#3B82F6" },
+              { icon: MapPin, value: 1, suffix: "", label: "مدينة نخدمها", color: "#F59E0B" },
+              { icon: Award, value: 1, suffix: "+", label: "سنوات خبرة", color: "#EF4444" },
+              { icon: Tag, value: 5, suffix: "+", label: "عرض متاح", color: "#8B5CF6" },
+            ].map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <Reveal key={i} delay={i * 120} className="flex flex-col items-center text-center">
+                  <div className="relative group">
+                    {/* Icon container with gradient background */}
+                    <div 
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-3 sm:mb-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 shadow-lg backdrop-blur-sm border border-white/20"
+                      style={{ 
+                        background: `linear-gradient(135deg, ${stat.color}20, ${stat.color}40)`,
+                      }}
+                    >
+                      <Icon className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: stat.color }} />
                     </div>
-                  )}
-                </div>
-                <p className="text-lg sm:text-2xl font-extrabold opacity-90" style={{ color: COFFEE.creamSoft }}>
-                  <CountUp value={s.value} />{s.suffix}
-                </p>
-                <p className="text-[11px] sm:text-xs mt-1 opacity-80" style={{ color: COFFEE.cream }}>{s.label}</p>
-              </Reveal>
-            );
-          })}
+                    
+                    {/* Play button overlay on selected items */}
+                    {(i === 1 || i === 3) && (
+                      <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center backdrop-blur-sm hover:bg-black/80 transition-colors cursor-pointer border border-white/30 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                          <path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path>
+                          <circle cx="12" cy="12" r="10"></circle>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Statistics Number */}
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-1 sm:mb-2 drop-shadow-lg">
+                    <CountUp value={stat.value} />{stat.suffix}
+                  </p>
+                  
+                  {/* Label */}
+                  <p className="text-xs sm:text-sm font-semibold text-white/90 leading-relaxed px-2">
+                    {stat.label}
+                  </p>
+                  
+                  {/* Decorative line */}
+                  <div className="w-8 h-0.5 rounded-full mt-2 opacity-60" style={{ backgroundColor: stat.color }} />
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
       </section>
+
 
       {/* --------------------------- خدماتنا -------------------------- */}
       <section className="py-10 sm:py-14 px-4 sm:px-6" style={{ backgroundColor: COFFEE.creamSoft }} dir="rtl">
