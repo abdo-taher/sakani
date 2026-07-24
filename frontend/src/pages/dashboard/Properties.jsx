@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import usePageTitle from "../../hooks/usePageTitle";
 
 import PropertyHeader from "../../components/properties/PropertyHeader";
@@ -43,7 +43,7 @@ const loadProperties = async () => {
     setProperties(data);
 
     const stuck = data.filter(
-      (p) => p.is_uploading && (p.total_images > 0 || p.images?.length > 0)
+      (p) => p.is_uploading
     );
     if (stuck.length > 0) {
       await Promise.all(stuck.map((p) => markUploadComplete(p.id)));
@@ -59,6 +59,19 @@ const loadProperties = async () => {
 
   }
 };
+
+const checkStuckUploads = async () => {
+  try {
+    const data = await getProperties();
+    const stuck = data.filter((p) => p.is_uploading);
+    if (stuck.length > 0) {
+      await Promise.all(stuck.map((p) => markUploadComplete(p.id)));
+      const refreshed = await getProperties();
+      setProperties(refreshed);
+    }
+  } catch { /* empty */ }
+};
+
 const loadCategories = async () => {
   try {
     const data = await getCategories();
@@ -81,6 +94,8 @@ useEffect(() => {
   loadProperties();
   loadCategories();
   loadLocations();
+  const interval = setInterval(checkStuckUploads, 15000);
+  return () => clearInterval(interval);
 }, []);
   
 

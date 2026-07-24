@@ -343,6 +343,7 @@ function PropertyForm({
           onClose();
         } else {
           successToast("تم إضافة العقار — جاري رفع الوسائط في الخلفية...");
+          await loadProperties();
           onClose();
 
           (async () => {
