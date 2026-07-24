@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\Property;
 use App\Models\Reservation;
+use App\Models\VisitorLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -59,12 +60,30 @@ class DashboardController extends Controller
                     ];
                 });
 
+            $today     = now()->startOfDay();
+            $monthStart = now()->startOfMonth();
+
+            $visitorStats = [
+                'today'     => VisitorLog::where('created_at', '>=', $today)->distinct('ip')->count(),
+                'month'     => VisitorLog::where('created_at', '>=', $monthStart)->distinct('ip')->count(),
+                'all_time'  => VisitorLog::distinct('ip')->count(),
+                'total_visits' => VisitorLog::count(),
+            ];
+
+            $dailyVisitors = VisitorLog::selectRaw("DATE(created_at) as date, COUNT(DISTINCT ip) as unique_visits, COUNT(*) as total_visits")
+                ->where('created_at', '>=', now()->subDays(6)->startOfDay())
+                ->groupBy('date')
+                ->pluck('unique_visits', 'date')
+                ->mapWithKeys(fn ($val, $key) => [$key => (int) $val]);
+
             return response()->json([
                 'counts'                => $counts,
                 'recent_properties'     => $recentProperties,
                 'recent_reservations'   => $recentReservations,
                 'monthly_stats'         => $monthlyStats,
                 'category_distribution' => $categoryDistribution,
+                'visitor_stats'         => $visitorStats,
+                'daily_visitors'        => $dailyVisitors,
             ]);
         } catch (Exception $e) {
             Log::error('Dashboard error: ' . $e->getMessage());
@@ -74,6 +93,8 @@ class DashboardController extends Controller
                 'recent_reservations'   => [],
                 'monthly_stats'         => [],
                 'category_distribution' => [],
+                'visitor_stats'         => ['today' => 0, 'month' => 0, 'all_time' => 0, 'total_visits' => 0],
+                'daily_visitors'        => [],
                 'error'                 => $e->getMessage(),
             ], 200);
         }

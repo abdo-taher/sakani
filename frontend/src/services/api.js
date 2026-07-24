@@ -1,6 +1,7 @@
 import axios from "axios";
 import dynamicConfig from "../config/dynamic";
 import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
+import { getCached, setCache, isFresh } from "./cache";
 
 // Get API base URL dynamically
 const getApiBaseUrl = () => {
@@ -52,5 +53,18 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export async function cachedGet(url, { ttl = 30000, params } = {}) {
+  const key = url + (params ? JSON.stringify(params) : "");
+  const cached = getCached(key);
+
+  if (cached && isFresh(key, ttl)) {
+    return cached;
+  }
+
+  const response = await api.get(url, { params });
+  setCache(key, response.data);
+  return response.data;
+}
 
 export default api;

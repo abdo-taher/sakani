@@ -27,7 +27,7 @@ function formatMonth(monthStr) {
   return MONTH_NAMES[month] || monthStr;
 }
 
-function Charts({ monthlyStats = [], categoryDistribution = [], loading = false }) {
+function Charts({ monthlyStats = [], categoryDistribution = [], dailyVisitors = {}, last7Days = [], loading = false }) {
   const chartData = monthlyStats.map((item) => ({
     ...item,
     monthLabel: formatMonth(item.month),
@@ -38,6 +38,13 @@ function Charts({ monthlyStats = [], categoryDistribution = [], loading = false 
   );
 
   const hasCategoryData = categoryDistribution.length > 0;
+
+  const visitorChartData = last7Days.map((date) => ({
+    date: date.slice(5),
+    unique: dailyVisitors[date] || 0,
+  }));
+
+  const hasVisitorData = visitorChartData.some((item) => item.unique > 0);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border p-6">
@@ -122,6 +129,36 @@ function Charts({ monthlyStats = [], categoryDistribution = [], loading = false 
             ) : (
               <div className="h-72 flex items-center justify-center text-stone-400 text-sm">
                 لا توجد عقارات مضافة بعد
+              </div>
+            )}
+          </div>
+
+          {/* زوار آخر 7 أيام */}
+          <div className="xl:col-span-2">
+            <h3 className="text-sm font-semibold text-stone-500 mb-4">
+              الزوار الفريدون (آخر 7 أيام)
+            </h3>
+
+            {hasVisitorData ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={visitorChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ECE7DD" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="unique"
+                    name="زوار فريدون"
+                    stroke="#6B4F3B"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-72 flex items-center justify-center text-stone-400 text-sm">
+                لا توجد بيانات زوار بعد
               </div>
             )}
           </div>

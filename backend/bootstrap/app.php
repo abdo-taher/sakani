@@ -8,6 +8,7 @@
     use App\Http\Middleware\SanitizeInput;
     use App\Http\Middleware\ValidateFileUploads;
     use App\Http\Middleware\CorsMiddleware;
+    use App\Http\Middleware\TrackVisitor;
 
     return Application::configure(basePath: dirname(__DIR__))
         ->withRouting(
@@ -37,6 +38,7 @@
 
     $middleware->api(append: [
         SanitizeInput::class,
+        TrackVisitor::class,
     ]);
 
 })
