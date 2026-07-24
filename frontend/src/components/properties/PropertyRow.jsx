@@ -16,16 +16,19 @@ function PropertyRow({
 
   return (
     <tr
-      className={`border-t border-stone-100 hover:bg-stone-50 transition`}
+      className={`border-t transition`}
       style={uploading ? {
-        backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(245,158,11,0.06) 10px, rgba(245,158,11,0.06) 20px)",
         backgroundColor: "#FFFBEB",
-      } : {}}
+        borderLeft: "4px solid #F59E0B",
+      } : {
+        borderBottom: "1px solid #f5f5f4",
+        backgroundColor: "transparent",
+      }}
     >
       <td className="px-4 py-4">
         {uploading ? (
-          <div className="w-20 h-14 rounded-lg bg-amber-100 flex items-center justify-center border border-amber-300">
-            <Loader2 size={20} className="animate-spin text-amber-500" />
+          <div className="w-20 h-14 rounded-lg bg-amber-50 flex items-center justify-center border-2 border-dashed border-amber-400">
+            <Loader2 size={22} className="animate-spin text-amber-500" />
           </div>
         ) : property.images?.length ? (
           <img
@@ -40,35 +43,45 @@ function PropertyRow({
         )}
       </td>
 
-      <td className="px-4 py-4 font-bold text-stone-800 truncate" title={property.title}>
-        <div className="flex items-center gap-2">
-          {property.title}
+      <td className="px-4 py-4 font-bold truncate" title={property.title}>
+        <div className="flex flex-col gap-1.5">
+          <span className={uploading ? "text-amber-700" : "text-stone-800"}>
+            {property.title}
+          </span>
           {uploading && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full font-bold">
-              <Loader2 size={12} className="animate-spin" />
-              جاري الرفع
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full font-bold w-fit">
+              <Loader2 size={11} className="animate-spin" />
+              جاري رفع الوسائط
             </span>
           )}
         </div>
       </td>
 
       <td className="px-4 py-4 whitespace-nowrap">
-        {property.category?.name}
+        <span className={uploading ? "text-amber-600" : ""}>
+          {property.category?.name}
+        </span>
       </td>
 
       <td className="px-4 py-4 truncate" title={property.location?.name}>
-        {property.location?.name}
+        <span className={uploading ? "text-amber-600" : ""}>
+          {property.location?.name}
+        </span>
       </td>
 
       <td className="px-4 py-4 whitespace-nowrap font-semibold">
-        {property.price?.toLocaleString()} ج.م
+        <span className={uploading ? "text-amber-600" : ""}>
+          {property.price?.toLocaleString()} ج.م
+        </span>
       </td>
 
       <td className="px-4 py-4">
-        <PropertyStatus
-          value={property.status}
-          onChange={(status) => onStatusChange(property.id, status)}
-        />
+        {!uploading && (
+          <PropertyStatus
+            value={property.status}
+            onChange={(status) => onStatusChange(property.id, status)}
+          />
+        )}
       </td>
 
       <td className="px-4 py-4">

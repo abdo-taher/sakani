@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, Bed, Bath, Maximize, MapPin, PlayCircle, Loader2 } from "lucide-react";
+import { Heart, Bed, Bath, Maximize, MapPin, PlayCircle, Loader2, CloudUpload } from "lucide-react";
 import { COFFEE } from "../constants/constants";
 import VideoThumb from "./VideoThumb";
 
@@ -38,16 +38,30 @@ function PropertyCard({ p, isFav, onToggleFav }) {
   return (
     <div
       onClick={() => !isUploading && navigate(`/property/${p.id}`)}
-      className={`group relative bg-white rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${isUploading ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+      className={`group relative bg-white rounded-2xl overflow-hidden border-2 transition-all duration-300 ${
+        isUploading
+          ? 'cursor-not-allowed border-dashed border-amber-400'
+          : 'cursor-pointer hover:-translate-y-1 hover:shadow-xl border-transparent'
+      }`}
       style={{
-        borderColor: isUploading ? "#F59E0B" : "#eee",
-        backgroundImage: isUploading
-          ? "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(245,158,11,0.06) 10px, rgba(245,158,11,0.06) 20px)"
-          : "none",
+        boxShadow: isUploading
+          ? "0 0 0 1px rgba(245,158,11,0.15), 0 2px 8px rgba(245,158,11,0.10)"
+          : undefined,
       }}
       dir="rtl"
     >
-      <div className="relative h-48 w-full overflow-hidden bg-stone-100">
+      {isUploading && (
+        <div
+          className="absolute top-0 right-0 left-0 z-20 flex items-center justify-center gap-2 py-1.5 text-xs font-bold text-amber-800"
+          style={{ backgroundColor: "rgba(254,243,199,0.95)" }}
+        >
+          <CloudUpload size={14} className="animate-bounce" />
+          جاري رفع الوسائط
+          <Loader2 size={13} className="animate-spin" />
+        </div>
+      )}
+
+      <div className={`relative w-full overflow-hidden bg-stone-100 ${isUploading ? 'h-44' : 'h-48'}`}>
         {mainVideo ? (
           <VideoThumb
             src={mainVideo}
@@ -63,10 +77,17 @@ function PropertyCard({ p, isFav, onToggleFav }) {
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-stone-300 text-sm">لا توجد صورة</div>
+          <div className="w-full h-full flex items-center justify-center text-stone-300 text-sm">
+            {isUploading ? (
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 size={28} className="animate-spin text-amber-400" />
+                <span className="text-amber-500 text-xs font-semibold">جاري رفع الصور...</span>
+              </div>
+            ) : "لا توجد صورة"}
+          </div>
         )}
 
-        {hasVideo && (
+        {hasVideo && !isUploading && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
               <PlayCircle className="w-7 h-7 text-white" />
@@ -74,19 +95,17 @@ function PropertyCard({ p, isFav, onToggleFav }) {
           </div>
         )}
 
-        <div
-          className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-xs font-bold text-white"
-          style={{ backgroundColor: status.color }}
-        >
-          {status.text}
-        </div>
+        {!isUploading && (
+          <div
+            className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-xs font-bold text-white"
+            style={{ backgroundColor: status.color }}
+          >
+            {status.text}
+          </div>
+        )}
 
         {isUploading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-amber-500/20 backdrop-blur-[1px]">
-            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500 text-white text-sm font-bold shadow-lg">
-              <Loader2 size={16} className="animate-spin" />
-              جاري رفع الوسائط...
-            </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-amber-500/10" style={{ marginTop: '16px' }}>
           </div>
         )}
 
@@ -102,7 +121,7 @@ function PropertyCard({ p, isFav, onToggleFav }) {
       </div>
 
       <div className="p-4">
-        <h3 className="font-extrabold text-base mb-1 truncate" style={{ color: COFFEE.dark }}>{p.title}</h3>
+        <h3 className="font-extrabold text-base mb-1 truncate" style={{ color: isUploading ? "#92400E" : COFFEE.dark }}>{p.title}</h3>
 
         <div className="flex items-center gap-1 text-xs text-stone-400 mb-3">
           <MapPin className="w-3.5 h-3.5" />
@@ -125,7 +144,7 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>{fmtPrice(p.price)} ج.م</span>
+          <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>{fmtPrice(p.price)} ج.م</span>
           {p.rent_duration && <span className="text-xs text-stone-400">/{p.rent_duration}</span>}
         </div>
       </div>
