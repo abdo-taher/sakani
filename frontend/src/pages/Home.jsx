@@ -120,34 +120,35 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
       </div>
 
       {/* ---------------------------- إحصائيات ----------------------------- */}
-      <section className="relative py-10 sm:py-16 px-4 sm:px-6 overflow-hidden min-h-[180px]" dir="rtl">
-        {/* Video Background */}
-        <video
-          className="absolute inset-0 w-full h-full object-cover scale-110"
-          src="/stats-bg.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          onError={(e) => { e.target.style.display = "none"; }}
-        />
-        
-        {/* Glass effect overlay instead of solid overlay */}
-        <div className="absolute inset-0 backdrop-blur-sm bg-white/10" />
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/10" />
+      <section className="relative py-10 sm:py-16 px-4 sm:px-6 overflow-hidden min-h-[180px] bg-gray-900" dir="rtl">
+        {/* Dark mode background with subtle pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black" />
+        <div className="absolute inset-0 opacity-10" style={{ 
+          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+          backgroundSize: '40px 40px'
+        }} />
         
         {/* Animated background elements */}
         <div className="absolute top-10 right-10 w-32 h-32 rounded-full blur-2xl opacity-20 animate-pulse pointer-events-none" style={{ backgroundColor: COFFEE.gold }} />
         <div className="absolute bottom-10 left-10 w-40 h-40 rounded-full blur-3xl opacity-15 animate-pulse pointer-events-none delay-1000" style={{ backgroundColor: COFFEE.cream }} />
         
-        {/* Content with glass container */}
-        <div className="relative z-10 max-w-7xl mx-auto backdrop-blur-md bg-white/5 rounded-3xl border border-white/20 shadow-2xl p-8 sm:p-12">
+        {/* Content with dark container */}
+        <div className="relative z-10 max-w-7xl mx-auto bg-gray-800/50 rounded-3xl border border-gray-700 shadow-2xl p-8 sm:p-12 backdrop-blur-sm">
           {/* Section Header */}
           <Reveal>
             <div className="text-center mb-8 sm:mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 backdrop-blur-md bg-white/20 border border-white/30 shadow-xl">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 bg-gray-700/70 border border-gray-600 shadow-xl backdrop-blur-sm">
                 <Award className="w-4 h-4" style={{ color: COFFEE.gold }} />
+                <span className="text-xs font-extrabold tracking-wider text-white drop-shadow-lg">إحصائياتنا</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-2 drop-shadow-xl">
+                أرقام تتحدث عن نجاحنا
+              </h2>
+              <p className="text-sm text-gray-300 max-w-lg mx-auto drop-shadow-lg">
+                نفتخر بثقة عملائنا وإنجازاتنا المتميزة في السوق العقاري
+              </p>
+            </div>
+          </Reveal>
                 <span className="text-xs font-extrabold tracking-wider text-white drop-shadow-lg">إحصائياتنا</span>
               </div>
               <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-2 drop-shadow-xl">
@@ -172,19 +173,19 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
               return (
                 <Reveal key={i} delay={i * 120} className="flex flex-col items-center text-center">
                   <div className="relative group">
-                    {/* Icon container with glass effect */}
+                    {/* Icon container with dark mode styling */}
                     <div 
-                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-3 sm:mb-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 shadow-lg backdrop-blur-md bg-white/20 border border-white/30"
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-3 sm:mb-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 shadow-lg bg-gray-700/70 border border-gray-600 backdrop-blur-sm"
                       style={{ 
-                        background: `linear-gradient(135deg, rgba(255,255,255,0.1), ${stat.color}30)`,
+                        background: `linear-gradient(135deg, ${stat.color}20, ${stat.color}40)`,
                       }}
                     >
                       <Icon className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: stat.color }} />
                     </div>
                     
-                    {/* Play button overlay with glass effect */}
+                    {/* Play button overlay with dark styling */}
                     {(i === 1 || i === 3) && (
-                      <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full backdrop-blur-md bg-black/30 flex items-center justify-center hover:bg-black/50 transition-colors cursor-pointer border border-white/40 shadow-lg">
+                      <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-gray-800/80 flex items-center justify-center hover:bg-gray-700 transition-colors cursor-pointer border border-gray-600 shadow-lg backdrop-blur-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                           <path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path>
                           <circle cx="12" cy="12" r="10"></circle>
@@ -212,6 +213,52 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
         </div>
       </section>
 
+      {/* ---------------------------- فيديو تعريفي ----------------------------- */}
+      <section className="py-10 sm:py-16 px-4 sm:px-6 bg-gray-100" dir="rtl">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl font-extrabold mb-4" style={{ color: COFFEE.dark }}>
+                شاهد قصة نجاحنا
+              </h2>
+              <p className="text-sm sm:text-base max-w-2xl mx-auto text-gray-600 leading-relaxed">
+                تعرف على سكني من خلال فيديو تعريفي يوضح رحلتنا وإنجازاتنا في السوق العقاري
+              </p>
+            </div>
+          </Reveal>
+
+          <Reveal delay={200}>
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black group cursor-pointer">
+              {/* Video */}
+              <video
+                className="w-full h-64 sm:h-80 md:h-96 object-cover transition-transform duration-500 group-hover:scale-105"
+                src="/intro-video.mp4"
+                poster="/video-thumbnail.jpg"
+                controls
+                preload="metadata"
+                onError={(e) => { 
+                  e.target.style.display = "none";
+                  e.target.nextSibling.style.display = "flex";
+                }}
+              />
+              
+              {/* Fallback when video fails to load */}
+              <div 
+                className="hidden w-full h-64 sm:h-80 md:h-96 bg-gradient-to-br from-gray-800 to-gray-900 flex-col items-center justify-center text-white"
+              >
+                <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mb-4 backdrop-blur-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                </div>
+                <p className="text-lg font-bold">فيديو تعريفي بسكني</p>
+                <p className="text-sm text-white/70 mt-2">قريباً...</p>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
       {/* --------------------------- خدماتنا -------------------------- */}
       <section className="py-10 sm:py-14 px-4 sm:px-6" style={{ backgroundColor: COFFEE.creamSoft }} dir="rtl">
