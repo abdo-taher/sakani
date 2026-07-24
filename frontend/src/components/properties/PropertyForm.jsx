@@ -1161,19 +1161,25 @@ function PropertyForm({
                       {propertyData.videos.map((file, idx) => {
                         const thumb = propertyData.videoThumbnails[idx];
                         return (
-                          <div key={idx} className="relative group">
-                            {thumb?.thumbUrl ? (
-                              <img
-                                src={thumb.thumbUrl}
-                                alt=""
-                                className="w-32 h-20 rounded-xl object-cover border-2"
-                                style={{ borderColor: COFFEE.gold }}
-                              />
-                            ) : (
-                              <div className="w-32 h-20 rounded-xl border-2 flex items-center justify-center bg-stone-100" style={{ borderColor: COFFEE.gold }}>
-                                <Video className="w-6 h-6 text-stone-400" />
+                          <div key={idx} className="relative group w-24 h-24">
+                            <div className="w-full h-full rounded-xl overflow-hidden border-2" style={{ borderColor: COFFEE.gold }}>
+                              {thumb?.thumbUrl ? (
+                                <img
+                                  src={thumb.thumbUrl}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-stone-100 flex items-center justify-center animate-pulse">
+                                  <Video className="w-6 h-6 text-stone-400" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-xl">
+                              <div className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
+                                <Video className="w-4 h-4 text-white" />
                               </div>
-                            )}
+                            </div>
                             <button
                               type="button"
                               onClick={() => removeNewVideo(idx)}
@@ -1181,7 +1187,7 @@ function PropertyForm({
                             >
                               ✕
                             </button>
-                            <div className="text-[10px] mt-1 text-stone-400 truncate max-w-[128px]">{file.name}</div>
+                            <div className="text-[10px] mt-1 text-stone-400 truncate max-w-[96px]">{file.name}</div>
                           </div>
                         );
                       })}

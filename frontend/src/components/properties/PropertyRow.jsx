@@ -34,16 +34,16 @@ function PropertyRow({
         ) : (
           <img
             src={property.images?.[0]?.image_url || SAMPLE_IMG(property.id)}
-            alt={property.title}
+            alt={property.title || "عقار"}
             className="w-20 h-14 rounded-lg object-cover bg-stone-100"
           />
         )}
       </td>
 
-      <td className="px-4 py-4 font-bold truncate" title={property.title}>
+      <td className="px-4 py-4 font-bold truncate" title={property.title || "بدون عنوان"}>
         <div className="flex flex-col gap-1.5">
           <span className={uploading ? "text-amber-700" : "text-stone-800"}>
-            {property.title}
+            {property.title || "بدون عنوان"}
           </span>
           {uploading && (
             <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full font-bold w-fit">
