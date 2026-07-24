@@ -1,6 +1,5 @@
   import React, { useState } from "react";
   import {
-    X,
     MapPin,
     Building2,
     Ruler,
@@ -10,15 +9,17 @@
     User,
     Phone,
     Send,
+    ArrowRight,
   } from "lucide-react";
   import { COFFEE } from "../constants/constants";
 import { successToast, errorToast } from "../utils/toast";
+import { useNavigate } from "react-router-dom";
 
 import { createNeedRequest } from "../services/needRequestService";
   import { formatPhone, getPhoneError } from "../utils/phoneValidator";
   import { numbersOnly } from "../utils/numbersOnly";
+  import usePageTitle from "../hooks/usePageTitle";
 
-  /* الفيلد مكوّن ثابت برّه BuyRequestForm عشان مايتعملوش remount مع كل حرف */
   function Field({ icon: Icon, label, children }) {
     return (
       <div>
@@ -34,7 +35,9 @@ import { createNeedRequest } from "../services/needRequestService";
   const inputBase =
     "w-full border-2 rounded-xl p-3.5 mt-2 text-base transition-all duration-300 outline-none bg-white";
 
-  function BuyRequestForm({ onClose }) {
+  function BuyRequestForm() {
+    usePageTitle("طلب شراء — سكني");
+    const navigate = useNavigate();
     const [form, setForm] = useState({
       location: "",
       propertyType: "",
@@ -59,7 +62,6 @@ import { createNeedRequest } from "../services/needRequestService";
       }
     };
      
-    
 
 const submit = async () => {
   const phoneErr = getPhoneError(form.phone);
@@ -87,7 +89,7 @@ const submit = async () => {
     });
 
    successToast("تم إرسال الطلب — سيتم التواصل معك في أقرب وقت.");
-   onClose();
+   setSent(true);
   } catch (error) {
     console.error(error);
     errorToast("تعذر إرسال الطلب، حاول مرة أخرى.");
@@ -96,26 +98,28 @@ const submit = async () => {
 
     return (
       <div
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fadeIn"
-        style={{ backgroundColor: "rgba(20,12,8,0.55)", backdropFilter: "blur(4px)" }}
+        className="min-h-[85vh] flex items-center justify-center py-20 px-4 sm:px-6"
+        style={{ backgroundColor: COFFEE.creamSoft }}
         dir="rtl"
       >
+        <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20" style={{ backgroundColor: COFFEE.gold }} />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full blur-3xl opacity-20" style={{ backgroundColor: COFFEE.gold }} />
+
         <div
-          className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl shadow-2xl animate-popIn"
+          className="relative w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden"
           style={{ backgroundColor: COFFEE.creamSoft }}
         >
           {/* الهيدر */}
           <div
-            className="sticky top-0 z-10 flex items-center justify-between px-8 sm:px-10 py-6 rounded-t-3xl"
+            className="flex items-center justify-between px-8 sm:px-10 py-6 rounded-t-3xl"
             style={{ backgroundColor: COFFEE.darkest }}
           >
             <button
-              onClick={onClose}
+              onClick={() => navigate("/need")}
               className="w-10 h-10 rounded-full flex items-center justify-center border-2 hover:bg-white/10 hover:rotate-90 transition-all duration-300"
               style={{ borderColor: COFFEE.gold }}
-              aria-label="إغلاق"
             >
-              <X className="w-5 h-5" style={{ color: COFFEE.gold }} />
+              <ArrowRight className="w-5 h-5" style={{ color: COFFEE.gold }} />
             </button>
             <div className="text-center flex-1">
               <h2 className="text-2xl sm:text-3xl font-extrabold" style={{ color: COFFEE.cream }}>
@@ -269,20 +273,6 @@ const submit = async () => {
             </button>
           </div>
         </div>
-
-        <style>{`
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
-
-          @keyframes popIn {
-            from { opacity: 0; transform: scale(0.92) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-          }
-          .animate-popIn { animation: popIn 0.35s cubic-bezier(.34,1.56,.64,1); }
-        `}</style>
       </div>
     );
   }

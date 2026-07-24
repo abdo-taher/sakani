@@ -6,6 +6,8 @@ import Need from "../pages/Need";
 import Sell from "../pages/Sell";
 import Buy from "../pages/Buy";
 import Rent from "../pages/Rent";
+import BuyRequestForm from "../components/BuyRequestForm";
+import RentRequestForm from "../components/RentRequestForm";
 import Contact from "../pages/Contact";
 import AdminLogin from "../pages/AdminLogin";
 import AdminDashboard from "../pages/dashboard/AdminDashboard";
@@ -19,6 +21,7 @@ import CreateRoomPage from "../pages/dashboard/CreateRoomPage";
 import EditRoomPage from "../pages/dashboard/EditRoomPage";
 import PropertyCreate from "../pages/dashboard/PropertyCreate";
 import PropertyEdit from "../pages/dashboard/PropertyEdit";
+import FeatureManager from "../components/properties/FeatureManager";
 import Reservations from "../pages/dashboard/Reservations";
 import Statistics from "../pages/dashboard/Statistics";
 import Settings from "../pages/dashboard/Settings";
@@ -63,6 +66,8 @@ function AppRoutes({
       />
 
       <Route path="/need" element={<Need />} />
+      <Route path="/buy-request" element={<BuyRequestForm />} />
+      <Route path="/rent-request" element={<RentRequestForm />} />
 
       <Route
         path="/sell"
@@ -185,6 +190,10 @@ function AppRoutes({
 <Route
     path="reservations"
     element={<Reservations />}
+/>
+<Route
+    path="features"
+    element={<FeatureManager />}
 />
 <Route
     path="statistics"

@@ -1,8 +1,4 @@
-import RequestModal from "../components/RequestModal";
-import RentRequestForm from "../components/RentRequestForm";
-import BuyRequestForm from "../components/BuyRequestForm";
-
-import React, { useState } from "react";
+import React from "react";
 import usePageTitle from "../hooks/usePageTitle";
 import {
   Tag,
@@ -16,36 +12,31 @@ import Reveal from "../components/Reveal";
 import { COFFEE } from "../constants/constants";
 import { useNavigate } from "react-router-dom";
 
-/* -------------------------------------------------------------------- */
-/*  صفحة: محتاج؟                                                         */
-/* -------------------------------------------------------------------- */
 function Need() {
   usePageTitle("محتاج اي؟ — سكني");
-  const [openModal, setOpenModal] = useState(false);
-const [requestType, setRequestType] = useState("");
-const navigate = useNavigate();
-const options = [
-  
-  {
-    key: "buy",
-    label: "عايز تشتري",
-    icon: ShoppingBag,
-    text: "قدّم طلب شراء بالمواصفات اللي محتاجها",
-  },
-  {
-    key: "rent",
-    label: "عايز تأجر",
-    icon: KeyRound,
-    text: "قدّم طلب إيجار بالمواصفات اللي تناسبك",
-  },
-];
+  const navigate = useNavigate();
+  const options = [
+    {
+      key: "buy",
+      label: "عايز تشتري",
+      icon: ShoppingBag,
+      text: "قدّم طلب شراء بالمواصفات اللي محتاجها",
+      link: "/buy-request",
+    },
+    {
+      key: "rent",
+      label: "عايز تأجر",
+      icon: KeyRound,
+      text: "قدّم طلب إيجار بالمواصفات اللي تناسبك",
+      link: "/rent-request",
+    },
+  ];
   return (
     <div
       className="relative min-h-[85vh] flex items-center justify-center py-20 px-4 sm:px-6 overflow-hidden"
       style={{ backgroundColor: COFFEE.creamSoft }}
       dir="rtl"
     >
-      {/* لمسة خلفية بسيطة عشان الصفحة متبقاش فاضية */}
       <div
         className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20"
         style={{ backgroundColor: COFFEE.gold }}
@@ -69,7 +60,7 @@ const options = [
           اختر الخدمة اللي تناسبك وهنوجهك للصفحة الصح على طول
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-2xl mx-auto">
           {options.map((o, i) => {
             const Icon = o.icon;
             return (
@@ -77,14 +68,7 @@ const options = [
                 key={o.key}
                 delay={i * 120}
                 as="button"
-               onClick={() => {
-                if (o.key === "sell") {
-                  navigate("/sell");
-                } else {
-                    setRequestType(o.key);
-                    setOpenModal(true);
-                  }
-                }}
+                onClick={() => navigate(o.link)}
                 className="group flex flex-col items-center rounded-2xl bg-white p-8 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all border w-full text-center h-full"
                 style={{ borderColor: "#EADFD0" }}
               >
@@ -104,18 +88,6 @@ const options = [
           })}
         </div>
       </div>
-      <RequestModal
-  open={openModal}
-  onClose={() => setOpenModal(false)}
->
- {requestType === "rent" && (
-  <RentRequestForm onClose={() => setOpenModal(false)} />
-)}
-
-{requestType === "buy" && (
-  <BuyRequestForm onClose={() => setOpenModal(false)} />
-)}
-</RequestModal>
     </div>
   );
 }

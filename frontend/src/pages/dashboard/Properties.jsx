@@ -5,7 +5,6 @@ import usePageTitle from "../../hooks/usePageTitle";
 import PropertyHeader from "../../components/properties/PropertyHeader";
 import PropertyToolbar from "../../components/properties/PropertyToolbar";
 import PropertyTable from "../../components/properties/PropertyTable";
-import FeatureManager from "../../components/properties/FeatureManager";
 import {
   getProperties,
   deleteProperty,
@@ -28,7 +27,6 @@ function Properties() {
   const [type, setType] = useState("");
   const [status, setStatus] = useState("");
   const [location, setLocation] = useState("");
-const [openFeatures, setOpenFeatures] = useState(false);
 const [properties, setProperties] = useState([]);
 const [categories, setCategories] = useState([]);
 const [locations, setLocations] = useState([]);
@@ -111,7 +109,6 @@ useEffect(() => {
     <div className="p-8"> 
      <PropertyHeader
   onAdd={() => navigate("/dashboard/properties/create")}
-  onOpenFeatures={() => setOpenFeatures(true)}
 />
 
       <PropertyToolbar
@@ -205,11 +202,6 @@ useEffect(() => {
 }}
       onRefresh={loadProperties}
       />
-       <FeatureManager
-    open={openFeatures}
-    onClose={() => setOpenFeatures(false)}
-/>
-
       {previewProperty && (
   <PropertyPreviewModal
     property={previewProperty}

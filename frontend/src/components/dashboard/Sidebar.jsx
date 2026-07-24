@@ -15,6 +15,7 @@ import {
   Mail,
   Bell,
   Tag,
+  Sparkles,
 } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 
@@ -43,6 +44,11 @@ const menuItems = [
     title: "إدارة التاجات",
     icon: Tag,
     path: "/dashboard/tags",
+  },
+  {
+    title: "إدارة المميزات",
+    icon: Sparkles,
+    path: "/dashboard/features",
   },
   {
     title: "طلبات الحجز",

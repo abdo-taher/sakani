@@ -1,11 +1,12 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 
 function PropertyHeader({
   onAdd,
-  onOpenFeatures,
 }) {
+  const navigate = useNavigate();
   return (
     <div className="flex flex-wrap items-center justify-between gap-5 mb-10">
       <div className="min-w-0">
@@ -24,7 +25,7 @@ function PropertyHeader({
       <div className="flex flex-wrap gap-3">
 
   <button
-    onClick={onOpenFeatures}
+    onClick={() => navigate("/dashboard/features")}
     className="flex items-center justify-center gap-2 px-7 py-4 rounded-2xl font-bold transition-all duration-300 hover:scale-105 shadow-md border"
     style={{
       borderColor: COFFEE.gold,

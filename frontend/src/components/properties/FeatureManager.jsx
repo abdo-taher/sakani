@@ -1,12 +1,14 @@
-import { X, Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Sparkles, ArrowRight } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getAmenities,
   createAmenity,
   updateAmenity,
   deleteAmenity,
 } from "../../services/amenityService";
+import usePageTitle from "../../hooks/usePageTitle";
 
 import Swal from "sweetalert2";
 
@@ -14,255 +16,163 @@ import {
   successToast,
   errorToast,
 } from "../../utils/toast";
-function FeatureManager({
-  open,
-  onClose,
-}) {
+
+function FeatureManager() {
+  usePageTitle("إدارة المميزات — سكني");
+  const navigate = useNavigate();
   const [featureName, setFeatureName] = useState("");
-const [editingFeature, setEditingFeature] = useState(null);
- const [features, setFeatures] = useState([]);
- const loadAmenities = async () => {
+  const [editingFeature, setEditingFeature] = useState(null);
+  const [features, setFeatures] = useState([]);
+
+  const loadAmenities = async () => {
     try {
-        const data = await getAmenities();
-        setFeatures(data);
+      const data = await getAmenities();
+      setFeatures(data);
     } catch (error) {
-        console.error(error);
+      console.error(error);
     }
-};
-useEffect(() => {
+  };
+
+  useEffect(() => {
     loadAmenities();
-}, []);
-  if (!open) return null;
+  }, []);
 
- const handleAdd = async () => {
-  if (!featureName.trim()) return;
+  const handleAdd = async () => {
+    if (!featureName.trim()) return;
 
-  try {
+    try {
+      if (editingFeature) {
+        await updateAmenity(editingFeature.id, { name: featureName });
+        successToast("تم تعديل الميزة بنجاح");
+      } else {
+        await createAmenity({ name: featureName });
+        successToast("تم إضافة الميزة بنجاح");
+      }
 
-    if (editingFeature) {
-
-      await updateAmenity(editingFeature.id, {
-        name: featureName,
-      });
-
-      successToast("تم تعديل الميزة بنجاح");
-
-    } else {
-
-      await createAmenity({
-        name: featureName,
-      });
-
-      successToast("تم إضافة الميزة بنجاح");
-
+      await loadAmenities();
+      setFeatureName("");
+      setEditingFeature(null);
+    } catch (error) {
+      errorToast(error.response?.data?.message || "حدث خطأ");
     }
+  };
 
-    await loadAmenities();
-
-    setFeatureName("");
-
-    setEditingFeature(null);
-
-  } catch (error) {
-
-    errorToast(
-      error.response?.data?.message ||
-      "حدث خطأ"
-    );
-
-  }
-};
   const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: "حذف الميزة؟",
+      text: "لن تستطيع استرجاعها",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "حذف",
+      cancelButtonText: "إلغاء",
+      confirmButtonColor: "#DC2626",
+      cancelButtonColor: "#6B7280",
+    });
 
-  const result = await Swal.fire({
+    if (!result.isConfirmed) return;
 
-    title: "حذف الميزة؟",
-
-    text: "لن تستطيع استرجاعها",
-
-    icon: "warning",
-
-    showCancelButton: true,
-
-    confirmButtonText: "حذف",
-
-    cancelButtonText: "إلغاء",
-
-    confirmButtonColor: "#DC2626",
-
-    cancelButtonColor: "#6B7280",
-
-  });
-
-  if (!result.isConfirmed) return;
-
-  try {
-
-    await deleteAmenity(id);
-
-    successToast("تم حذف الميزة");
-
-    loadAmenities();
-
-  } catch (error) {
-
-    errorToast(
-      error.response?.data?.message ||
-      "تعذر حذف الميزة"
-    );
-
-  }
-
-};
+    try {
+      await deleteAmenity(id);
+      successToast("تم حذف الميزة");
+      loadAmenities();
+    } catch (error) {
+      errorToast(error.response?.data?.message || "تعذر حذف الميزة");
+    }
+  };
 
   const handleEdit = (feature) => {
-
-  setEditingFeature(feature);
-
-  setFeatureName(feature.name);
-
-};
+    setEditingFeature(feature);
+    setFeatureName(feature.name);
+  };
 
   return (
-    <div className="fixed inset-0 z-[300] bg-black/50 flex items-center justify-center p-6">
-
-      <div className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden">
-
-        {/* Header */}
-
-        <div
-          className="flex justify-between items-center px-8 py-6"
-          style={{
-            backgroundColor: COFFEE.dark,
-          }}
+    <div>
+      <div className="flex items-center gap-3 mb-8">
+        <button
+          onClick={() => navigate("/dashboard/properties")}
+          className="w-10 h-10 rounded-xl flex items-center justify-center border border-stone-200 hover:bg-stone-100 transition"
         >
-          <h2 className="text-2xl font-bold text-white">
-            إدارة المميزات
-          </h2>
+          <ArrowRight size={20} color={COFFEE.dark} />
+        </button>
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: COFFEE.gold }}>
+          <Sparkles size={22} color={COFFEE.dark} />
+        </div>
+        <div>
+          <h1 className="text-2xl font-extrabold" style={{ color: COFFEE.dark }}>إدارة المميزات</h1>
+          <p className="text-sm" style={{ color: COFFEE.stone }}>إضافة وتعديل وحذف مميزات العقارات</p>
+        </div>
+      </div>
 
+      <div className="bg-white rounded-3xl shadow-sm border border-stone-200 p-8">
+        <div className="flex gap-3 mb-8">
+          <input
+            type="text"
+            value={featureName}
+            onChange={(e) => setFeatureName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            placeholder="اسم الميزة..."
+            className="flex-1 border-2 rounded-xl px-5 py-3.5 outline-none transition focus:border-[var(--gold)] focus:ring-4 focus:ring-[var(--goldRing)]"
+            style={{ borderColor: "#EADFD0" }}
+          />
           <button
-            onClick={onClose}
-            className="text-white"
+            onClick={handleAdd}
+            className="px-6 rounded-xl flex items-center gap-2 font-bold transition hover:opacity-90"
+            style={{
+              backgroundColor: COFFEE.gold,
+              color: COFFEE.dark,
+            }}
           >
-            <X size={28} />
+            <Plus size={20} />
+            {editingFeature ? "حفظ" : "إضافة"}
           </button>
         </div>
 
-        {/* Body */}
-
-        <div className="p-8">
-
-          <div className="flex gap-3 mb-8">
-
-            <input
-              type="text"
-              value={featureName}
-              onChange={(e) =>
-                setFeatureName(e.target.value)
-              }
-              placeholder="اسم الميزة..."
-              className="flex-1 border rounded-xl px-5 py-4 outline-none focus:ring-2 focus:ring-yellow-200"
-            />
-
-            <button
-              onClick={handleAdd}
-              className="px-6 rounded-xl flex items-center gap-2 font-bold"
-              style={{
-                backgroundColor: COFFEE.gold,
-                color: COFFEE.dark,
-              }}
-            >
-              <Plus size={20} />
-            {editingFeature ? "حفظ" : "إضافة"}
-            </button>
-
-          </div>
-
-          {/* الجدول */}
-
-          <div className="border rounded-2xl overflow-hidden">
-
-            <table className="w-full">
-
-              <thead
-                className="text-right"
-                style={{
-                  backgroundColor: "#F7F3EE",
-                }}
-              >
+        <div className="border rounded-2xl overflow-hidden">
+          <table className="w-full">
+            <thead className="text-right" style={{ backgroundColor: "#F7F3EE" }}>
+              <tr>
+                <th className="px-6 py-4 font-bold text-stone-600">الميزة</th>
+                <th className="px-6 py-4 text-center w-40 font-bold text-stone-600">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {features.length === 0 ? (
                 <tr>
-
-                  <th className="px-6 py-4">
-                    الميزة
-                  </th>
-
-                  <th className="px-6 py-4 text-center w-40">
-                    الإجراءات
-                  </th>
-
+                  <td colSpan={2} className="py-16 text-center text-stone-400 font-semibold text-lg">
+                    لا توجد مميزات حالياً
+                  </td>
                 </tr>
-
-              </thead>
-
-              <tbody>
-
-                {features.map((feature) => (
-
-                  <tr
-                   key={feature.id}
-                    className="border-t"
-                  >
-
-                    <td className="px-6 py-4">
+              ) : (
+                features.map((feature) => (
+                  <tr key={feature.id} className="border-t">
+                    <td className="px-6 py-4 font-bold" style={{ color: COFFEE.dark }}>
                       {feature.name}
                     </td>
-
                     <td className="px-6 py-4">
-
                       <div className="flex justify-center gap-2">
-
                         <button
-                          onClick={() =>
-                            handleEdit(feature)
-                          }
-                          className="w-10 h-10 rounded-lg hover:bg-stone-100 flex items-center justify-center"
+                          onClick={() => handleEdit(feature)}
+                          className="w-10 h-10 rounded-lg hover:bg-stone-100 flex items-center justify-center transition"
+                          title="تعديل"
                         >
-                          <Pencil
-                            size={18}
-                            color={COFFEE.dark}
-                          />
+                          <Pencil size={18} color={COFFEE.dark} />
                         </button>
-
                         <button
-                          onClick={() =>
-                            handleDelete(feature.id)
-                          }
-                          className="w-10 h-10 rounded-lg hover:bg-red-50 flex items-center justify-center"
+                          onClick={() => handleDelete(feature.id)}
+                          className="w-10 h-10 rounded-lg hover:bg-red-50 flex items-center justify-center transition"
+                          title="حذف"
                         >
-                          <Trash2
-                            size={18}
-                            color="#DC2626"
-                          />
+                          <Trash2 size={18} color="#DC2626" />
                         </button>
-
                       </div>
-
                     </td>
-
                   </tr>
-
-                ))}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-
       </div>
-
     </div>
   );
 }

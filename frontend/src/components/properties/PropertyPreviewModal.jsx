@@ -81,7 +81,7 @@ function PropertyPreviewModal({ property, onClose }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#FAF6F0] rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col"
+        className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div
