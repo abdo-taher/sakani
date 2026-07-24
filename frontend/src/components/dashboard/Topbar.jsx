@@ -1,9 +1,11 @@
 import React from "react";
 import { Bell, CalendarDays, UserCircle2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { COFFEE } from "../../constants/constants";
 
-function Topbar() {
+function Topbar({ unreadCount = 0 }) {
+  const navigate = useNavigate();
   const today = new Date().toLocaleDateString("ar-EG", {
     weekday: "long",
     day: "numeric",
@@ -36,14 +38,18 @@ function Topbar() {
       <div className="flex items-center gap-6">
         {/* إشعارات */}
         <button
+          onClick={() => navigate("/dashboard/notifications")}
           className="relative w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition hover:bg-stone-100"
+          title="الإشعارات"
         >
           <Bell size={20} />
 
-          <span
-            className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full ring-2 ring-white"
-            style={{ backgroundColor: COFFEE.gold }}
-          />
+          {unreadCount > 0 && (
+            <span
+              className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full ring-2 ring-white animate-pulse"
+              style={{ backgroundColor: "#e0435c" }}
+            />
+          )}
         </button>
 
         {/* فاصل */}
