@@ -33,7 +33,7 @@ const TYPE_COLOR = {
   property: COFFEE.gold,
 };
 
-function Notifications({ setUnreadCount }) {
+function Notifications() {
   usePageTitle("الإشعارات — سكني");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,9 +43,6 @@ function Notifications({ setUnreadCount }) {
     try {
       const res = await getNotifications();
       setNotifications(res.data || []);
-      if (setUnreadCount && res?.unread_count !== undefined) {
-        setUnreadCount(res.unread_count);
-      }
     } catch {
       /* empty */
     } finally {
@@ -62,7 +59,6 @@ function Notifications({ setUnreadCount }) {
       await markAsRead(id);
       setNotifications((prev) => {
         const next = prev.map((n) => (n.id === id ? { ...n, is_read: true } : n));
-        if (setUnreadCount) setUnreadCount(next.filter((n) => !n.is_read).length);
         return next;
       });
     } catch {
@@ -75,7 +71,6 @@ function Notifications({ setUnreadCount }) {
       await markAllAsRead();
       setNotifications((prev) => {
         const next = prev.map((n) => ({ ...n, is_read: true }));
-        if (setUnreadCount) setUnreadCount(0);
         return next;
       });
       successToast("تم تعليم الكل كمقروء");

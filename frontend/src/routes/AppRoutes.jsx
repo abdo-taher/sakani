@@ -42,7 +42,6 @@ function AppRoutes({
   addProperty,
   updateProperty,
   deleteProperty,
-  setUnreadCount,
 }) {
   return (
     <Routes>
@@ -178,7 +177,7 @@ function AppRoutes({
 />
 <Route
   path="notifications"
-  element={<Notifications setUnreadCount={setUnreadCount} />}
+  element={<Notifications />}
 />
       </Route>
 

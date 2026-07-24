@@ -130,7 +130,7 @@ export default function App() {
             addProperty={addProperty}
             updateProperty={updateProperty}
             deleteProperty={deleteProperty}
-            setUnreadCount={setUnreadCount}
+
           />
         )}
       </div>
