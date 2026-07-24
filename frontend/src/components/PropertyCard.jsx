@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, Bed, Bath, Maximize, MapPin, PlayCircle, Loader2, CloudUpload } from "lucide-react";
 import { COFFEE } from "../constants/constants";
+import { fmtPrice, SAMPLE_IMG } from "../utils/helpers";
 import VideoThumb from "./VideoThumb";
 
 const STATUS_LABELS = {
@@ -10,10 +11,6 @@ const STATUS_LABELS = {
   sold: { text: "تم البيع", color: "#8B1E1E" },
   rented: { text: "تم التأجير", color: "#8B1E1E" },
 };
-
-function fmtPrice(price) {
-  return new Intl.NumberFormat("ar-EG").format(price);
-}
 
 function PropertyCard({ p, isFav, onToggleFav }) {
   const [imgError, setImgError] = useState(false);
@@ -76,15 +73,18 @@ function PropertyCard({ p, isFav, onToggleFav }) {
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-stone-300 text-sm">
-            {isUploading ? (
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 size={28} className="animate-spin text-amber-400" />
-                <span className="text-amber-500 text-xs font-semibold">جاري رفع الصور...</span>
-              </div>
-            ) : "لا توجد صورة"}
+        ) : isUploading ? (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <Loader2 size={28} className="animate-spin text-amber-400" />
+            <span className="text-amber-500 text-xs font-semibold">جاري رفع الصور...</span>
           </div>
+        ) : (
+          <img
+            src={SAMPLE_IMG(p.id)}
+            alt={p.title}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         )}
 
         {hasVideo && !isUploading && (
@@ -146,7 +146,7 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>{fmtPrice(p.price)} ج.م</span>
+          <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>{fmtPrice(p.price)}</span>
           {p.rent_duration && <span className="text-xs text-stone-400">/{p.rent_duration}</span>}
         </div>
       </div>

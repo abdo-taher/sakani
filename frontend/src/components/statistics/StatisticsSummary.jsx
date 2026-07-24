@@ -11,8 +11,8 @@ import {
 import { COFFEE } from "../../constants/constants";
 
 function formatPrice(value) {
-  if (!value) return "0 ج.م";
-  return `${Number(value).toLocaleString("ar-EG")} ج.م`;
+  if (!value) return "0.00 ج.م";
+  return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + " ج.م";
 }
 
 function StatisticsSummary({ summary, loading }) {

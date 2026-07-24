@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Eye, Pencil, Trash2, ExternalLink, Loader2, CloudUpload, EyeOff } from "lucide-react";
 import PropertyStatus from "./PropertyStatus";
 import { COFFEE } from "../../constants/constants";
+import { fmtPrice, SAMPLE_IMG } from "../../utils/helpers";
 
 function PropertyRow({
   property,
@@ -30,16 +31,12 @@ function PropertyRow({
           <div className="w-20 h-14 rounded-lg bg-amber-50 flex items-center justify-center border-2 border-dashed border-amber-400">
             <Loader2 size={22} className="animate-spin text-amber-500" />
           </div>
-        ) : property.images?.length ? (
+        ) : (
           <img
-            src={property.images[0].image_url}
+            src={property.images?.[0]?.image_url || SAMPLE_IMG(property.id)}
             alt={property.title}
             className="w-20 h-14 rounded-lg object-cover bg-stone-100"
           />
-        ) : (
-          <div className="w-20 h-14 rounded-lg bg-stone-100 flex items-center justify-center text-xs">
-            لا توجد صورة
-          </div>
         )}
       </td>
 
@@ -71,7 +68,7 @@ function PropertyRow({
 
       <td className="px-4 py-4 whitespace-nowrap font-semibold">
         <span className={uploading ? "text-amber-600" : ""}>
-          {property.price?.toLocaleString()} ج.م
+          {fmtPrice(property.price)}
         </span>
       </td>
 

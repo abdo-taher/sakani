@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, MapPin, Layers, Ruler, BedDouble, Bath, ArrowUpDown, Paintbrush, Sofa, Building2, ImageIcon, Video, Sparkles, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
+import { fmtPrice } from "../../utils/helpers";
 import VideoThumb from "../VideoThumb";
 
 const STATUS_MAP = {
@@ -90,7 +91,7 @@ function PropertyPreviewModal({ property, onClose }) {
           <div>
             <h2 className="text-2xl font-bold text-white">{property.title}</h2>
             <p className="text-sm mt-1" style={{ color: COFFEE.goldLight }}>
-              {property.price?.toLocaleString()} ج.م
+              {fmtPrice(property.price)}
             </p>
           </div>
 

@@ -277,7 +277,7 @@ function PublicPropertyDetail() {
                 {isRent ? "الإيجار الشهري" : "السعر"}
               </p>
               <p className="text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
-                {property.price?.toLocaleString()} ج.م
+                {fmtPrice(property.price)}
               </p>
             </div>
 

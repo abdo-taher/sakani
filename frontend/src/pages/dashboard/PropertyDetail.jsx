@@ -29,6 +29,7 @@ import { updateReservation, deleteReservation } from "../../services/reservation
 import { COFFEE } from "../../constants/constants";
 import { successToast, errorToast } from "../../utils/toast";
 import { confirmDelete } from "../../utils/confirm";
+import { fmtPrice } from "../../utils/helpers";
 import VideoThumb from "../../components/VideoThumb";
 
 const STATUS_MAP = {
@@ -343,7 +344,7 @@ function PropertyDetail() {
               السعر
             </p>
             <p className="text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
-              {property.price?.toLocaleString()} ج.م
+              {fmtPrice(property.price)}
             </p>
           </div>
 

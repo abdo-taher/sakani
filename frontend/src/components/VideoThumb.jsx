@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Video } from "lucide-react";
 
+const DEFAULT_VIDEO_POSTER = "https://res.cloudinary.com/demo/image/upload/w_600,h_420,cs_thumb,a_hflip/fl_presenter/v1/blank.jpg";
+
 function VideoThumb({ src, className = "", alt = "" }) {
   const [thumb, setThumb] = useState(null);
   const [failed, setFailed] = useState(false);
@@ -45,8 +47,16 @@ function VideoThumb({ src, className = "", alt = "" }) {
 
   if (failed) {
     return (
-      <div className={`flex items-center justify-center bg-stone-800 ${className}`}>
-        <Video size={24} color="white" className="opacity-60" />
+      <div className={`relative overflow-hidden bg-stone-800 ${className}`}>
+        <img
+          src={src || DEFAULT_VIDEO_POSTER}
+          alt={alt}
+          className="w-full h-full object-cover opacity-70"
+          onError={(e) => { e.target.src = DEFAULT_VIDEO_POSTER; }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Video size={24} color="white" className="opacity-70" />
+        </div>
       </div>
     );
   }
