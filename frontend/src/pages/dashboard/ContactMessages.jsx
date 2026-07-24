@@ -15,6 +15,7 @@ import {
   updateContactMessage,
   deleteContactMessage,
 } from "../../services/contactMessageService";
+import { successToast, errorToast } from "../../utils/toast";
 
 function ContactMessages() {
   usePageTitle("رسائل التواصل — سكني");
@@ -31,6 +32,7 @@ function ContactMessages() {
         setMessages(data);
       } catch (error) {
         console.log(error);
+        errorToast("تعذر تحميل رسائل التواصل");
       } finally {
         setLoading(false);
       }
@@ -57,8 +59,10 @@ function ContactMessages() {
         ...selectedMessage,
         status: "replied",
       });
+      successToast("تم تحديد الرسالة كمردود عليها");
     } catch (error) {
       console.log(error);
+      errorToast("تعذر تحديث حالة الرسالة");
     }
   };
 
@@ -71,8 +75,10 @@ function ContactMessages() {
       );
 
       setMessageToDelete(null);
+      successToast("تم حذف الرسالة بنجاح");
     } catch (error) {
       console.log(error);
+      errorToast("تعذر حذف الرسالة");
     }
   };
 

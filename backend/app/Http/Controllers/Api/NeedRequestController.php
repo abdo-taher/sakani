@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\NeedRequest;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class NeedRequestController extends Controller
@@ -41,6 +42,14 @@ class NeedRequestController extends Controller
         ]);
 
         $needRequest = NeedRequest::create($validated);
+
+        $typeLabel = $validated['listing_type'] === 'buy' ? 'شراء' : 'إيجار';
+        Notification::create([
+            'type'    => 'need_request',
+            'title'   => "طلب {$typeLabel} جديد",
+            'message' => "{$validated['name']} قدم طلب {$typeLabel} على عقار في {$validated['location']}",
+            'link'    => '/dashboard/need-requests',
+        ]);
 
         return response()->json([
             'message' => 'Request created successfully.',

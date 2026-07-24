@@ -25,7 +25,7 @@ function DashboardLayout() {
         const res = await getUnreadCount();
         if (res?.unread_count !== undefined) {
           const newCount = res.unread_count;
-          if (newCount > prevCountRef.current && prevCountRef.current > 0) {
+          if (newCount > prevCountRef.current && prevCountRef.current >= 0) {
             try { notifSound.play(); } catch {}
           }
           prevCountRef.current = newCount;

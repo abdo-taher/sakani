@@ -12,7 +12,7 @@ import {
   Send,
 } from "lucide-react";
 import { COFFEE } from "../constants/constants";
-import Swal from "sweetalert2";
+import { successToast, errorToast } from "../utils/toast";
 import { createNeedRequest } from "../services/needRequestService";
 import { formatPhone, getPhoneError } from "../utils/phoneValidator";
 import { numbersOnly } from "../utils/numbersOnly";
@@ -81,23 +81,11 @@ function RentRequestForm({ onClose }) {
       notes: form.notes,
     });
 
-    await Swal.fire({
-      icon: "success",
-      title: "تم إرسال الطلب",
-      text: "سيتم التواصل معك في أقرب وقت.",
-      confirmButtonColor: COFFEE.gold,
-    });
-
+    successToast("تم إرسال الطلب — سيتم التواصل معك في أقرب وقت.");
     onClose();
   } catch (error) {
     console.error(error);
-
-    Swal.fire({
-      icon: "error",
-      title: "حدث خطأ",
-      text: "تعذر إرسال الطلب.",
-      confirmButtonColor: COFFEE.gold,
-    });
+    errorToast("تعذر إرسال الطلب، حاول مرة أخرى.");
   }
 };
 

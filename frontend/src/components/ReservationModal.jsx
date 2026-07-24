@@ -4,6 +4,7 @@ import { COFFEE } from "../constants/constants";
 import { SAMPLE_IMG, fmtPrice } from "../utils/helpers";
 import { createReservation, checkReservation } from "../services/reservationService";
 import { formatPhone, getPhoneError } from "../utils/phoneValidator";
+import { errorToast } from "../utils/toast";
 
 function ReservationModal({ open, property, onClose }) {
   const [form, setForm] = useState({ name: "", phone: "", message: "" });
@@ -59,6 +60,7 @@ function ReservationModal({ open, property, onClose }) {
       setSuccess(true);
     } catch (error) {
       console.error(error);
+      errorToast("حدث خطأ أثناء إرسال طلب الحجز");
     } finally {
       setLoading(false);
     }
