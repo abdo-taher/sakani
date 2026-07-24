@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, Bed, Bath, Maximize, MapPin, PlayCircle } from "lucide-react";
 import { COFFEE } from "../constants/constants";
+import VideoThumb from "./VideoThumb";
 
 const STATUS_LABELS = {
   available: { text: "متاح", color: "#2E7D32" },
@@ -18,10 +19,18 @@ function PropertyCard({ p, isFav, onToggleFav }) {
   const [imgError, setImgError] = useState(false);
   const navigate = useNavigate();
 
-  const mainImage =
-    !imgError && p.images && p.images.length > 0
-      ? p.images[0].image_url || p.images[0].path
-      : null;
+  const hasVideo = (p.images && p.images.some(img => img.media_type === 'video')) || p.video_url;
+
+  const firstVideo = p.images && p.images.find(img => img.media_type === 'video');
+  const firstImage = p.images && p.images.find(img => (img.media_type || 'image') === 'image');
+
+  const mainImage = !imgError && firstImage
+    ? firstImage.image_url || firstImage.path
+    : null;
+
+  const mainVideo = hasVideo
+    ? (firstVideo ? firstVideo.image_url : p.video_url)
+    : null;
 
   const status = STATUS_LABELS[p.status] || STATUS_LABELS.available;
 
@@ -33,7 +42,13 @@ function PropertyCard({ p, isFav, onToggleFav }) {
       dir="rtl"
     >
       <div className="relative h-48 w-full overflow-hidden bg-stone-100">
-        {mainImage ? (
+        {mainVideo ? (
+          <VideoThumb
+            src={mainVideo}
+            alt={p.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : mainImage ? (
           <img
             src={mainImage}
             alt={p.title}
@@ -44,13 +59,11 @@ function PropertyCard({ p, isFav, onToggleFav }) {
           <div className="w-full h-full flex items-center justify-center text-stone-300 text-sm">لا توجد صورة</div>
         )}
 
-        {p.video_url && (
-          <div
-            className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold text-white"
-            style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
-          >
-            <PlayCircle className="w-3.5 h-3.5" />
-            فيديو
+        {hasVideo && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
+              <PlayCircle className="w-7 h-7 text-white" />
+            </div>
           </div>
         )}
 

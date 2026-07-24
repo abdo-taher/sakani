@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, MapPin, Layers, Ruler, BedDouble, Bath, ArrowUpDown, Paintbrush, Sofa, Building2, ImageIcon, Video, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
+import VideoThumb from "../VideoThumb";
 
 const STATUS_MAP = {
   available: { label: "متاح", color: "#16A34A", bg: "#DCFCE7" },
@@ -173,8 +174,11 @@ function PropertyPreviewModal({ property, onClose }) {
                 }`}
               >
                 {m.type === 'video' ? (
-                  <div className="w-16 h-12 bg-gray-900 flex items-center justify-center">
-                    <Video size={14} color="white" />
+                  <div className="relative w-16 h-12 overflow-hidden bg-black">
+                    <VideoThumb src={m.url} className="w-full h-full object-cover opacity-80" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Video size={12} color="white" />
+                    </div>
                   </div>
                 ) : (
                   <img src={m.url} alt="" className="w-16 h-12 object-cover" />

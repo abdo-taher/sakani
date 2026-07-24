@@ -27,6 +27,7 @@ import { updateReservation, deleteReservation } from "../../services/reservation
 import { COFFEE } from "../../constants/constants";
 import { successToast, errorToast } from "../../utils/toast";
 import { confirmDelete } from "../../utils/confirm";
+import VideoThumb from "../../components/VideoThumb";
 
 const STATUS_MAP = {
   available: { label: "متاح", color: "#16A34A", bg: "#DCFCE7" },
@@ -259,8 +260,11 @@ function PropertyDetail() {
                   }`}
                 >
                   {m.type === "video" ? (
-                    <div className="w-full h-full bg-stone-200 flex items-center justify-center">
-                      <Video size={16} color={COFFEE.gold} />
+                    <div className="relative w-full h-full overflow-hidden bg-black">
+                      <VideoThumb src={m.url} className="w-full h-full object-cover opacity-80" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Video size={14} color="white" />
+                      </div>
                     </div>
                   ) : (
                     <img src={m.url} alt="" className="w-full h-full object-cover" />
