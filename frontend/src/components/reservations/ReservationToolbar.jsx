@@ -8,8 +8,11 @@ function ReservationToolbar({
   status,
   setStatus,
 }) {
-  const selectClass =
-    "w-full rounded-xl border border-stone-300 pl-10 pr-4 py-3.5 text-base outline-none focus:border-yellow-600 focus:ring-2 focus:ring-yellow-100 bg-white cursor-pointer transition";
+  const selectStyle = {
+    WebkitAppearance: "none",
+    MozAppearance: "none",
+    appearance: "none",
+  };
 
   return (
     <div
@@ -64,7 +67,8 @@ function ReservationToolbar({
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className={selectClass}
+              style={selectStyle}
+              className="w-full rounded-xl border border-stone-300 pl-10 pr-4 py-3.5 text-base outline-none focus:border-yellow-600 focus:ring-2 focus:ring-yellow-100 bg-white cursor-pointer transition"
             >
               <option value="">كل الطلبات</option>
               <option value="new">طلب جديد</option>
