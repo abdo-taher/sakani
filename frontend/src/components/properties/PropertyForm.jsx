@@ -97,7 +97,7 @@ function PropertyForm({
   });
 
   useEffect(() => {
-    if (property) {
+    if (property && property.id) { // Only run when we have a property with an ID
       const existingImages = (property.images || []).filter(img => (img.media_type || 'image') === 'image');
       const existingVideos = (property.images || []).filter(img => img.media_type === 'video');
       const firstVideo = existingVideos.length > 0 ? existingVideos[0] : null;
@@ -136,6 +136,7 @@ function PropertyForm({
         videoThumbnails: [],
         has_detailed_rooms: property.has_detailed_rooms || false,
         roomsData: (property.detailed_rooms || []).map(r => ({
+          id: r.id, // Keep the ID to prevent duplication
           name: r.name || "",
           description: r.description || "",
           price: r.price || "",
@@ -143,7 +144,7 @@ function PropertyForm({
         })),
       });
     }
-  }, [property]);
+  }, [property?.id]); // Only depend on property.id, not the entire property object
 
   const handleChange = (e) => {
     setPropertyData({ ...propertyData, [e.target.name]: e.target.value });
@@ -452,7 +453,6 @@ function PropertyForm({
           pageMode ? navigate("/dashboard/properties") : onClose();
         } else {
           successToast("تم إضافة العقار — جاري رفع الوسائط في الخلفية...");
-          await loadProperties();
           pageMode ? navigate("/dashboard/properties") : onClose();
 
           (async () => {
@@ -501,12 +501,12 @@ function PropertyForm({
               }
 
               await markUploadComplete(propertyId);
-              await loadProperties();
+              await loadProperties(); // Refresh after upload is complete
               successToast("تم رفع جميع الوسائط بنجاح");
             } catch (err) {
               console.error("Background upload failed:", err);
               await markUploadComplete(propertyId);
-              await loadProperties();
+              await loadProperties(); // Refresh even on error
               errorToast("حدث خطأ أثناء رفع بعض الوسائط");
             }
           })();
