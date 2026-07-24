@@ -7,6 +7,7 @@ function PropertyTable({
   onEdit,
   onDelete,
   onStatusChange,
+  onRefresh,
 }) {
   return (
     <div
@@ -74,6 +75,7 @@ function PropertyTable({
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onStatusChange={onStatusChange}
+                  onRefresh={onRefresh}
                 />
               ))
             )}

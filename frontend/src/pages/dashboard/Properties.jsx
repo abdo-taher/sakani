@@ -196,6 +196,7 @@ useEffect(() => {
   }
 
 }}
+      onRefresh={loadProperties}
       />
        <FeatureManager
     open={openFeatures}

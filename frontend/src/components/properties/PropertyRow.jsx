@@ -1,9 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Pencil, Trash2, ExternalLink, Loader2 } from "lucide-react";
+import { Eye, Pencil, Trash2, ExternalLink, Loader2, CheckCircle } from "lucide-react";
 import PropertyStatus from "./PropertyStatus";
 import { COFFEE } from "../../constants/constants";
 import { fmtPrice, SAMPLE_IMG } from "../../utils/helpers";
+import { markUploadComplete } from "../../services/propertyService";
+import { toast } from "react-hot-toast";
 
 function PropertyRow({
   property,
@@ -11,9 +13,21 @@ function PropertyRow({
   onEdit,
   onDelete,
   onStatusChange,
+  onRefresh, // Add refresh callback
 }) {
   const navigate = useNavigate();
   const uploading = Boolean(property.is_uploading);
+
+  const handleMarkComplete = async () => {
+    try {
+      await markUploadComplete(property.id);
+      toast.success("تم إنهاء رفع الوسائط بنجاح");
+      if (onRefresh) onRefresh(); // Refresh the properties list
+    } catch (error) {
+      console.error("Failed to mark upload complete:", error);
+      toast.error("فشل في إنهاء رفع الوسائط");
+    }
+  };
 
   return (
     <tr
@@ -92,6 +106,16 @@ function PropertyRow({
 
       <td className="px-4 py-4">
         <div className="flex justify-center gap-1.5">
+          {uploading && (
+            <button
+              onClick={handleMarkComplete}
+              className="w-9 h-9 rounded-lg hover:bg-green-50 flex items-center justify-center transition"
+              title="إنهاء رفع الوسائط"
+            >
+              <CheckCircle size={18} color="#059669" />
+            </button>
+          )}
+
           <button
             onClick={() => navigate(`/dashboard/properties/${property.id}`)}
             disabled={uploading}
