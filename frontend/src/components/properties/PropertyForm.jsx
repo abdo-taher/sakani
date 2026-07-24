@@ -133,6 +133,7 @@ function PropertyForm({
         removeVideo: false,
         existingVideoUrl: firstVideo?.image_url || property.video_url || null,
         existingVideoPublicId: firstVideo?.image_public_id || property.video_public_id || null,
+        videoThumbnails: [],
         has_detailed_rooms: property.has_detailed_rooms || false,
         roomsData: (property.detailed_rooms || []).map(r => ({
           name: r.name || "",

@@ -120,6 +120,7 @@ function PropertyFormWithMap({
         removeVideo: false,
         existingVideoUrl: firstVideo?.image_url || property.video_url || null,
         existingVideoPublicId: firstVideo?.image_public_id || property.video_public_id || null,
+        videoThumbnails: [],
       });
     }
   }, [property]);
