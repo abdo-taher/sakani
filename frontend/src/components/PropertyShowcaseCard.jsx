@@ -223,11 +223,11 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
         {isRent && p.has_detailed_rooms && (() => {
           const rooms = Array.isArray(p.rooms) ? p.rooms : Array.isArray(p.detailed_rooms) ? p.detailed_rooms : [];
           const availableCount = rooms.filter(r => r.status === "available").length;
-          return availableCount > 0 ? (
+          return availableCount > 0 && (
             <p className="text-xs mt-1 font-bold" style={{ color: COFFEE.gold }}>
               {availableCount} غرف متاحة
             </p>
-          ) : null;
+          );
         })()}
       </div>
     </div>

@@ -120,7 +120,7 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
       </div>
 
       {/* ---------------------------- إحصائيات ----------------------------- */}
-      <section className="py-8 px-4 sm:px-6" style={{ backgroundColor: "rgba(43,27,18,0.7)" }} dir="rtl">
+      <section className="py-8 px-4 sm:px-6" style={{ backgroundColor: "rgba(43,27,18,0.4)" }} dir="rtl">
         <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
           {[
             { icon: Building2, value: 3, suffix: "+", label: "عقار تم بيعه" },
