@@ -6,30 +6,34 @@ use Closure;
 use Illuminate\Http\Request;
 use App\Models\VisitorLog;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
 class TrackVisitor
 {
-    // Paths that should not be tracked
     private array $skipPaths = [
         'health',
         'config',
+        'login',
+        'login-status',
     ];
 
     public function handle(Request $request, Closure $next)
     {
-        // Only track GET requests (page views)
         if ($request->method() !== 'GET') {
             return $next($request);
         }
 
-        // Skip non-public paths (login, admin credentials, notifications, etc.)
+        // Skip authenticated admin users — they are not visitors
+        if ($request->user() || $request->bearerToken()) {
+            return $next($request);
+        }
+
         $path = $request->path();
 
         if (in_array($path, $this->skipPaths)) {
             return $next($request);
         }
 
-        // Skip any path containing a dot (file extensions, asset requests)
         if (str_contains($path, '.')) {
             return $next($request);
         }
@@ -48,7 +52,7 @@ class TrackVisitor
                     'user_agent' => $request->userAgent(),
                 ]);
             } catch (\Exception $e) {
-                // Silently fail — don't break the request
+                // Silently fail
             }
         }
 

@@ -94,7 +94,7 @@ useEffect(() => {
   loadProperties();
   loadCategories();
   loadLocations();
-  const interval = setInterval(checkStuckUploads, 15000);
+  const interval = setInterval(checkStuckUploads, 5000);
   return () => clearInterval(interval);
 }, []);
   

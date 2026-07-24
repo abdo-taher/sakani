@@ -15,7 +15,7 @@ function PropertyRow({
   const uploading = property.is_uploading;
 
   return (
-    <tr className={`border-t border-stone-100 hover:bg-stone-50 transition ${uploading ? "opacity-40 pointer-events-none" : ""}`}>
+    <tr className={`border-t border-stone-100 hover:bg-stone-50 transition`}>
       <td className="px-4 py-4">
         {uploading ? (
           <div className="w-20 h-14 rounded-lg bg-stone-200 flex items-center justify-center">
