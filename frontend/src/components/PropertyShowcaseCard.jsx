@@ -179,11 +179,11 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
         <div className="flex items-center justify-between">
           {isRent && p.has_detailed_rooms && p.rooms?.length > 0 ? (
             <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>
-              يبدأ من {fmtPrice(Math.min(...p.rooms.map(r => r.price)))} ج.م
+              يبدأ من {fmtPrice(Math.min(...p.rooms.map(r => r.price)))}
             </span>
           ) : (
             <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>
-              {fmtPrice(p.price)} ج.م
+              {fmtPrice(p.price)}
             </span>
           )}
           {p.rent_duration && <span className="text-xs" style={{ color: "#aaa" }}>/{p.rent_duration}</span>}

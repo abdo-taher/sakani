@@ -159,7 +159,7 @@ function PropertyDetail() {
       await deleteRoom(roomId, property.id);
       setProperty((prev) => ({
         ...prev,
-        rooms: (prev.rooms || []).filter((r) => r.id !== roomId),
+        detailed_rooms: (prev.detailed_rooms || []).filter((r) => r.id !== roomId),
       }));
       successToast("تم حذف الغرفة");
     } catch {
@@ -395,7 +395,7 @@ function PropertyDetail() {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <p className="text-sm font-bold" style={{ color: COFFEE.stone }}>
-                      {property.rooms?.length || 0} غرف
+                      {property.detailed_rooms?.length || 0} غرف
                     </p>
                     <button
                       onClick={() => navigate(`/dashboard/properties/${property.id}/rooms/create`)}
@@ -407,7 +407,7 @@ function PropertyDetail() {
                     </button>
                   </div>
 
-                  {!property.rooms?.length ? (
+                  {!property.detailed_rooms?.length ? (
                     <div className="text-center py-6">
                       <BedDouble size={32} color={COFFEE.gold} className="mx-auto mb-2" />
                       <p className="text-sm font-bold" style={{ color: COFFEE.stone }}>
@@ -419,7 +419,7 @@ function PropertyDetail() {
                     </div>
                   ) : (
                     <div className="grid gap-3">
-                      {property.rooms.map((room) => {
+                      {property.detailed_rooms.map((room) => {
                         const roomStatusMap = {
                           available: { label: "متاح", color: "#16A34A", bg: "#DCFCE7" },
                           reserved: { label: "محجوز", color: "#F59E0B", bg: "#FEF3C7" },
@@ -462,7 +462,7 @@ function PropertyDetail() {
                                 </span>
                               </div>
                               <p className="text-sm font-bold" style={{ color: COFFEE.gold }}>
-                                {fmtPrice(room.price)} ج.م/شهر
+                                {fmtPrice(room.price)}/شهر
                               </p>
                               {room.area && (
                                 <p className="text-xs" style={{ color: COFFEE.stone }}>

@@ -161,7 +161,7 @@ function ReservationModal({ open, property, onClose }) {
                 className="font-extrabold text-lg whitespace-nowrap"
                 style={{ color: COFFEE.gold }}
               >
-                {fmtPrice(property.price)} ج.م
+                {fmtPrice(property.price)}
               </span>
             </div>
 

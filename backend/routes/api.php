@@ -21,6 +21,7 @@ use App\Http\Controllers\PropertyTypeController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\StatisticsController;
 use App\Http\Controllers\Api\CloudinaryController;
+use App\Http\Controllers\Api\MarketingMailController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\TagController;
@@ -83,7 +84,7 @@ Route::delete('/properties/{property}', [PropertyController::class, 'destroy']);
     Route::delete('/room-images/{image}', [RoomController::class, 'destroyImage']);
     Route::patch('/rooms/{room}/upload-complete', [RoomController::class, 'markUploadComplete']);
     Route::apiResource('property-images', PropertyImageController::class);
-    
+
     // Enhanced property image routes
     Route::prefix('property-images')->group(function () {
         Route::post('/upload-multiple', [PropertyImageController::class, 'uploadMultiple']);
@@ -106,8 +107,8 @@ Route::delete('/properties/{property}', [PropertyController::class, 'destroy']);
     Route::put('/admin/credentials', [AuthController::class, 'updateCredentials']);
 
     // Marketing emails (disabled - controller missing)
-    // Route::post('/marketing/send', [MarketingMailController::class, 'send']);
-    // Route::post('/marketing/preview', [MarketingMailController::class, 'preview']);
+    Route::post('/marketing/send', [MarketingMailController::class, 'send']);
+    Route::post('/marketing/preview', [MarketingMailController::class, 'preview']);
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index']);

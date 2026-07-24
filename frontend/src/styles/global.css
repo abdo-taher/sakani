@@ -59,6 +59,8 @@ html {
 ::-webkit-scrollbar-track { background: #F7F1E8; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 @keyframes pageIn {
   from { opacity: 0; transform: translateY(14px); }

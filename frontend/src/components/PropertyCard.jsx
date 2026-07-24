@@ -148,11 +148,11 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         <div className="flex items-center justify-between">
           {p.category?.slug === "rent" && p.has_detailed_rooms && p.rooms?.length > 0 ? (
             <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>
-              يبدأ من {fmtPrice(Math.min(...p.rooms.map(r => r.price)))} ج.م
+              يبدأ من {fmtPrice(Math.min(...p.rooms.map(r => r.price)))}
             </span>
           ) : (
             <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>
-              {fmtPrice(p.price)} ج.م
+              {fmtPrice(p.price)}
             </span>
           )}
           {p.rent_duration && <span className="text-xs text-stone-400">/{p.rent_duration}</span>}

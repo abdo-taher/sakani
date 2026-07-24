@@ -132,7 +132,7 @@ function PropertyForm({
         existingVideoUrl: firstVideo?.image_url || property.video_url || null,
         existingVideoPublicId: firstVideo?.image_public_id || property.video_public_id || null,
         has_detailed_rooms: property.has_detailed_rooms || false,
-        roomsData: (property.rooms || []).map(r => ({
+        roomsData: (property.detailed_rooms || []).map(r => ({
           name: r.name || "",
           description: r.description || "",
           price: r.price || "",
@@ -1165,7 +1165,7 @@ function PropertyForm({
                         >
                           <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: COFFEE.gold, color: "white" }}>{idx + 1}</span>
                           <span className="font-bold text-sm" style={{ color: COFFEE.dark }}>{room.name}</span>
-                          <span className="text-xs" style={{ color: COFFEE.stone }}>{room.price ? `${fmtPrice(room.price)} ج.م/شهر` : ""}</span>
+                          <span className="text-xs" style={{ color: COFFEE.stone }}>{room.price ? `${fmtPrice(room.price)}/شهر` : ""}</span>
                           {room.area && <span className="text-xs" style={{ color: COFFEE.stone }}>{room.area} م²</span>}
                         </div>
                       ))}

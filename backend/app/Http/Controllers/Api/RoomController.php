@@ -85,7 +85,7 @@ class RoomController extends Controller
         $room->delete();
 
         // If no rooms left, disable detailed rooms
-        if ($property && $property->rooms()->count() === 0) {
+        if ($property && $property->detailedRooms()->count() === 0) {
             $property->update(['has_detailed_rooms' => false]);
         }
 

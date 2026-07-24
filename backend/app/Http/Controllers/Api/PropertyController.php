@@ -224,7 +224,7 @@ class PropertyController extends Controller
             // Create rooms inline if provided
             if ($request->filled('rooms_data') && $request->has_detailed_rooms) {
                 foreach ($request->rooms_data as $roomData) {
-                    $property->rooms()->create([
+                    $property->detailedRooms()->create([
                         'name' => $roomData['name'],
                         'description' => $roomData['description'] ?? null,
                         'price' => $roomData['price'],
@@ -359,7 +359,7 @@ class PropertyController extends Controller
                 'amenities',
                 'tags',
                 'reservations',
-                'rooms' => function($query) {
+                'detailedRooms' => function($query) {
                     $query->with('roomImages');
                 },
             ])->findOrFail($id);
@@ -568,7 +568,7 @@ class PropertyController extends Controller
         // Create rooms inline if provided
         if ($request->filled('rooms_data')) {
             foreach ($request->rooms_data as $roomData) {
-                $property->rooms()->create([
+                $property->detailedRooms()->create([
                     'name' => $roomData['name'],
                     'description' => $roomData['description'] ?? null,
                     'price' => $roomData['price'],
@@ -581,7 +581,7 @@ class PropertyController extends Controller
 
         return response()->json([
             'message' => 'Property updated successfully',
-            'data' => Property::with(['category', 'propertyType', 'location', 'images', 'amenities', 'tags', 'rooms', 'rooms.roomImages'])->find($property->id)
+            'data' => Property::with(['category', 'propertyType', 'location', 'images', 'amenities', 'tags', 'detailedRooms', 'detailedRooms.roomImages'])->find($property->id)
         ]);
     }
 

@@ -94,7 +94,7 @@ class Property extends Model
         return $this->hasMany(Reservation::class)->latest();
     }
 
-    public function rooms()
+    public function detailedRooms()
     {
         return $this->hasMany(Room::class);
     }

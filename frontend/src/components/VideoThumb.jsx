@@ -51,11 +51,12 @@ function VideoThumb({ src, className = "", alt = "" }) {
         <img
           src={src || DEFAULT_VIDEO_POSTER}
           alt={alt}
-          className="w-full h-full object-cover opacity-70"
+          className="w-full h-full object-cover"
+          style={{ opacity: 0.7 }}
           onError={(e) => { e.target.src = DEFAULT_VIDEO_POSTER; }}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <Video size={24} color="white" className="opacity-70" />
+          <Video size={24} color="white" style={{ opacity: 0.7 }} />
         </div>
       </div>
     );
@@ -68,10 +69,11 @@ function VideoThumb({ src, className = "", alt = "" }) {
         muted
         playsInline
         preload="metadata"
-        className="absolute inset-0 w-full h-full object-cover opacity-0"
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ opacity: 0.7 }}
       />
       <div className="absolute inset-0 flex items-center justify-center">
-        <Video size={24} color="white" className="opacity-50" />
+        <Video size={24} color="white" style={{ opacity: 0.7 }} />
       </div>
     </div>
   );

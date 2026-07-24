@@ -313,11 +313,11 @@ function PublicPropertyDetail() {
             )}
 
             {/* Rooms Section - for detailed mode */}
-            {isRent && property.has_detailed_rooms && property.rooms?.length > 0 && (
+            {isRent && property.has_detailed_rooms && property.detailed_rooms?.length > 0 && (
               <div className="mt-6">
                 <h3 className="font-bold mb-3" style={{ color: COFFEE.dark }}>الغرف المتاحة</h3>
                 <div className="grid gap-3">
-                  {property.rooms.map((room) => {
+                  {property.detailed_rooms.map((room) => {
                     const roomStatusMap = {
                       available: { label: "متاح", color: "#16A34A", bg: "#DCFCE7" },
                       reserved: { label: "محجوز", color: "#F59E0B", bg: "#FEF3C7" },
@@ -372,7 +372,7 @@ function PublicPropertyDetail() {
                               </span>
                             </div>
                             <p className="text-lg font-extrabold" style={{ color: COFFEE.gold }}>
-                              {fmtPrice(room.price)} ج.م
+                              {fmtPrice(room.price)}
                               <span className="text-xs font-normal" style={{ color: COFFEE.stone }}> / شهر</span>
                             </p>
                             {room.area && (
@@ -414,8 +414,8 @@ function PublicPropertyDetail() {
                 </p>
                 <p className="text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
                   {selectedRoomId
-                    ? `${fmtPrice(property.rooms?.find(r => r.id === selectedRoomId)?.price)} ج.م`
-                    : `${fmtPrice(Math.min(...(property.rooms || []).map(r => r.price)))} ج.م`
+                    ? `${fmtPrice(property.detailed_rooms?.find(r => r.id === selectedRoomId)?.price)}`
+                    : `${fmtPrice(Math.min(...(property.detailed_rooms || []).map(r => r.price)))}`
                   }
                 </p>
                 {selectedRoomId && (

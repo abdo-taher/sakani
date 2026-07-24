@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Flame, ArrowLeft } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { Flame, ChevronLeft, ChevronRight } from "lucide-react";
 import { COFFEE } from "../constants/constants";
 import { getBestProperties } from "../services/propertyService";
 import PropertyShowcaseCard from "./PropertyShowcaseCard";
@@ -8,6 +8,18 @@ import Reveal from "./Reveal";
 function BestPropertiesSection({ favorites, onToggleFav }) {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [filteredProperties, setFilteredProperties] = useState([]);
+  const scrollContainerRef = useRef(null);
+
+  const PROPERTIES_LIMIT = 8; // Maximum number of properties to show per category
+
+  const categories = [
+    { label: "الكل", value: "all", icon: "🔥" },
+    { label: "إيجار", value: "rent", icon: "🏠" },
+    { label: "شراء", value: "buy", icon: "🛒" },
+    { label: "بيع", value: "sell", icon: "🏷️" },
+  ];
 
   useEffect(() => {
     const load = async () => {
@@ -22,6 +34,23 @@ function BestPropertiesSection({ favorites, onToggleFav }) {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    let filtered = properties;
+    if (activeFilter !== "all") {
+      filtered = properties.filter(p => p.category?.slug === activeFilter);
+    }
+    // Limit the number of properties shown
+    setFilteredProperties(filtered.slice(0, PROPERTIES_LIMIT));
+  }, [properties, activeFilter]);
+
+  const scrollLeft = () => {
+    scrollContainerRef.current?.scrollBy({ left: -300, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    scrollContainerRef.current?.scrollBy({ left: 300, behavior: 'smooth' });
+  };
 
   if (loading || properties.length === 0) return null;
 
@@ -47,38 +76,71 @@ function BestPropertiesSection({ favorites, onToggleFav }) {
         {/* Category filter pills */}
         <Reveal delay={100}>
           <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {[
-              { label: "الكل", value: "all", icon: "🔥" },
-              { label: "إيجار", value: "rent", icon: "🏠" },
-              { label: "شراء", value: "buy", icon: "🛒" },
-              { label: "بيع", value: "sell", icon: "🏷️" },
-            ].map((cat) => (
-              <span
+            {categories.map((cat) => (
+              <button
                 key={cat.value}
-                className="px-4 py-2 rounded-full text-xs font-bold cursor-default"
+                onClick={() => setActiveFilter(cat.value)}
+                className="px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105"
                 style={{
-                  backgroundColor: cat.value === "all" ? COFFEE.gold : "white",
-                  color: cat.value === "all" ? "white" : COFFEE.dark,
-                  border: `1.5px solid ${cat.value === "all" ? COFFEE.gold : "#e8e0d4"}`,
+                  backgroundColor: cat.value === activeFilter ? COFFEE.gold : "white",
+                  color: cat.value === activeFilter ? "white" : COFFEE.dark,
+                  border: `1.5px solid ${cat.value === activeFilter ? COFFEE.gold : "#e8e0d4"}`,
                 }}
               >
                 {cat.icon} {cat.label}
-              </span>
+              </button>
             ))}
           </div>
         </Reveal>
 
-        {/* Properties Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {properties.map((p, i) => (
-            <Reveal key={p.id} delay={i * 80}>
-              <PropertyShowcaseCard
-                p={p}
-                isFav={favorites?.has?.(p.id) || false}
-                onToggleFav={onToggleFav}
-              />
-            </Reveal>
-          ))}
+        {/* Properties Slider */}
+        <div className="relative">
+          {/* Scroll buttons */}
+          {filteredProperties.length > 4 && (
+            <>
+              <button
+                onClick={scrollLeft}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                style={{ color: COFFEE.gold }}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={scrollRight}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                style={{ color: COFFEE.gold }}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+
+          {/* Properties container */}
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-5 overflow-x-auto scrollbar-hide pb-4"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {filteredProperties.map((p, i) => (
+              <div key={p.id} className="flex-shrink-0 w-72">
+                <Reveal delay={i * 80}>
+                  <PropertyShowcaseCard
+                    p={p}
+                    isFav={favorites?.has?.(p.id) || false}
+                    onToggleFav={onToggleFav}
+                  />
+                </Reveal>
+              </div>
+            ))}
+          </div>
+
+          {filteredProperties.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-lg font-bold" style={{ color: COFFEE.stone }}>
+                لا توجد عقارات في هذا القسم حالياً
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>
