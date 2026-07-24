@@ -105,6 +105,11 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
           <h1 className="animate-heroFade-1 text-2xl sm:text-4xl font-extrabold mb-3 max-w-3xl leading-tight" style={{ color: COFFEE.creamSoft }}>
             بيتك القادم يبدأ من هنا
           </h1>
+          <div className="animate-heroFade-2 mb-3 inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 border-dashed" style={{ borderColor: COFFEE.gold, backgroundColor: "rgba(176,141,87,0.12)" }}>
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-xs sm:text-sm font-extrabold" style={{ color: COFFEE.gold }}>عمولة 35% فقط</span>
+            <span className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full text-white bg-red-500">جديد</span>
+          </div>
           <p className="animate-heroFade-2 text-xs sm:text-base max-w-xl mb-5 leading-relaxed" style={{ color: COFFEE.cream }}>
             نقدم لك أفضل فرص البيع والشراء والإيجار في دمياط ودمياط الجديدة، بثقة وخبرة تمتد لسنوات.
           </p>
