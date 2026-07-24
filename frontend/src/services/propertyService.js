@@ -50,3 +50,12 @@ export const markUploadComplete = async (id) => {
   const response = await api.patch(`/properties/${id}/upload-complete`);
   return response.data;
 };
+
+export const recordView = async (id) => {
+  const response = await api.post(`/properties/${id}/view`);
+  return response.data;
+};
+
+export const getTopViewed = async () => {
+  return cachedGet("/properties/top-viewed", { ttl: 60000 });
+};

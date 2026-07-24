@@ -10,6 +10,7 @@ use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Exception;
 
 class PropertyController extends Controller
@@ -477,6 +478,41 @@ class PropertyController extends Controller
             'success' => true,
             'message' => 'تم الانتهاء من رفع الوسائط'
         ]);
+    }
+
+    public function recordView($id)
+    {
+        $key = "property_views_{$id}";
+        $count = Cache::get($key, 0);
+        Cache::put($key, $count + 1, now()->addMinutes(30));
+
+        if (($count + 1) % 10 === 0) {
+            Property::where('id', $id)->increment('views', $count + 1);
+            Cache::put($key, 0, now()->addMinutes(30));
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function topViewed()
+    {
+        $properties = Property::with([
+            'category', 'propertyType', 'location', 'images', 'amenities'
+        ])
+        ->where('status', 'available')
+        ->where('is_uploading', false)
+        ->orderByDesc('views')
+        ->limit(2)
+        ->get();
+
+        $properties->transform(function ($property) {
+            $property->primary_image = $property->images->where('is_primary', true)->first();
+            $property->total_images = $property->images->count();
+            $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
+            return $property;
+        });
+
+        return response()->json($properties);
     }
 
     /**

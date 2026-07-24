@@ -181,13 +181,15 @@ onClose();
 
               <Field icon={BedDouble} label="عدد الغرف">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   name="rooms"
                   value={form.rooms}
                   onChange={change}
                   onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
+                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
                   min="0"
-                  inputMode="numeric"
                   className={inputBase}
                   style={{ borderColor: "#EADFD0" }}
                   onFocus={(e) => (e.target.style.borderColor = COFFEE.gold)}

@@ -40,6 +40,8 @@ Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 Route::post('/reservations', [ReservationController::class, 'store']);
 Route::post('/reservations/check', [ReservationController::class, 'check']);
 Route::get('/properties', [PropertyController::class, 'index']);
+Route::get('/properties/top-viewed', [PropertyController::class, 'topViewed']);
+Route::post('/properties/{property}/view', [PropertyController::class, 'recordView']);
 Route::get('/properties/{property}', [PropertyController::class, 'show']);
 Route::get('/properties/category/{category}', [PropertyController::class, 'byCategory']);
 Route::post('/need-requests', [NeedRequestController::class, 'store']);

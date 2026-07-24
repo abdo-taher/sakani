@@ -15,7 +15,13 @@ function PropertyRow({
   const uploading = property.is_uploading;
 
   return (
-    <tr className={`border-t border-stone-100 hover:bg-stone-50 transition`}>
+    <tr
+      className={`border-t border-stone-100 hover:bg-stone-50 transition`}
+      style={uploading ? {
+        backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(245,158,11,0.06) 10px, rgba(245,158,11,0.06) 20px)",
+        backgroundColor: "#FFFBEB",
+      } : {}}
+    >
       <td className="px-4 py-4">
         {uploading ? (
           <div className="w-20 h-14 rounded-lg bg-stone-200 flex items-center justify-center">

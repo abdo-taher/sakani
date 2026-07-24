@@ -17,7 +17,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import usePageTitle from "../hooks/usePageTitle";
-import { getPropertyById } from "../services/propertyService";
+import { getPropertyById, recordView } from "../services/propertyService";
 import { createReservation, checkReservation } from "../services/reservationService";
 import { formatPhone, getPhoneError } from "../utils/phoneValidator";
 import { COFFEE } from "../constants/constants";
@@ -67,6 +67,7 @@ function PublicPropertyDetail() {
     try {
       const response = await getPropertyById(id);
       setProperty(response.data);
+      recordView(id).catch(() => {});
     } catch (error) {
       console.error(error);
       errorToast("تعذر تحميل بيانات العقار");

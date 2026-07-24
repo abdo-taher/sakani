@@ -658,13 +658,15 @@ function PropertyForm({
                       السعر (جنيه)
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       name="price"
                       value={propertyData.price}
                       onChange={handleChange}
                       onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
+                      onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
                       min="0"
-                      inputMode="numeric"
                       placeholder="0"
                       className={inputClass}
                     />
@@ -1088,19 +1090,26 @@ function NumberField({ icon: Icon, label, name, value, onChange, inputClass, lab
   const handleKeyDown = (e) => {
     if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
   };
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/[^0-9]/g, "");
+    document.execCommand("insertText", false, pasted);
+  };
   return (
     <div>
       <div className={labelClass} style={{ color }}>
         <Icon size={15} /> {label}
       </div>
       <input
-        type="number"
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
         name={name}
         value={value}
         onChange={onChange}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
         min="0"
-        inputMode="numeric"
         placeholder="0"
         className={inputClass}
       />

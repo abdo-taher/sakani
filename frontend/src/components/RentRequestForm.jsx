@@ -170,10 +170,12 @@ function RentRequestForm({ onClose }) {
   <input
     type="text"
     inputMode="numeric"
+    pattern="[0-9]*"
     name="rooms"
     value={form.rooms}
     onChange={change}
     onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
+    onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
     className={inputBase}
     style={{ borderColor: "#EADFD0" }}
     placeholder="مثال: 3"

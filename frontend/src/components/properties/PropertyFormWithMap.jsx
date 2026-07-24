@@ -511,13 +511,15 @@ function PropertyFormWithMap({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">السعر (جنيه مصري)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   name="price"
                   value={propertyData.price}
                   onChange={handleChange}
                   onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
+                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
                   min="0"
-                  inputMode="numeric"
                   placeholder="0"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 />
@@ -526,13 +528,15 @@ function PropertyFormWithMap({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">المساحة (متر مربع)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   name="area"
                   value={propertyData.area}
                   onChange={handleChange}
                   onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
+                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
                   min="0"
-                  inputMode="numeric"
                   placeholder="0"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 />
@@ -541,13 +545,15 @@ function PropertyFormWithMap({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">عدد الغرف</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   name="rooms"
                   value={propertyData.rooms}
                   onChange={handleChange}
                   onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
+                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
                   min="0"
-                  inputMode="numeric"
                   placeholder="0"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 />
@@ -556,13 +562,15 @@ function PropertyFormWithMap({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">عدد الحمامات</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   name="bathrooms"
                   value={propertyData.bathrooms}
                   onChange={handleChange}
                   onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
+                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
                   min="0"
-                  inputMode="numeric"
                   placeholder="0"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 />
@@ -571,13 +579,15 @@ function PropertyFormWithMap({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">الطابق (اختياري)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   name="floor"
                   value={propertyData.floor}
                   onChange={handleChange}
                   onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
+                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
                   min="0"
-                  inputMode="numeric"
                   placeholder="الطابق"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 />

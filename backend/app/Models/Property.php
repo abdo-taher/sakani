@@ -35,6 +35,7 @@ class Property extends Model
         'status',
         'featured',
         'is_uploading',
+        'views',
     ];
 
     public function category()

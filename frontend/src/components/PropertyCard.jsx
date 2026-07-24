@@ -38,8 +38,13 @@ function PropertyCard({ p, isFav, onToggleFav }) {
   return (
     <div
       onClick={() => !isUploading && navigate(`/property/${p.id}`)}
-      className={`group relative bg-white rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${isUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-      style={{ borderColor: "#eee" }}
+      className={`group relative bg-white rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${isUploading ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+      style={{
+        borderColor: isUploading ? "#F59E0B" : "#eee",
+        backgroundImage: isUploading
+          ? "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(245,158,11,0.06) 10px, rgba(245,158,11,0.06) 20px)"
+          : "none",
+      }}
       dir="rtl"
     >
       <div className="relative h-48 w-full overflow-hidden bg-stone-100">
@@ -77,9 +82,9 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         </div>
 
         {isUploading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 text-white text-xs font-bold backdrop-blur-sm">
-              <Loader2 size={14} className="animate-spin" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-amber-500/20 backdrop-blur-[1px]">
+            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500 text-white text-sm font-bold shadow-lg">
+              <Loader2 size={16} className="animate-spin" />
               جاري رفع الوسائط...
             </div>
           </div>
