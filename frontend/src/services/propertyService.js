@@ -18,6 +18,14 @@ export const getPropertiesByCategory = async (category) => {
   return cachedGet(`/properties/category/${category}`, { ttl: 30000 });
 };
 
+export const getBestProperties = async () => {
+  return cachedGet("/properties/best", { ttl: 60000 });
+};
+
+export const getRelatedProperties = async (id) => {
+  return cachedGet(`/properties/${id}/related`, { ttl: 60000 });
+};
+
 export const createProperty = async (data) => {
   clearCache("/properties");
   const response = await api.post("/properties", data);

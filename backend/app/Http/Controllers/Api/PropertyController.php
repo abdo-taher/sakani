@@ -31,7 +31,8 @@ class PropertyController extends Controller
             'propertyType', 
             'location', 
             'images', 
-            'amenities'
+            'amenities',
+            'tags'
         ])->latest()->get();
 
         // Add primary image and images grouped by type for each property
@@ -55,7 +56,8 @@ class PropertyController extends Controller
             'propertyType', 
             'location', 
             'images', 
-            'amenities'
+            'amenities',
+            'tags'
         ])->whereHas('category', function ($query) use ($category) {
             $query->where('slug', $category);
         })->latest()->get();
@@ -260,7 +262,8 @@ class PropertyController extends Controller
                 'images' => function($query) {
                     $query->ordered();
                 }, 
-                'amenities'
+                'amenities',
+                'tags'
             ])->find($property->id);
 
             // Add computed attributes
@@ -305,6 +308,7 @@ class PropertyController extends Controller
                 $query->ordered();
             }, 
             'amenities',
+            'tags',
             'reservations' => function($query) {
                 $query->with('room');
             },
@@ -462,9 +466,14 @@ class PropertyController extends Controller
             $property->amenities()->sync($request->amenities);
         }
 
+        // Update tags if provided
+        if ($request->has('tags')) {
+            $property->tags()->sync($request->tags);
+        }
+
         return response()->json([
             'message' => 'Property updated successfully',
-            'data' => Property::with('category', 'propertyType', 'location', 'images', 'amenities')->find($property->id)
+            'data' => Property::with('category', 'propertyType', 'location', 'images', 'amenities', 'tags')->find($property->id)
         ]);
     }
 
@@ -526,6 +535,115 @@ class PropertyController extends Controller
         $properties->transform(function ($property) {
             $property->primary_image = $property->images->where('is_primary', true)->first();
             $property->total_images = $property->images->count();
+            $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
+            return $property;
+        });
+
+        return response()->json($properties);
+    }
+
+    /**
+     * Get best properties (featured + top viewed) for home page
+     */
+    public function bestProperties(Request $request)
+    {
+        $user = $request->user();
+
+        $properties = Property::with([
+            'category', 'propertyType', 'location', 'images', 'amenities', 'tags'
+        ])
+        ->where('status', 'available')
+        ->where('is_uploading', false)
+        ->orderByDesc('featured')
+        ->orderByDesc('views')
+        ->limit(8)
+        ->get();
+
+        $properties->transform(function ($property) use ($user) {
+            $property->primary_image = $property->images->where('is_primary', true)->first();
+            $property->images_by_type = $property->images->groupBy('image_type');
+            $property->total_images = $property->images->count();
+            $property->is_favorite = $property->isFavoritedBy($user);
+            $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
+            return $property;
+        });
+
+        return response()->json($properties);
+    }
+
+    /**
+     * Get related properties based on tags, category, budget, and location
+     */
+    public function relatedProperties(Request $request, $id)
+    {
+        $user = $request->user();
+        $property = Property::with(['tags', 'category', 'location'])->findOrFail($id);
+
+        $budgetMin = $property->price * 0.5;
+        $budgetMax = $property->price * 2;
+
+        $relatedIds = collect();
+
+        // 1. Properties sharing tags (highest priority)
+        if ($property->tags->count() > 0) {
+            $tagIds = $property->tags->pluck('id');
+            $tagRelated = Property::whereHas('tags', function ($query) use ($tagIds) {
+                $query->whereIn('tags.id', $tagIds);
+            })
+            ->where('id', '!=', $property->id)
+            ->where('status', 'available')
+            ->where('is_uploading', false)
+            ->pluck('id');
+            $relatedIds = $relatedIds->merge($tagRelated);
+        }
+
+        // 2. Properties in same category
+        if ($property->category_id) {
+            $categoryRelated = Property::where('category_id', $property->category_id)
+                ->where('id', '!=', $property->id)
+                ->where('status', 'available')
+                ->where('is_uploading', false)
+                ->pluck('id');
+            $relatedIds = $relatedIds->merge($categoryRelated);
+        }
+
+        // 3. Properties in same location
+        if ($property->location_id) {
+            $locationRelated = Property::where('location_id', $property->location_id)
+                ->where('id', '!=', $property->id)
+                ->where('status', 'available')
+                ->where('is_uploading', false)
+                ->pluck('id');
+            $relatedIds = $relatedIds->merge($locationRelated);
+        }
+
+        // 4. Properties in similar budget range
+        $budgetRelated = Property::whereBetween('price', [$budgetMin, $budgetMax])
+            ->where('id', '!=', $property->id)
+            ->where('status', 'available')
+            ->where('is_uploading', false)
+            ->pluck('id');
+        $relatedIds = $relatedIds->merge($budgetRelated);
+
+        // Deduplicate while preserving priority order
+        $relatedIds = $relatedIds->unique()->take(6);
+
+        $properties = Property::with([
+            'category', 'propertyType', 'location', 'images', 'amenities', 'tags'
+        ])
+        ->whereIn('id', $relatedIds)
+        ->get();
+
+        // Re-order to match priority
+        $properties = $properties->sortBy(function ($p) use ($relatedIds) {
+            return $relatedIds->search($p->id);
+        })->values();
+
+        $properties->transform(function ($property) use ($user) {
+            $property->primary_image = $property->images->where('is_primary', true)->first();
+            $property->images_by_type = $property->images->groupBy('image_type');
+            $property->total_images = $property->images->count();
+            $property->is_favorite = $property->isFavoritedBy($user);
             $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
             return $property;
         });

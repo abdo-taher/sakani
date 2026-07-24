@@ -986,53 +986,7 @@ function PropertyForm({
               </div>
           )}
         </div>
-
-      {/* Footer */}
-        <div
-          className="shrink-0 p-6 flex justify-between items-center relative"
-          style={{ background: "white", borderTop: `1px solid ${COFFEE.line}` }}
-        >
-          {saving && savingMessage && (
-            <div
-              className="absolute -top-14 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg whitespace-nowrap"
-              style={{ background: COFFEE.dark, color: "white" }}
-            >
-              {savingMessage}
-            </div>
-          )}
-
-          <button
-            disabled={step === 1}
-            onClick={goPrev}
-            className="px-6 py-3 rounded-xl font-bold flex items-center gap-2 border-2 transition disabled:opacity-30 disabled:cursor-not-allowed"
-            style={{ borderColor: COFFEE.line, color: COFFEE.stone }}
-          >
-            <ChevronRight size={18} />
-            السابق
-          </button>
-
-          {step < 5 ? (
-            <button
-              onClick={goNext}
-              className="px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition hover:brightness-105"
-              style={{ background: COFFEE.gold, color: COFFEE.dark }}
-            >
-              التالي
-              <ChevronLeft size={18} />
-            </button>
-          ) : (
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition hover:brightness-110 pop-in disabled:opacity-60 disabled:cursor-wait"
-              style={{ background: "#2F7A4D", color: "white" }}
-            >
-              <Check size={18} />
-              {saving ? "جاري الحفظ..." : (property ? "حفظ التعديلات" : "حفظ العقار")}
-            </button>
-          )}
         </div>
-      </div>
 
       {/* Footer */}
       <div
@@ -1095,7 +1049,7 @@ function PropertyForm({
           .pop-in { animation: popIn 0.35s cubic-bezier(.34,1.56,.64,1) both; }
           .active-ring { animation: ringPulse 1.8s ease-out infinite; }
         `}</style>
-        <div className="max-w-5xl mx-auto min-h-[80vh] flex flex-col rounded-3xl overflow-hidden shadow-sm my-4">
+        <div className="w-full min-h-[80vh] flex flex-col rounded-3xl overflow-hidden shadow-sm my-4">
           {formContent}
         </div>
       </div>

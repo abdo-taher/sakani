@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\StatisticsController;
 use App\Http\Controllers\Api\CloudinaryController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\TagController;
 
 // Health check and configuration - No auth required
 Route::get('/health', [ConfigController::class, 'health']);
@@ -41,10 +42,13 @@ Route::post('/reservations', [ReservationController::class, 'store']);
 Route::post('/reservations/check', [ReservationController::class, 'check']);
 Route::get('/properties', [PropertyController::class, 'index']);
 Route::get('/properties/top-viewed', [PropertyController::class, 'topViewed']);
+Route::get('/properties/best', [PropertyController::class, 'bestProperties']);
+Route::get('/properties/{property}/related', [PropertyController::class, 'relatedProperties']);
 Route::post('/properties/{property}/view', [PropertyController::class, 'recordView']);
 Route::get('/properties/{property}', [PropertyController::class, 'show']);
 Route::get('/properties/category/{category}', [PropertyController::class, 'byCategory']);
 Route::post('/need-requests', [NeedRequestController::class, 'store']);
+Route::get('/tags', [TagController::class, 'index']);
 
 // Public favorite routes (for guest users using local storage)
 Route::prefix('favorites')->group(function () {
@@ -94,6 +98,7 @@ Route::delete('/properties/{property}', [PropertyController::class, 'destroy']);
     Route::apiResource('contact-messages', ContactMessageController::class)->except(['store']);
     Route::apiResource('settings', SettingController::class);
     Route::apiResource('property-types', PropertyTypeController::class);
+    Route::apiResource('tags', TagController::class)->except(['index']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/statistics', [StatisticsController::class, 'index']);
     Route::post('/cloudinary/signature', [CloudinaryController::class, 'signature']);
