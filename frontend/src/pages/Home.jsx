@@ -120,8 +120,24 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
       </div>
 
       {/* ---------------------------- إحصائيات ----------------------------- */}
-      <section className="py-8 px-4 sm:px-6" style={{ backgroundColor: "rgba(43,27,18,0.4)" }} dir="rtl">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
+      <section className="relative py-8 px-4 sm:px-6 overflow-hidden" dir="rtl">
+        {/* Video Background */}
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          src="/stats-bg.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onError={(e) => { e.target.style.display = "none"; }}
+        />
+        
+        {/* Overlay */}
+        <div className="absolute inset-0" style={{ backgroundColor: "rgba(43,27,18,0.6)" }} />
+        
+        {/* Content */}
+        <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
           {[
             { icon: Building2, value: 3, suffix: "+", label: "عقار تم بيعه" },
             { icon: Users, value: 3, suffix: "+", label: "عميل سعيد" },
@@ -132,13 +148,24 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
             const Icon = s.icon;
             return (
               <Reveal key={i} delay={i * 110} className="flex flex-col items-center">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center mb-2 animate-float" style={{ backgroundColor: "rgba(176,141,87,0.15)" }}>
-                  <Icon className="w-4 h-4" style={{ color: COFFEE.gold }} />
+                {/* Play button overlay for video effect */}
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center mb-2 animate-float" style={{ backgroundColor: "rgba(176,141,87,0.15)" }}>
+                    <Icon className="w-4 h-4" style={{ color: COFFEE.gold }} />
+                  </div>
+                  {i === 2 && ( // Add play button on the middle item as example
+                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm hover:bg-black/70 transition-colors cursor-pointer">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                        <path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                      </svg>
+                    </div>
+                  )}
                 </div>
-                <p className="text-lg sm:text-2xl font-extrabold opacity-70" style={{ color: COFFEE.creamSoft }}>
+                <p className="text-lg sm:text-2xl font-extrabold opacity-90" style={{ color: COFFEE.creamSoft }}>
                   <CountUp value={s.value} />{s.suffix}
                 </p>
-                <p className="text-[11px] sm:text-xs mt-1 opacity-60" style={{ color: COFFEE.cream }}>{s.label}</p>
+                <p className="text-[11px] sm:text-xs mt-1 opacity-80" style={{ color: COFFEE.cream }}>{s.label}</p>
               </Reveal>
             );
           })}

@@ -95,7 +95,7 @@ function BestPropertiesSection({ favorites, onToggleFav }) {
 
         {/* Properties Slider */}
         <div className="relative">
-          {/* Scroll buttons */}
+          {/* Scroll buttons - only show when there are properties AND more than 4 */}
           {filteredProperties.length > 4 && (
             <>
               <button
@@ -115,24 +115,26 @@ function BestPropertiesSection({ favorites, onToggleFav }) {
             </>
           )}
 
-          {/* Properties container */}
-          <div
-            ref={scrollContainerRef}
-            className="flex gap-5 overflow-x-auto scrollbar-hide pb-4"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {filteredProperties.map((p, i) => (
-              <div key={p.id} className="flex-shrink-0 w-72">
-                <Reveal delay={i * 80}>
-                  <PropertyShowcaseCard
-                    p={p}
-                    isFav={favorites?.has?.(p.id) || false}
-                    onToggleFav={onToggleFav}
-                  />
-                </Reveal>
-              </div>
-            ))}
-          </div>
+          {/* Properties container - only render when there are properties */}
+          {filteredProperties.length > 0 && (
+            <div
+              ref={scrollContainerRef}
+              className="flex gap-5 overflow-x-auto scrollbar-hide pb-4"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {filteredProperties.map((p, i) => (
+                <div key={p.id} className="flex-shrink-0 w-72">
+                  <Reveal delay={i * 80}>
+                    <PropertyShowcaseCard
+                      p={p}
+                      isFav={favorites?.has?.(p.id) || false}
+                      onToggleFav={onToggleFav}
+                    />
+                  </Reveal>
+                </div>
+              ))}
+            </div>
+          )}
 
           {filteredProperties.length === 0 && (
             <div className="text-center py-8">
