@@ -173,6 +173,7 @@ function RentRequestForm({ onClose }) {
     name="rooms"
     value={form.rooms}
     onChange={change}
+    onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
     className={inputBase}
     style={{ borderColor: "#EADFD0" }}
     placeholder="مثال: 3"

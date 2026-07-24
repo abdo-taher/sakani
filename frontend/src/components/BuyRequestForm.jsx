@@ -185,6 +185,9 @@ onClose();
                   name="rooms"
                   value={form.rooms}
                   onChange={change}
+                  onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
+                  min="0"
+                  inputMode="numeric"
                   className={inputBase}
                   style={{ borderColor: "#EADFD0" }}
                   onFocus={(e) => (e.target.style.borderColor = COFFEE.gold)}

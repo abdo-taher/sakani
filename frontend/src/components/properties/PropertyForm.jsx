@@ -661,6 +661,9 @@ function PropertyForm({
                       name="price"
                       value={propertyData.price}
                       onChange={handleChange}
+                      onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
+                      min="0"
+                      inputMode="numeric"
                       placeholder="0"
                       className={inputClass}
                     />
@@ -1081,6 +1084,9 @@ function SectionTitle({ icon: Icon, children }) {
 }
 
 function NumberField({ icon: Icon, label, name, value, onChange, inputClass, labelClass, color }) {
+  const handleKeyDown = (e) => {
+    if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+  };
   return (
     <div>
       <div className={labelClass} style={{ color }}>
@@ -1091,6 +1097,9 @@ function NumberField({ icon: Icon, label, name, value, onChange, inputClass, lab
         name={name}
         value={value}
         onChange={onChange}
+        onKeyDown={handleKeyDown}
+        min="0"
+        inputMode="numeric"
         placeholder="0"
         className={inputClass}
       />
