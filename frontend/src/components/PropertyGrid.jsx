@@ -10,7 +10,7 @@ function PropertyGrid({ list, emptyText, favorites = new Set(), onToggleFav, onO
     );
   }
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-h-[720px] overflow-y-auto p-1" style={{ overflowAnchor: "none" }}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-h-[720px] overflow-y-auto p-1 no-scrollbar" style={{ overflowAnchor: "none" }}>
       {list.map((p, i) => (
         <PropertyCard key={p.id} p={p} index={i} isFav={favorites.has(p.id)} onToggleFav={onToggleFav} onOpen={onOpen} />
       ))}
