@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Video } from "lucide-react";
 
-const DEFAULT_VIDEO_POSTER = "https://res.cloudinary.com/demo/image/upload/w_600,h_420,cs_thumb,a_hflip/fl_presenter/v1/blank.jpg";
-
 function VideoThumb({ src, className = "", alt = "" }) {
   const [thumb, setThumb] = useState(null);
   const [failed, setFailed] = useState(false);
@@ -48,15 +46,13 @@ function VideoThumb({ src, className = "", alt = "" }) {
   if (failed) {
     return (
       <div className={`relative overflow-hidden bg-stone-800 ${className}`}>
-        <img
-          src={src || DEFAULT_VIDEO_POSTER}
-          alt={alt}
-          className="w-full h-full object-cover"
-          style={{ opacity: 0.7 }}
-          onError={(e) => { e.target.src = DEFAULT_VIDEO_POSTER; }}
-        />
+        {/* Show a solid background with video icon instead of trying to load external image */}
+        <div className="w-full h-full bg-gradient-to-br from-stone-600 to-stone-800" style={{ opacity: 0.7 }} />
         <div className="absolute inset-0 flex items-center justify-center">
-          <Video size={24} color="white" style={{ opacity: 0.7 }} />
+          <Video size={24} color="white" style={{ opacity: 0.9 }} />
+        </div>
+        <div className="absolute bottom-2 left-2 text-xs text-white font-medium" style={{ opacity: 0.8 }}>
+          فيديو غير متاح
         </div>
       </div>
     );

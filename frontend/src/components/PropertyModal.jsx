@@ -266,16 +266,19 @@ function PropertyModal({
                 }
               </p>
               <span className="font-extrabold text-3xl sm:text-4xl" style={{ color: COFFEE.gold }}>
-                {property.has_detailed_rooms && property.rooms?.length > 0
-                  ? fmtPrice(Math.min(...property.rooms.map(r => r.price)))
-                  : fmtPrice(property.price)
-                }
+                {property.has_detailed_rooms && (() => {
+                  const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
+                  return rooms.length > 0 ? fmtPrice(Math.min(...rooms.map(r => r.price || 0))) : fmtPrice(property.price || 0);
+                })() || fmtPrice(property.price || 0)}
               </span>
-              {property.has_detailed_rooms && (
-                <p className="text-xs mt-1" style={{ color: COFFEE.stone }}>
-                  {property.rooms?.filter(r => r.status === "available").length || 0} غرف متاحة
-                </p>
-              )}
+              {property.has_detailed_rooms && (() => {
+                const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
+                return rooms.length > 0 ? (
+                  <p className="text-xs mt-1" style={{ color: COFFEE.stone }}>
+                    {rooms.filter(r => r.status === "available").length || 0} غرف متاحة
+                  </p>
+                ) : null;
+              })()}
             </div>
 
             <button

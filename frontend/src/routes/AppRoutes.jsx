@@ -26,6 +26,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import ContactMessages from "../pages/dashboard/ContactMessages";
 import MarketingMail from "../pages/dashboard/MarketingMail";
 import Notifications from "../pages/dashboard/Notifications";
+import Tags from "../pages/dashboard/Tags";
 import NotFound from "../pages/NotFound";
 import PublicPropertyDetail from "../pages/PublicPropertyDetail";
 import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
@@ -167,6 +168,10 @@ function AppRoutes({
 <Route
   path="locations"
   element={<Locations />}
+/>
+<Route
+  path="tags"
+  element={<Tags />}
 />
 <Route
     path="categories"

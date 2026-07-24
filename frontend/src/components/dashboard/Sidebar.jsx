@@ -14,6 +14,7 @@ import {
   LogOut,
   Mail,
   Bell,
+  Tag,
 } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 
@@ -37,6 +38,11 @@ const menuItems = [
     title: "إدارة الأماكن",
     icon: MapPinned,
     path: "/dashboard/locations",
+  },
+  {
+    title: "إدارة التاجات",
+    icon: Tag,
+    path: "/dashboard/tags",
   },
   {
     title: "طلبات الحجز",

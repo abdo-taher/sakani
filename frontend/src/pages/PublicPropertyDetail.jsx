@@ -313,11 +313,13 @@ function PublicPropertyDetail() {
             )}
 
             {/* Rooms Section - for detailed mode */}
-            {isRent && property.has_detailed_rooms && property.detailed_rooms?.length > 0 && (
-              <div className="mt-6">
-                <h3 className="font-bold mb-3" style={{ color: COFFEE.dark }}>الغرف المتاحة</h3>
-                <div className="grid gap-3">
-                  {property.detailed_rooms.map((room) => {
+            {isRent && property.has_detailed_rooms && (() => {
+              const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
+              return rooms.length > 0 ? (
+                <div className="mt-6">
+                  <h3 className="font-bold mb-3" style={{ color: COFFEE.dark }}>الغرف المتاحة</h3>
+                  <div className="grid gap-3">
+                    {rooms.map((room) => {
                     const roomStatusMap = {
                       available: { label: "متاح", color: "#16A34A", bg: "#DCFCE7" },
                       reserved: { label: "محجوز", color: "#F59E0B", bg: "#FEF3C7" },
@@ -401,7 +403,8 @@ function PublicPropertyDetail() {
                   })}
                 </div>
               </div>
-            )}
+              ) : null;
+            })()}
           </div>
 
           {/* Details + Reservation - 2 cols */}
@@ -413,10 +416,14 @@ function PublicPropertyDetail() {
                   {selectedRoomId ? "سعر الغرفة المختارة" : "يبدأ من"}
                 </p>
                 <p className="text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
-                  {selectedRoomId
-                    ? `${fmtPrice(property.detailed_rooms?.find(r => r.id === selectedRoomId)?.price)}`
-                    : `${fmtPrice(Math.min(...(property.detailed_rooms || []).map(r => r.price)))}`
-                  }
+                  {selectedRoomId ? (() => {
+                    const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
+                    const selectedRoom = rooms.find(r => r.id === selectedRoomId);
+                    return `${fmtPrice(selectedRoom?.price || 0)}`;
+                  })() : (() => {
+                    const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
+                    return rooms.length > 0 ? `${fmtPrice(Math.min(...rooms.map(r => r.price || 0)))}` : `${fmtPrice(property.price || 0)}`;
+                  })()}
                 </p>
                 {selectedRoomId && (
                   <p className="text-xs mt-1" style={{ color: COFFEE.stone }}>الإيجار الشهري</p>

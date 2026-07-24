@@ -36,9 +36,9 @@ function BestPropertiesSection({ favorites, onToggleFav }) {
   }, []);
 
   useEffect(() => {
-    let filtered = properties;
+    let filtered = properties || [];
     if (activeFilter !== "all") {
-      filtered = properties.filter(p => p.category?.slug === activeFilter);
+      filtered = filtered.filter(p => p?.category?.slug === activeFilter);
     }
     // Limit the number of properties shown
     setFilteredProperties(filtered.slice(0, PROPERTIES_LIMIT));

@@ -159,14 +159,18 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
 
         {/* Stats row */}
         <div className="flex items-center justify-between text-xs mb-3 border-t border-b py-2" style={{ borderColor: "#f2f2f2", color: "#777" }}>
-          <div className="flex items-center gap-1">
-            <Bed className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
-            {p.rooms}
-          </div>
-          <div className="flex items-center gap-1">
-            <Bath className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
-            {p.bathrooms}
-          </div>
+          {p.rooms > 0 && (
+            <div className="flex items-center gap-1">
+              <Bed className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
+              {p.rooms}
+            </div>
+          )}
+          {p.bathrooms > 0 && (
+            <div className="flex items-center gap-1">
+              <Bath className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
+              {p.bathrooms}
+            </div>
+          )}
           {!isRent && p.area && (
             <div className="flex items-center gap-1">
               <Maximize className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
@@ -177,23 +181,33 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
 
         {/* Price + available rooms */}
         <div className="flex items-center justify-between">
-          {isRent && p.has_detailed_rooms && p.rooms?.length > 0 ? (
+          {isRent && p.has_detailed_rooms && (() => {
+            const rooms = Array.isArray(p.rooms) ? p.rooms : Array.isArray(p.detailed_rooms) ? p.detailed_rooms : [];
+            return rooms.length > 0 ? (
+              <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>
+                يبدأ من {fmtPrice(Math.min(...rooms.map(r => r.price || 0)))}
+              </span>
+            ) : (
+              <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>
+                {fmtPrice(p.price || 0)}
+              </span>
+            );
+          })() || (
             <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>
-              يبدأ من {fmtPrice(Math.min(...p.rooms.map(r => r.price)))}
-            </span>
-          ) : (
-            <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>
-              {fmtPrice(p.price)}
+              {fmtPrice(p.price || 0)}
             </span>
           )}
           {p.rent_duration && <span className="text-xs" style={{ color: "#aaa" }}>/{p.rent_duration}</span>}
         </div>
 
-        {isRent && p.has_detailed_rooms && (
-          <p className="text-xs mt-1 font-bold" style={{ color: COFFEE.gold }}>
-            {p.rooms?.filter(r => r.status === "available").length || 0} غرف متاحة
-          </p>
-        )}
+        {isRent && p.has_detailed_rooms && (() => {
+          const rooms = Array.isArray(p.rooms) ? p.rooms : Array.isArray(p.detailed_rooms) ? p.detailed_rooms : [];
+          return rooms.length > 0 ? (
+            <p className="text-xs mt-1 font-bold" style={{ color: COFFEE.gold }}>
+              {rooms.filter(r => r.status === "available").length || 0} غرف متاحة
+            </p>
+          ) : null;
+        })()}
       </div>
     </div>
   );

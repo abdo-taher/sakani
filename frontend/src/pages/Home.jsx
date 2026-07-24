@@ -20,6 +20,7 @@ import CountUp from "../components/CountUp";
 import PropertyCard from "../components/PropertyCard";
 import TopViewedNotice from "../components/TopViewedNotice";
 import BestPropertiesSection from "../components/BestPropertiesSection";
+import BestOffersSection from "../components/BestOffersSection";
 
 import { COFFEE } from "../constants/constants";
 import { useNavigate } from "react-router-dom";
@@ -153,6 +154,9 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
           })}
         </div>
       </section>
+
+      {/* ----------------------------- أفضل العروض ------------------------------ */}
+      <BestOffersSection favorites={favorites} onToggleFav={onToggleFav} />
 
       {/* ----------------------------- من نحن ------------------------------ */}
       <section className="py-10 sm:py-14 px-4 sm:px-6" style={{ backgroundColor: COFFEE.creamSoft }} dir="rtl">
