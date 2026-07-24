@@ -134,8 +134,8 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
         />
         
         {/* Multi-layer overlay for better contrast */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70" />
-        <div className="absolute inset-0" style={{ backgroundColor: "rgba(43,27,18,0.75)" }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/20 to-black/40" />
+        <div className="absolute inset-0" style={{ backgroundColor: "rgba(43,27,18,0.25)" }} />
         
         {/* Animated background elements */}
         <div className="absolute top-10 right-10 w-32 h-32 rounded-full blur-2xl opacity-20 animate-pulse pointer-events-none" style={{ backgroundColor: COFFEE.gold }} />
@@ -146,14 +146,14 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
           {/* Section Header */}
           <Reveal>
             <div className="text-center mb-8 sm:mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 backdrop-blur-sm border border-white/20" style={{ backgroundColor: "rgba(176,141,87,0.15)" }}>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 backdrop-blur-md border border-white/30 shadow-xl" style={{ backgroundColor: "rgba(176,141,87,0.3)" }}>
                 <Award className="w-4 h-4" style={{ color: COFFEE.gold }} />
-                <span className="text-xs font-extrabold tracking-wider text-white">إحصائياتنا</span>
+                <span className="text-xs font-extrabold tracking-wider text-white drop-shadow-lg">إحصائياتنا</span>
               </div>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-2">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-2 drop-shadow-xl">
                 أرقام تتحدث عن نجاحنا
               </h2>
-              <p className="text-sm text-white/80 max-w-lg mx-auto">
+              <p className="text-sm text-white/90 max-w-lg mx-auto drop-shadow-lg">
                 نفتخر بثقة عملائنا وإنجازاتنا المتميزة في السوق العقاري
               </p>
             </div>
@@ -194,12 +194,12 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
                   </div>
                   
                   {/* Statistics Number */}
-                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-1 sm:mb-2 drop-shadow-lg">
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-1 sm:mb-2 drop-shadow-2xl" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
                     <CountUp value={stat.value} />{stat.suffix}
                   </p>
                   
                   {/* Label */}
-                  <p className="text-xs sm:text-sm font-semibold text-white/90 leading-relaxed px-2">
+                  <p className="text-xs sm:text-sm font-semibold text-white/95 leading-relaxed px-2 drop-shadow-lg" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>
                     {stat.label}
                   </p>
                   
