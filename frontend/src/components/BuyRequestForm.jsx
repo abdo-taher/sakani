@@ -15,7 +15,8 @@
 import Swal from "sweetalert2";
 
 import { createNeedRequest } from "../services/needRequestService";
-import { formatPhone, getPhoneError } from "../utils/phoneValidator";
+  import { formatPhone, getPhoneError } from "../utils/phoneValidator";
+  import { numbersOnly } from "../utils/numbersOnly";
 
   /* الفيلد مكوّن ثابت برّه BuyRequestForm عشان مايتعملوش remount مع كل حرف */
   function Field({ icon: Icon, label, children }) {
@@ -171,29 +172,30 @@ onClose();
                   name="area"
                   value={form.area}
                   onChange={change}
+                  inputMode="numeric"
+                  onKeyDown={numbersOnly.onKeyDown}
+                  onPaste={numbersOnly.onPaste}
                   className={inputBase}
                   style={{ borderColor: "#EADFD0" }}
                   onFocus={(e) => (e.target.style.borderColor = COFFEE.gold)}
                   onBlur={(e) => (e.target.style.borderColor = "#EADFD0")}
-                  placeholder="مثال: 180 متر"
+                  placeholder="مثال: 180"
                 />
               </Field>
 
               <Field icon={BedDouble} label="عدد الغرف">
                 <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
                   name="rooms"
                   value={form.rooms}
                   onChange={change}
-                  onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
-                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
-                  min="0"
+                  inputMode="numeric"
+                  onKeyDown={numbersOnly.onKeyDown}
+                  onPaste={numbersOnly.onPaste}
                   className={inputBase}
                   style={{ borderColor: "#EADFD0" }}
                   onFocus={(e) => (e.target.style.borderColor = COFFEE.gold)}
                   onBlur={(e) => (e.target.style.borderColor = "#EADFD0")}
+                  placeholder="مثال: 3"
                 />
               </Field>
             </div>
@@ -203,6 +205,9 @@ onClose();
                 name="budget"
                 value={form.budget}
                 onChange={change}
+                inputMode="numeric"
+                onKeyDown={numbersOnly.onKeyDown}
+                onPaste={numbersOnly.onPaste}
                 className={inputBase}
                 style={{ borderColor: "#EADFD0" }}
                 onFocus={(e) => (e.target.style.borderColor = COFFEE.gold)}
@@ -241,6 +246,8 @@ onClose();
 
               <Field icon={Phone} label="رقم الهاتف">
                 <input
+                  type="tel"
+                  inputMode="numeric"
                   name="phone"
                   value={form.phone}
                   onChange={change}

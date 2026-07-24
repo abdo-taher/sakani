@@ -15,6 +15,7 @@ import { COFFEE } from "../constants/constants";
 import Swal from "sweetalert2";
 import { createNeedRequest } from "../services/needRequestService";
 import { formatPhone, getPhoneError } from "../utils/phoneValidator";
+import { numbersOnly } from "../utils/numbersOnly";
 /* الفيلد بقى مكوّن ثابت برّه RentRequestForm عشان مايتعملوش remount */
 function Field({ icon: Icon, label, children }) {
   return (
@@ -168,14 +169,12 @@ function RentRequestForm({ onClose }) {
 
             <Field icon={BedDouble} label="عدد الغرف">
   <input
-    type="text"
-    inputMode="numeric"
-    pattern="[0-9]*"
     name="rooms"
     value={form.rooms}
     onChange={change}
-    onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
-    onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
+    inputMode="numeric"
+    onKeyDown={numbersOnly.onKeyDown}
+    onPaste={numbersOnly.onPaste}
     className={inputBase}
     style={{ borderColor: "#EADFD0" }}
     placeholder="مثال: 3"
@@ -201,6 +200,9 @@ function RentRequestForm({ onClose }) {
               name="budget"
               value={form.budget}
               onChange={change}
+              inputMode="numeric"
+              onKeyDown={numbersOnly.onKeyDown}
+              onPaste={numbersOnly.onPaste}
               className={inputBase}
               style={{ borderColor: "#EADFD0" }}
               onFocus={(e) => (e.target.style.borderColor = COFFEE.gold)}
@@ -239,6 +241,8 @@ function RentRequestForm({ onClose }) {
 
             <Field icon={Phone} label="رقم الهاتف">
               <input
+                type="tel"
+                inputMode="numeric"
                 name="phone"
                 value={form.phone}
                 onChange={change}

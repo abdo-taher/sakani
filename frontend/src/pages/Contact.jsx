@@ -116,6 +116,8 @@ function Contact() {
                 رقم الهاتف
               </label>
               <input
+                type="tel"
+                inputMode="numeric"
                 value={phone}
                 onChange={(e) => {
                   const val = formatPhone(e.target.value);
