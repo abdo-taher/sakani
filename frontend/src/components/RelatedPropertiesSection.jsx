@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Link2, ArrowLeft } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { Link2, ChevronLeft, ChevronRight } from "lucide-react";
 import { COFFEE } from "../constants/constants";
 import { getRelatedProperties } from "../services/propertyService";
 import PropertyShowcaseCard from "./PropertyShowcaseCard";
@@ -8,6 +8,7 @@ import Reveal from "./Reveal";
 function RelatedPropertiesSection({ propertyId, favorites, onToggleFav }) {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
     if (!propertyId) return;
@@ -24,11 +25,15 @@ function RelatedPropertiesSection({ propertyId, favorites, onToggleFav }) {
     load();
   }, [propertyId]);
 
-  const MAX_RELATED = 5;
+  const scrollLeft = () => {
+    scrollContainerRef.current?.scrollBy({ left: -320, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    scrollContainerRef.current?.scrollBy({ left: 320, behavior: 'smooth' });
+  };
 
   if (loading || properties.length === 0) return null;
-
-  const displayProperties = properties.slice(0, MAX_RELATED);
 
   return (
     <section className="py-8 px-4 sm:px-6 max-w-6xl mx-auto" dir="rtl">
@@ -48,17 +53,47 @@ function RelatedPropertiesSection({ propertyId, favorites, onToggleFav }) {
         </div>
       </Reveal>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {displayProperties.map((p, i) => (
-          <Reveal key={p.id} delay={i * 80}>
-            <PropertyShowcaseCard
-              p={p}
-              isFav={favorites?.has?.(p.id) || false}
-              onToggleFav={onToggleFav}
-              showBadge={true}
-            />
-          </Reveal>
-        ))}
+      {/* Properties Slider */}
+      <div className="relative">
+        {/* Scroll buttons */}
+        {properties.length > 4 && (
+          <>
+            <button
+              onClick={scrollLeft}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center"
+              style={{ color: COFFEE.gold }}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={scrollRight}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center"
+              style={{ color: COFFEE.gold }}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </>
+        )}
+
+        {/* Properties container */}
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-5 overflow-x-auto scrollbar-hide pb-4"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {properties.map((p, i) => (
+            <div key={p.id} className="flex-shrink-0 w-72">
+              <Reveal delay={i * 80}>
+                <PropertyShowcaseCard
+                  p={p}
+                  isFav={favorites?.has?.(p.id) || false}
+                  onToggleFav={onToggleFav}
+                  showBadge={true}
+                />
+              </Reveal>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
