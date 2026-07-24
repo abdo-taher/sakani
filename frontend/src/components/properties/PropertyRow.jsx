@@ -14,7 +14,7 @@ function PropertyRow({
   const navigate = useNavigate();
 
   return (
-    <tr className="border-t border-stone-100 hover:bg-stone-50 transition">
+    <tr className={`border-t border-stone-100 hover:bg-stone-50 transition ${property.is_uploading ? "opacity-40" : ""}`}>
       <td className="px-4 py-4">
 {property.images?.length ? (
   <img

@@ -14,8 +14,11 @@ function PropertyToolbar({
  categories = [],
 locations = [],
 }) {
-  const selectClass =
-    "w-full rounded-xl border border-stone-300 pl-10 pr-4 py-3.5 text-base outline-none focus:border-yellow-600 focus:ring-2 focus:ring-yellow-100 bg-white cursor-pointer transition appearance-none";
+  const selectStyle = {
+    WebkitAppearance: "none",
+    MozAppearance: "none",
+    appearance: "none",
+  };
 
   return (
     <div

@@ -10,6 +10,7 @@ import {
   getProperties,
   deleteProperty,
   changePropertyStatus,
+  markUploadComplete,
 } from "../../services/propertyService";
 import PropertyPreviewModal from "../../components/properties/PropertyPreviewModal";
 import Swal from "sweetalert2";
@@ -40,6 +41,15 @@ const loadProperties = async () => {
     const data = await getProperties();
 
     setProperties(data);
+
+    const stuck = data.filter(
+      (p) => p.is_uploading && (p.total_images > 0 || p.images?.length > 0)
+    );
+    if (stuck.length > 0) {
+      await Promise.all(stuck.map((p) => markUploadComplete(p.id)));
+      const refreshed = await getProperties();
+      setProperties(refreshed);
+    }
 
   } catch (error) {
 
