@@ -10,6 +10,7 @@ use App\Models\Amenity;
 use App\Models\PropertyType;
 use App\Models\User;
 use App\Models\Reservation;
+use App\Models\Tag;
 
 class Property extends Model
 {
@@ -92,6 +93,16 @@ class Property extends Model
         return $this->hasMany(Reservation::class)->latest();
     }
 
+    public function rooms()
+    {
+        return $this->hasMany(Room::class);
+    }
+
+    public function availableRooms()
+    {
+        return $this->hasMany(Room::class)->where('status', 'available');
+    }
+
     /**
      * Check if a user has favorited this property
      */
@@ -110,5 +121,10 @@ class Property extends Model
     public function favoriteUsers()
     {
         return $this->belongsToMany(User::class, 'user_favorites')->withTimestamps();
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'property_tags');
     }
 }

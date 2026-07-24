@@ -15,6 +15,7 @@ import {
   Video,
   Heart,
   CheckCircle2,
+  ImageIcon,
 } from "lucide-react";
 import usePageTitle from "../hooks/usePageTitle";
 import { getPropertyById, recordView } from "../services/propertyService";
@@ -58,6 +59,7 @@ function PublicPropertyDetail() {
   const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reserveSuccess, setReserveSuccess] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState(null);
 
   useEffect(() => {
     loadProperty();
@@ -81,7 +83,7 @@ function PublicPropertyDetail() {
     if (!phone || phone.length < 11) return;
     setChecking(true);
     try {
-      const res = await checkReservation(property.id, phone);
+      const res = await checkReservation(property.id, phone, selectedRoomId);
       setAlreadyReserved(res.reserved);
     } catch {
       setAlreadyReserved(false);
@@ -101,6 +103,7 @@ function PublicPropertyDetail() {
     try {
       await createReservation({
         property_id: property.id,
+        room_id: selectedRoomId,
         name: form.name,
         phone: form.phone,
         message: form.message,
@@ -267,19 +270,127 @@ function PublicPropertyDetail() {
                 </div>
               </div>
             )}
+
+            {/* Rooms Section - for detailed mode */}
+            {isRent && property.has_detailed_rooms && property.rooms?.length > 0 && (
+              <div className="mt-6">
+                <h3 className="font-bold mb-3" style={{ color: COFFEE.dark }}>الغرف المتاحة</h3>
+                <div className="grid gap-3">
+                  {property.rooms.map((room) => {
+                    const roomStatusMap = {
+                      available: { label: "متاح", color: "#16A34A", bg: "#DCFCE7" },
+                      reserved: { label: "محجوز", color: "#F59E0B", bg: "#FEF3C7" },
+                      rented: { label: "مؤجر", color: "#2563EB", bg: "#DBEAFE" },
+                    };
+                    const roomStatus = roomStatusMap[room.status] || roomStatusMap.available;
+                    const roomImages = room.room_images || room.roomImages || [];
+                    const primaryImg = roomImages.find(img => img.is_primary) || roomImages[0];
+                    const isSelected = selectedRoomId === room.id;
+
+                    return (
+                      <div
+                        key={room.id}
+                        className={`rounded-2xl border-2 p-4 transition cursor-pointer ${
+                          isSelected ? "ring-2 ring-amber-400" : "hover:shadow-md"
+                        }`}
+                        style={{
+                          borderColor: isSelected ? COFFEE.gold : COFFEE.line,
+                          background: isSelected ? "rgba(204,154,58,0.05)" : "white",
+                        }}
+                        onClick={() => {
+                          if (room.status === "available") {
+                            setSelectedRoomId(isSelected ? null : room.id);
+                            setReserveSuccess(false);
+                            setAlreadyReserved(false);
+                          }
+                        }}
+                      >
+                        <div className="flex gap-3">
+                          {primaryImg ? (
+                            <img
+                              src={primaryImg.image_url}
+                              alt={room.name}
+                              className="w-20 h-20 rounded-xl object-cover shrink-0"
+                            />
+                          ) : (
+                            <div
+                              className="w-20 h-20 rounded-xl flex items-center justify-center shrink-0"
+                              style={{ background: COFFEE.cream }}
+                            >
+                              <ImageIcon size={24} color={COFFEE.gold} />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-bold" style={{ color: COFFEE.dark }}>{room.name}</p>
+                              <span
+                                className="px-2 py-0.5 rounded text-[10px] font-bold"
+                                style={{ background: roomStatus.bg, color: roomStatus.color }}
+                              >
+                                {roomStatus.label}
+                              </span>
+                            </div>
+                            <p className="text-lg font-extrabold" style={{ color: COFFEE.gold }}>
+                              {fmtPrice(room.price)} ج.م
+                              <span className="text-xs font-normal" style={{ color: COFFEE.stone }}> / شهر</span>
+                            </p>
+                            {room.area && (
+                              <p className="text-xs mt-1" style={{ color: COFFEE.stone }}>{room.area} م²</p>
+                            )}
+                            {room.description && (
+                              <p className="text-xs mt-1 line-clamp-2" style={{ color: COFFEE.stone }}>{room.description}</p>
+                            )}
+                          </div>
+                        </div>
+                        {room.status === "available" && (
+                          <div className="mt-3 text-center">
+                            <span
+                              className="text-xs font-bold px-4 py-1.5 rounded-full transition"
+                              style={{
+                                background: isSelected ? COFFEE.gold : "rgba(204,154,58,0.1)",
+                                color: isSelected ? COFFEE.dark : COFFEE.gold,
+                              }}
+                            >
+                              {isSelected ? "تم التحديد ✓" : "اضغط لاختيار هذه الغرفة"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Details + Reservation - 2 cols */}
           <div className="lg:col-span-2 space-y-6">
             {/* Price */}
-            <div className="rounded-2xl p-6 text-center" style={{ background: "#FBF3DF" }}>
-              <p className="text-sm font-bold mb-1" style={{ color: COFFEE.stone }}>
-                {isRent ? "الإيجار الشهري" : "السعر"}
-              </p>
-              <p className="text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
-                {fmtPrice(property.price)}
-              </p>
-            </div>
+            {isRent && property.has_detailed_rooms ? (
+              <div className="rounded-2xl p-6 text-center" style={{ background: "#FBF3DF" }}>
+                <p className="text-sm font-bold mb-1" style={{ color: COFFEE.stone }}>
+                  {selectedRoomId ? "سعر الغرفة المختارة" : "يبدأ من"}
+                </p>
+                <p className="text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
+                  {selectedRoomId
+                    ? `${fmtPrice(property.rooms?.find(r => r.id === selectedRoomId)?.price)} ج.م`
+                    : `${fmtPrice(Math.min(...(property.rooms || []).map(r => r.price)))} ج.م`
+                  }
+                </p>
+                {selectedRoomId && (
+                  <p className="text-xs mt-1" style={{ color: COFFEE.stone }}>الإيجار الشهري</p>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-2xl p-6 text-center" style={{ background: "#FBF3DF" }}>
+                <p className="text-sm font-bold mb-1" style={{ color: COFFEE.stone }}>
+                  {isRent ? "الإيجار الشهري" : "السعر"}
+                </p>
+                <p className="text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
+                  {fmtPrice(property.price)}
+                </p>
+              </div>
+            )}
 
             {/* Info Cards */}
             <div className="grid grid-cols-2 gap-3">
@@ -307,7 +418,7 @@ function PublicPropertyDetail() {
             </div>
 
             {/* Reservation Form */}
-            {property.status === "available" && (
+            {property.status === "available" && (!property.has_detailed_rooms || selectedRoomId) && (
               <div className="rounded-2xl border p-5" style={{ borderColor: COFFEE.line, background: "white" }}>
                 {reserveSuccess ? (
                   <div className="text-center py-4">

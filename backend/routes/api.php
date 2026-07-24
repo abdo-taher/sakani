@@ -21,7 +21,7 @@ use App\Http\Controllers\PropertyTypeController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\StatisticsController;
 use App\Http\Controllers\Api\CloudinaryController;
-use App\Http\Controllers\Api\MarketingMailController;
+use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\NotificationController;
 
 // Health check and configuration - No auth required
@@ -68,7 +68,15 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/properties', [PropertyController::class, 'store']);
 Route::put('/properties/{property}', [PropertyController::class, 'update']);
 Route::delete('/properties/{property}', [PropertyController::class, 'destroy']);
-Route::patch('/properties/{property}/upload-complete', [PropertyController::class, 'uploadComplete']);
+    Route::patch('/properties/{property}/upload-complete', [PropertyController::class, 'uploadComplete']);
+
+    // Room routes
+    Route::post('/properties/{id}/rooms', [RoomController::class, 'store']);
+    Route::put('/rooms/{room}', [RoomController::class, 'update']);
+    Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
+    Route::post('/rooms/{room}/images', [RoomController::class, 'uploadImage']);
+    Route::delete('/room-images/{image}', [RoomController::class, 'destroyImage']);
+    Route::patch('/rooms/{room}/upload-complete', [RoomController::class, 'markUploadComplete']);
     Route::apiResource('property-images', PropertyImageController::class);
     
     // Enhanced property image routes

@@ -22,9 +22,14 @@ import {
   Trash2,
   Loader2,
   Eye,
+  Plus,
+  Edit3,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 import usePageTitle from "../../hooks/usePageTitle";
-import { getPropertyById } from "../../services/propertyService";
+import { getPropertyById, updateProperty } from "../../services/propertyService";
+import { deleteRoom } from "../../services/roomService";
 import { updateReservation, deleteReservation } from "../../services/reservationService";
 import { COFFEE } from "../../constants/constants";
 import { successToast, errorToast } from "../../utils/toast";
@@ -132,6 +137,33 @@ function PropertyDetail() {
       successToast("تم حذف طلب الحجز");
     } catch {
       errorToast("تعذر حذف طلب الحجز");
+    }
+  };
+
+  const isRent = property?.category?.slug === "rent";
+
+  const toggleDetailedRooms = async () => {
+    try {
+      await updateProperty(property.id, { has_detailed_rooms: !property.has_detailed_rooms });
+      setProperty((prev) => ({ ...prev, has_detailed_rooms: !prev.has_detailed_rooms }));
+      successToast(property.has_detailed_rooms ? "تم تعطيل الغرف بالتفصيل" : "تم تفعيل الغرف بالتفصيل");
+    } catch {
+      errorToast("تعذر تغيير الإعداد");
+    }
+  };
+
+  const handleDeleteRoom = async (roomId) => {
+    const confirmed = await confirmDelete("الغرفة");
+    if (!confirmed) return;
+    try {
+      await deleteRoom(roomId, property.id);
+      setProperty((prev) => ({
+        ...prev,
+        rooms: (prev.rooms || []).filter((r) => r.id !== roomId),
+      }));
+      successToast("تم حذف الغرفة");
+    } catch {
+      errorToast("تعذر حذف الغرفة");
     }
   };
 
@@ -329,6 +361,138 @@ function PropertyDetail() {
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Room Management - only for rent properties */}
+          {isRent && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold" style={{ color: COFFEE.dark }}>
+                  إدارة الغرف
+                </h3>
+                <button
+                  onClick={toggleDetailedRooms}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition"
+                  style={{
+                    background: property.has_detailed_rooms ? "rgba(46,125,50,0.1)" : "rgba(156,163,175,0.1)",
+                    color: property.has_detailed_rooms ? "#16A34A" : "#6B7280",
+                  }}
+                >
+                  {property.has_detailed_rooms ? (
+                    <ToggleRight size={20} />
+                  ) : (
+                    <ToggleLeft size={20} />
+                  )}
+                  غرف بالتفصيل
+                </button>
+              </div>
+
+              {property.has_detailed_rooms && (
+                <div
+                  className="rounded-2xl border p-4"
+                  style={{ borderColor: COFFEE.line, background: "white" }}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-bold" style={{ color: COFFEE.stone }}>
+                      {property.rooms?.length || 0} غرف
+                    </p>
+                    <button
+                      onClick={() => navigate(`/dashboard/properties/${property.id}/rooms/create`)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition hover:brightness-110"
+                      style={{ background: COFFEE.gold, color: COFFEE.dark }}
+                    >
+                      <Plus size={16} />
+                      إضافة غرفة
+                    </button>
+                  </div>
+
+                  {!property.rooms?.length ? (
+                    <div className="text-center py-6">
+                      <BedDouble size={32} color={COFFEE.gold} className="mx-auto mb-2" />
+                      <p className="text-sm font-bold" style={{ color: COFFEE.stone }}>
+                        لا توجد غرف بعد
+                      </p>
+                      <p className="text-xs mt-1" style={{ color: COFFEE.stone }}>
+                        اضغط "إضافة غرفة" لإضافة غرفة جديدة
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-3">
+                      {property.rooms.map((room) => {
+                        const roomStatusMap = {
+                          available: { label: "متاح", color: "#16A34A", bg: "#DCFCE7" },
+                          reserved: { label: "محجوز", color: "#F59E0B", bg: "#FEF3C7" },
+                          rented: { label: "مؤجر", color: "#2563EB", bg: "#DBEAFE" },
+                        };
+                        const roomStatus = roomStatusMap[room.status] || roomStatusMap.available;
+                        const primaryImg = (room.room_images || room.roomImages || []).find(img => img.is_primary) || (room.room_images || room.roomImages || [])[0];
+
+                        return (
+                          <div
+                            key={room.id}
+                            className="flex items-center gap-4 p-3 rounded-xl border transition hover:shadow-sm"
+                            style={{ borderColor: COFFEE.line }}
+                          >
+                            {primaryImg ? (
+                              <img
+                                src={primaryImg.image_url}
+                                alt={room.name}
+                                className="w-16 h-16 rounded-xl object-cover shrink-0"
+                              />
+                            ) : (
+                              <div
+                                className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0"
+                                style={{ background: COFFEE.cream }}
+                              >
+                                <ImageIcon size={20} color={COFFEE.gold} />
+                              </div>
+                            )}
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="font-bold truncate" style={{ color: COFFEE.dark }}>
+                                  {room.name}
+                                </p>
+                                <span
+                                  className="px-2 py-0.5 rounded text-[10px] font-bold shrink-0"
+                                  style={{ background: roomStatus.bg, color: roomStatus.color }}
+                                >
+                                  {roomStatus.label}
+                                </span>
+                              </div>
+                              <p className="text-sm font-bold" style={{ color: COFFEE.gold }}>
+                                {fmtPrice(room.price)} ج.م/شهر
+                              </p>
+                              {room.area && (
+                                <p className="text-xs" style={{ color: COFFEE.stone }}>
+                                  {room.area} م²
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex gap-2 shrink-0">
+                              <button
+                                onClick={() => navigate(`/dashboard/properties/${property.id}/rooms/${room.id}/edit`)}
+                                className="w-9 h-9 rounded-xl flex items-center justify-center border transition hover:bg-stone-50"
+                                style={{ borderColor: COFFEE.line }}
+                              >
+                                <Edit3 size={14} color={COFFEE.dark} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRoom(room.id)}
+                                className="w-9 h-9 rounded-xl flex items-center justify-center border border-red-200 text-red-500 transition hover:bg-red-50"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

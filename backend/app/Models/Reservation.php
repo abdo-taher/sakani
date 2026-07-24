@@ -8,14 +8,21 @@ class Reservation extends Model
 {
     protected $fillable = [
         'property_id',
+        'room_id',
         'name',
         'phone',
         'message',
-        'status'
+        'status',
     ];
 
     public function property()
     {
         return $this->belongsTo(Property::class);
     }
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
+    }
+}
 }

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import {
   X,
+  ArrowRight,
   Home,
   Building2,
   MapPin,
@@ -58,7 +60,9 @@ function PropertyForm({
   onClose,
   property,
   loadProperties,
+  pageMode = false,
 }) {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState("next");
   const [propertyData, setPropertyData] = useState({
@@ -326,7 +330,7 @@ function PropertyForm({
 
         successToast("تم تعديل العقار بنجاح");
         await loadProperties();
-        onClose();
+        pageMode ? navigate("/dashboard/properties") : onClose();
 
       } else {
 
@@ -341,11 +345,11 @@ function PropertyForm({
           await markUploadComplete(propertyId);
           await loadProperties();
           successToast("تم إضافة العقار بنجاح");
-          onClose();
+          pageMode ? navigate("/dashboard/properties") : onClose();
         } else {
           successToast("تم إضافة العقار — جاري رفع الوسائط في الخلفية...");
           await loadProperties();
-          onClose();
+          pageMode ? navigate("/dashboard/properties") : onClose();
 
           (async () => {
             let uploadedCount = 0;
@@ -432,121 +436,83 @@ function PropertyForm({
     propertyData.features.includes(a.id)
   );
 
-  const modalContent = (
-    <div
-      className="fixed inset-0 z-[999] flex items-center justify-center p-4"
-      style={{ background: "rgba(20,14,9,0.55)", backdropFilter: "blur(6px)" }}
-      onClick={onClose}
-    >
-      <style>{`
-        @keyframes fadeSlideNext {
-          from { opacity: 0; transform: translateX(14px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes fadeSlidePrev {
-          from { opacity: 0; transform: translateX(-14px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes popIn {
-          from { opacity: 0; transform: scale(0.85); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes ringPulse {
-          0% { box-shadow: 0 0 0 0 rgba(204,154,58,0.45); }
-          70% { box-shadow: 0 0 0 8px rgba(204,154,58,0); }
-          100% { box-shadow: 0 0 0 0 rgba(204,154,58,0); }
-        }
-        .step-anim-next { animation: fadeSlideNext 0.32s ease both; }
-        .step-anim-prev { animation: fadeSlidePrev 0.32s ease both; }
-        .pop-in { animation: popIn 0.35s cubic-bezier(.34,1.56,.64,1) both; }
-        .active-ring { animation: ringPulse 1.8s ease-out infinite; }
-      `}</style>
-
+  const formContent = (
+    <>
+      {/* Header */}
       <div
-        onClick={(e) => e.stopPropagation()}
-        dir="rtl"
-        className="w-full max-w-5xl h-[92vh] max-h-[92vh] flex flex-col rounded-3xl overflow-hidden shadow-2xl"
-        style={{
-          background: COFFEE.cream,
-          "--gold": COFFEE.gold,
-          "--goldRing": "rgba(204,154,58,0.18)",
-        }}
+        className="shrink-0 px-8 py-6 flex items-center justify-between"
+        style={{ background: COFFEE.dark }}
       >
-        {/* Header */}
-        <div
-          className="shrink-0 px-8 py-6 flex items-center justify-between"
-          style={{ background: COFFEE.dark }}
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+            <span
+              className="w-10 h-10 rounded-2xl flex items-center justify-center"
+              style={{ background: COFFEE.gold }}
+            >
+              <Home size={20} color={COFFEE.dark} />
+            </span>
+            {property ? "تعديل العقار" : "إضافة عقار جديد"}
+          </h2>
+          <p className="mt-2 text-sm" style={{ color: COFFEE.goldLight }}>
+            الخطوة {step} من 5 — {STEPS[step - 1].label}
+          </p>
+        </div>
+
+        <button
+          onClick={pageMode ? () => navigate("/dashboard/properties") : onClose}
+          className="w-10 h-10 rounded-full flex items-center justify-center transition hover:bg-white/10"
         >
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
-              <span
-                className="w-10 h-10 rounded-2xl flex items-center justify-center"
-                style={{ background: COFFEE.gold }}
-              >
-                <Home size={20} color={COFFEE.dark} />
-              </span>
-              {property ? "تعديل العقار" : "إضافة عقار جديد"}
-            </h2>
-            <p className="mt-2 text-sm" style={{ color: COFFEE.goldLight }}>
-              الخطوة {step} من 5 — {STEPS[step - 1].label}
-            </p>
-          </div>
+          {pageMode ? <ArrowRight color="white" /> : <X color="white" />}
+        </button>
+      </div>
 
-          <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-full flex items-center justify-center transition hover:bg-white/10"
-          >
-            <X color="white" />
-          </button>
-        </div>
-
-        {/* Stepper */}
-        <div className="shrink-0 px-8 py-5 bg-white/60 border-b" style={{ borderColor: COFFEE.line }}>
-          <div className="flex items-center">
-            {STEPS.map((s, idx) => {
-              const done = step > s.id;
-              const active = step === s.id;
-              return (
-                <React.Fragment key={s.id}>
-                  <div className="flex flex-col items-center gap-1.5 shrink-0">
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                        active ? "active-ring" : ""
-                      }`}
-                      style={{
-                        background: done || active ? COFFEE.gold : "white",
-                        color: done || active ? COFFEE.dark : COFFEE.stone,
-                        border: `2px solid ${done || active ? COFFEE.gold : COFFEE.line}`,
-                      }}
-                    >
-                      {done ? <Check size={16} /> : s.id}
-                    </div>
-                    <span
-                      className="text-[11px] font-bold hidden md:block"
-                      style={{ color: active ? COFFEE.dark : COFFEE.stone }}
-                    >
-                      {s.label}
-                    </span>
+      {/* Stepper */}
+      <div className="shrink-0 px-8 py-5 bg-white/60 border-b" style={{ borderColor: COFFEE.line }}>
+        <div className="flex items-center">
+          {STEPS.map((s, idx) => {
+            const done = step > s.id;
+            const active = step === s.id;
+            return (
+              <React.Fragment key={s.id}>
+                <div className="flex flex-col items-center gap-1.5 shrink-0">
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                      active ? "active-ring" : ""
+                    }`}
+                    style={{
+                      background: done || active ? COFFEE.gold : "white",
+                      color: done || active ? COFFEE.dark : COFFEE.stone,
+                      border: `2px solid ${done || active ? COFFEE.gold : COFFEE.line}`,
+                    }}
+                  >
+                    {done ? <Check size={16} /> : s.id}
                   </div>
-                  {idx < STEPS.length - 1 && (
-                    <div className="flex-1 h-[2px] mx-2 rounded-full overflow-hidden bg-stone-200">
-                      <div
-                        className="h-full transition-all duration-500"
-                        style={{
-                          width: step > s.id ? "100%" : "0%",
-                          background: COFFEE.gold,
-                        }}
-                      />
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </div>
+                  <span
+                    className="text-[11px] font-bold hidden md:block"
+                    style={{ color: active ? COFFEE.dark : COFFEE.stone }}
+                  >
+                    {s.label}
+                  </span>
+                </div>
+                {idx < STEPS.length - 1 && (
+                  <div className="flex-1 h-[2px] mx-2 rounded-full overflow-hidden bg-stone-200">
+                    <div
+                      className="h-full transition-all duration-500"
+                      style={{
+                        width: step > s.id ? "100%" : "0%",
+                        background: COFFEE.gold,
+                      }}
+                    />
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
+      </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-8 min-h-0">
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto p-8 min-h-0">
           <div key={step} className={direction === "next" ? "step-anim-next" : "step-anim-prev"}>
             {step === 1 && (
               <div>
@@ -1018,11 +984,10 @@ function PropertyForm({
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* Footer */}
+      {/* Footer */}
         <div
           className="shrink-0 p-6 flex justify-between items-center relative"
           style={{ background: "white", borderTop: `1px solid ${COFFEE.line}` }}
@@ -1068,10 +1033,102 @@ function PropertyForm({
           )}
         </div>
       </div>
-    </div>
+
+      {/* Footer */}
+      <div
+        className="shrink-0 p-6 flex justify-between items-center relative"
+        style={{ background: "white", borderTop: `1px solid ${COFFEE.line}` }}
+      >
+        {saving && savingMessage && (
+          <div
+            className="absolute -top-14 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg whitespace-nowrap"
+            style={{ background: COFFEE.dark, color: "white" }}
+          >
+            {savingMessage}
+          </div>
+        )}
+
+        <button
+          disabled={step === 1}
+          onClick={goPrev}
+          className="px-6 py-3 rounded-xl font-bold flex items-center gap-2 border-2 transition disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{ borderColor: COFFEE.line, color: COFFEE.stone }}
+        >
+          <ChevronRight size={18} />
+          السابق
+        </button>
+
+        {step < 5 ? (
+          <button
+            onClick={goNext}
+            className="px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition hover:brightness-105"
+            style={{ background: COFFEE.gold, color: COFFEE.dark }}
+          >
+            التالي
+            <ChevronLeft size={18} />
+          </button>
+        ) : (
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition hover:brightness-110 pop-in disabled:opacity-60 disabled:cursor-wait"
+            style={{ background: "#2F7A4D", color: "white" }}
+          >
+            <Check size={18} />
+            {saving ? "جاري الحفظ..." : (property ? "حفظ التعديلات" : "حفظ العقار")}
+          </button>
+        )}
+      </div>
+    </>
   );
 
-  return createPortal(modalContent, document.body);
+  if (pageMode) {
+    return (
+      <div dir="rtl" style={{ background: COFFEE.cream, "--gold": COFFEE.gold, "--goldRing": "rgba(204,154,58,0.18)" }}>
+        <style>{`
+          @keyframes fadeSlideNext { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
+          @keyframes fadeSlidePrev { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: translateX(0); } }
+          @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+          @keyframes ringPulse { 0% { box-shadow: 0 0 0 0 rgba(204,154,58,0.45); } 70% { box-shadow: 0 0 0 8px rgba(204,154,58,0); } 100% { box-shadow: 0 0 0 0 rgba(204,154,58,0); } }
+          .step-anim-next { animation: fadeSlideNext 0.32s ease both; }
+          .step-anim-prev { animation: fadeSlidePrev 0.32s ease both; }
+          .pop-in { animation: popIn 0.35s cubic-bezier(.34,1.56,.64,1) both; }
+          .active-ring { animation: ringPulse 1.8s ease-out infinite; }
+        `}</style>
+        <div className="max-w-5xl mx-auto min-h-[80vh] flex flex-col rounded-3xl overflow-hidden shadow-sm my-4">
+          {formContent}
+        </div>
+      </div>
+    );
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[999] flex items-center justify-center p-4"
+      style={{ background: "rgba(20,14,9,0.55)", backdropFilter: "blur(6px)" }}
+      onClick={onClose}
+    >
+      <style>{`
+        @keyframes fadeSlideNext { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeSlidePrev { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+        @keyframes ringPulse { 0% { box-shadow: 0 0 0 0 rgba(204,154,58,0.45); } 70% { box-shadow: 0 0 0 8px rgba(204,154,58,0); } 100% { box-shadow: 0 0 0 0 rgba(204,154,58,0); } }
+        .step-anim-next { animation: fadeSlideNext 0.32s ease both; }
+        .step-anim-prev { animation: fadeSlidePrev 0.32s ease both; }
+        .pop-in { animation: popIn 0.35s cubic-bezier(.34,1.56,.64,1) both; }
+        .active-ring { animation: ringPulse 1.8s ease-out infinite; }
+      `}</style>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        dir="rtl"
+        className="w-full max-w-5xl h-[92vh] max-h-[92vh] flex flex-col rounded-3xl overflow-hidden shadow-2xl"
+        style={{ background: COFFEE.cream, "--gold": COFFEE.gold, "--goldRing": "rgba(204,154,58,0.18)" }}
+      >
+        {formContent}
+      </div>
+    </div>,
+    document.body
+  );
 }
 
 function SectionTitle({ icon: Icon, children }) {

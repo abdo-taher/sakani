@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import usePageTitle from "../../hooks/usePageTitle";
 
 import PropertyHeader from "../../components/properties/PropertyHeader";
 import PropertyToolbar from "../../components/properties/PropertyToolbar";
 import PropertyTable from "../../components/properties/PropertyTable";
-import PropertyForm from "../../components/properties/PropertyForm";
 import FeatureManager from "../../components/properties/FeatureManager";
 import {
   getProperties,
@@ -23,12 +23,11 @@ import { getCategories } from "../../services/categoryService";
 import { getLocations } from "../../services/locationService";
 function Properties() {
   usePageTitle("إدارة العقارات — سكني");
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
   const [status, setStatus] = useState("");
   const [location, setLocation] = useState("");
-  const [openForm, setOpenForm] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState(null);
 const [openFeatures, setOpenFeatures] = useState(false);
 const [properties, setProperties] = useState([]);
 const [categories, setCategories] = useState([]);
@@ -104,10 +103,7 @@ useEffect(() => {
   return (
     <div className="p-8"> 
      <PropertyHeader
-  onAdd={() => {
-    setSelectedProperty(null);
-    setOpenForm(true);
-  }}
+  onAdd={() => navigate("/dashboard/properties/create")}
   onOpenFeatures={() => setOpenFeatures(true)}
 />
 
@@ -134,8 +130,7 @@ useEffect(() => {
     setPreviewProperty(property);
   }}
         onEdit={(property) => {
-          setSelectedProperty(property);
-          setOpenForm(true);
+          navigate(`/dashboard/properties/${property.id}/edit`);
         }}
        onDelete={async (id) => {
 
@@ -207,17 +202,6 @@ useEffect(() => {
     onClose={() => setOpenFeatures(false)}
 />
 
-      {openForm && (
-       <PropertyForm
-  property={selectedProperty}
-  loadProperties={loadProperties}
-  onClose={() => {
-    setOpenForm(false);
-    setSelectedProperty(null);
-  }}
-/>
-
-      )}
       {previewProperty && (
   <PropertyPreviewModal
     property={previewProperty}

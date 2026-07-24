@@ -26,6 +26,7 @@ class ReservationController extends Controller
     {
         $request->validate([
             'property_id' => 'required|exists:properties,id',
+            'room_id' => 'nullable|exists:rooms,id',
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'message' => 'nullable|string',
@@ -33,6 +34,7 @@ class ReservationController extends Controller
 
         $reservation = Reservation::create([
             'property_id' => $request->property_id,
+            'room_id' => $request->room_id,
             'name' => $request->name,
             'phone' => $request->phone,
             'message' => $request->message,
@@ -96,12 +98,18 @@ $reservation->update([
     {
         $request->validate([
             'property_id' => 'required|exists:properties,id',
+            'room_id' => 'nullable|exists:rooms,id',
             'phone' => 'required|string|max:20',
         ]);
 
-        $exists = Reservation::where('property_id', $request->property_id)
-            ->where('phone', $request->phone)
-            ->exists();
+        $query = Reservation::where('property_id', $request->property_id)
+            ->where('phone', $request->phone);
+
+        if ($request->filled('room_id')) {
+            $query->where('room_id', $request->room_id);
+        }
+
+        $exists = $query->exists();
 
         return response()->json([
             'reserved' => $exists,

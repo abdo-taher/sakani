@@ -233,11 +233,22 @@ function PropertyModal({
           <div className="flex items-center justify-between flex-wrap gap-4 pt-6 border-t animate-heroFade-3" style={{ borderColor: "#EADFD0" }}>
             <div>
               <p className="text-sm text-stone-400 mb-1">
-                {property.category?.slug === "rent" ? "الإيجار الشهري" : "السعر"}
+                {property.category?.slug === "rent"
+                  ? (property.has_detailed_rooms ? "يبدأ من" : "الإيجار الشهري")
+                  : "السعر"
+                }
               </p>
               <span className="font-extrabold text-3xl sm:text-4xl" style={{ color: COFFEE.gold }}>
-                {fmtPrice(property.price)}
+                {property.has_detailed_rooms && property.rooms?.length > 0
+                  ? fmtPrice(Math.min(...property.rooms.map(r => r.price)))
+                  : fmtPrice(property.price)
+                }
               </span>
+              {property.has_detailed_rooms && (
+                <p className="text-xs mt-1" style={{ color: COFFEE.stone }}>
+                  {property.rooms?.filter(r => r.status === "available").length || 0} غرف متاحة
+                </p>
+              )}
             </div>
 
             <button

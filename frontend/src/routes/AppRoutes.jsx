@@ -15,6 +15,10 @@ import Locations from "../pages/dashboard/Locations";
 import Categories from "../pages/dashboard/Categories";
 import CategoryDetails from "../pages/dashboard/CategoryDetails";
 import PropertyDetail from "../pages/dashboard/PropertyDetail";
+import CreateRoomPage from "../pages/dashboard/CreateRoomPage";
+import EditRoomPage from "../pages/dashboard/EditRoomPage";
+import PropertyCreate from "../pages/dashboard/PropertyCreate";
+import PropertyEdit from "../pages/dashboard/PropertyEdit";
 import Reservations from "../pages/dashboard/Reservations";
 import Statistics from "../pages/dashboard/Statistics";
 import Settings from "../pages/dashboard/Settings";
@@ -139,8 +143,26 @@ function AppRoutes({
   />
 
   <Route
+    path="properties/create"
+    element={<PropertyCreate />}
+  />
+
+  <Route
+    path="properties/:id/edit"
+    element={<PropertyEdit />}
+  />
+
+  <Route
     path="properties/:id"
     element={<PropertyDetail />}
+  />
+  <Route
+    path="properties/:id/rooms/create"
+    element={<CreateRoomPage />}
+  />
+  <Route
+    path="properties/:id/rooms/:roomId/edit"
+    element={<EditRoomPage />}
   />
 <Route
   path="locations"

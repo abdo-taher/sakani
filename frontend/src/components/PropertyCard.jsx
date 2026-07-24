@@ -146,9 +146,22 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>{fmtPrice(p.price)}</span>
+          {p.category?.slug === "rent" && p.has_detailed_rooms && p.rooms?.length > 0 ? (
+            <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>
+              يبدأ من {fmtPrice(Math.min(...p.rooms.map(r => r.price)))} ج.م
+            </span>
+          ) : (
+            <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>
+              {fmtPrice(p.price)} ج.م
+            </span>
+          )}
           {p.rent_duration && <span className="text-xs text-stone-400">/{p.rent_duration}</span>}
         </div>
+        {p.category?.slug === "rent" && p.has_detailed_rooms && (
+          <p className="text-xs mt-1 font-bold" style={{ color: COFFEE.gold }}>
+            {p.rooms?.filter(r => r.status === "available").length || 0} غرف متاحة
+          </p>
+        )}
       </div>
     </div>
   );

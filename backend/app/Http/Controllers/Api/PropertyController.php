@@ -95,6 +95,9 @@ class PropertyController extends Controller
             'video_file_path' => 'nullable|string',
             'status' => 'nullable|in:available,reserved,sold,rented',
             'featured' => 'boolean',
+            'has_detailed_rooms' => 'boolean',
+            'tags' => 'sometimes|array',
+            'tags.*' => 'exists:tags,id',
             
             // Images validation
             'images' => 'sometimes|array|max:20',
@@ -180,6 +183,10 @@ class PropertyController extends Controller
     
             if ($request->filled('amenities')) {
                 $property->amenities()->sync($request->amenities);
+            }
+
+            if ($request->filled('tags')) {
+                $property->tags()->sync($request->tags);
             }
 
             // Handle image uploads
@@ -298,7 +305,12 @@ class PropertyController extends Controller
                 $query->ordered();
             }, 
             'amenities',
-            'reservations',
+            'reservations' => function($query) {
+                $query->with('room');
+            },
+            'rooms' => function($query) {
+                $query->with('roomImages');
+            },
         ])->findOrFail($id);
         
         // Add computed attributes for frontend display
@@ -360,12 +372,14 @@ class PropertyController extends Controller
             'featured' => 'sometimes|boolean',
             'amenities' => 'sometimes|array',
             'amenities.*' => 'exists:amenities,id',
+            'tags' => 'sometimes|array',
+            'tags.*' => 'exists:tags,id',
         ]);
 
         $updateData = $request->only([
             'title', 'description', 'price', 'property_type_id', 'category_id', 
             'location_id', 'area', 'rooms', 'bathrooms', 'floor', 'balconies', 
-            'finishing', 'furnishing', 'status', 'featured'
+            'finishing', 'furnishing', 'status', 'featured', 'has_detailed_rooms'
         ]);
 
         // Handle video removal
