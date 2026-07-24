@@ -34,6 +34,7 @@ import {
   errorToast,
 } from "../../utils/toast";
 import { uploadToCloudinary } from "../../services/cloudinaryService";
+import { numbersOnly } from "../../utils/numbersOnly";
 
 const COFFEE = {
   dark: "#3B2618",
@@ -664,8 +665,8 @@ function PropertyForm({
                       name="price"
                       value={propertyData.price}
                       onChange={handleChange}
-                      onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
-                      onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
+                      onKeyDown={numbersOnly.onKeyDown}
+                      onPaste={numbersOnly.onPaste}
                       min="0"
                       placeholder="0"
                       className={inputClass}
@@ -1087,14 +1088,6 @@ function SectionTitle({ icon: Icon, children }) {
 }
 
 function NumberField({ icon: Icon, label, name, value, onChange, inputClass, labelClass, color }) {
-  const handleKeyDown = (e) => {
-    if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
-  };
-  const handlePaste = (e) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/[^0-9]/g, "");
-    document.execCommand("insertText", false, pasted);
-  };
   return (
     <div>
       <div className={labelClass} style={{ color }}>
@@ -1107,8 +1100,8 @@ function NumberField({ icon: Icon, label, name, value, onChange, inputClass, lab
         name={name}
         value={value}
         onChange={onChange}
-        onKeyDown={handleKeyDown}
-        onPaste={handlePaste}
+        onKeyDown={numbersOnly.onKeyDown}
+        onPaste={numbersOnly.onPaste}
         min="0"
         placeholder="0"
         className={inputClass}

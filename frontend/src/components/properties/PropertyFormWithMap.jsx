@@ -34,6 +34,7 @@ import {
   errorToast,
 } from "../../utils/toast";
 import { uploadToCloudinary } from "../../services/cloudinaryService";
+import { numbersOnly } from "../../utils/numbersOnly";
 import MapPicker from "../common/MapPicker";
 
 const COFFEE = {
@@ -517,8 +518,8 @@ function PropertyFormWithMap({
                   name="price"
                   value={propertyData.price}
                   onChange={handleChange}
-                  onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
-                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
+                      onKeyDown={numbersOnly.onKeyDown}
+                      onPaste={numbersOnly.onPaste}
                   min="0"
                   placeholder="0"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
@@ -534,8 +535,8 @@ function PropertyFormWithMap({
                   name="area"
                   value={propertyData.area}
                   onChange={handleChange}
-                  onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
-                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
+                      onKeyDown={numbersOnly.onKeyDown}
+                      onPaste={numbersOnly.onPaste}
                   min="0"
                   placeholder="0"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
@@ -551,8 +552,8 @@ function PropertyFormWithMap({
                   name="rooms"
                   value={propertyData.rooms}
                   onChange={handleChange}
-                  onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
-                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
+                      onKeyDown={numbersOnly.onKeyDown}
+                      onPaste={numbersOnly.onPaste}
                   min="0"
                   placeholder="0"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
@@ -568,8 +569,8 @@ function PropertyFormWithMap({
                   name="bathrooms"
                   value={propertyData.bathrooms}
                   onChange={handleChange}
-                  onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
-                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
+                      onKeyDown={numbersOnly.onKeyDown}
+                      onPaste={numbersOnly.onPaste}
                   min="0"
                   placeholder="0"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
@@ -585,8 +586,8 @@ function PropertyFormWithMap({
                   name="floor"
                   value={propertyData.floor}
                   onChange={handleChange}
-                  onKeyDown={(e) => { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }}
-                  onPaste={(e) => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text").replace(/[^0-9]/g, "")); }}
+                      onKeyDown={numbersOnly.onKeyDown}
+                      onPaste={numbersOnly.onPaste}
                   min="0"
                   placeholder="الطابق"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
