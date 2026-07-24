@@ -85,7 +85,7 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
           preload="auto"
           onError={(e) => { e.target.style.display = "none"; }}
         />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(43,27,18,0.15) 0%, rgba(43,27,18,0.25) 100%)" }} />
+        <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, rgba(43,27,18,0.3) 0%, rgba(43,27,18,0.3) 100%)` }} />
         <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full blur-3xl opacity-30 animate-blob pointer-events-none" style={{ backgroundColor: COFFEE.gold }} />
         <div className="absolute bottom-0 -left-16 w-72 h-72 rounded-full blur-3xl opacity-20 animate-blob-2 pointer-events-none" style={{ backgroundColor: COFFEE.cream }} />
 
@@ -107,7 +107,7 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
             نقدم لك أفضل فرص البيع والشراء والإيجار في دمياط ودمياط الجديدة، بثقة وخبرة تمتد لسنوات.
           </p>
           <div className="animate-heroFade-3 flex flex-wrap gap-2.5 justify-center mb-6">
-            <button onClick={() => navigate("/sell")} className="btn-shimmer px-5 py-2.5 rounded-full font-bold text-sm hover:scale-105 hover:shadow-xl transition-transform duration-300" style={{ backgroundColor: COFFEE.gold, color: COFFEE.darkest }}>تصفح شقق البيع</button>
+            <button onClick={() => navigate("/rent")} className="btn-shimmer px-5 py-2.5 rounded-full font-bold text-sm hover:scale-105 hover:shadow-xl transition-transform duration-300" style={{ backgroundColor: COFFEE.gold, color: COFFEE.darkest }}>تصفح شقق الإيجار</button>
             <button onClick={() => navigate("/need")} className="btn-shimmer px-5 py-2.5 rounded-full font-bold text-sm border-2 hover:scale-105 hover:bg-white/10 transition-all duration-300" style={{ borderColor: COFFEE.cream, color: COFFEE.cream }}>محتاج مساعدة؟</button>
           </div>
         </div>
@@ -135,10 +135,10 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
                 <div className="w-9 h-9 rounded-full flex items-center justify-center mb-2 animate-float" style={{ backgroundColor: "rgba(176,141,87,0.15)" }}>
                   <Icon className="w-4 h-4" style={{ color: COFFEE.gold }} />
                 </div>
-                <p className="text-lg sm:text-2xl font-extrabold" style={{ color: COFFEE.creamSoft }}>
+                <p className="text-lg sm:text-2xl font-extrabold opacity-70" style={{ color: COFFEE.creamSoft }}>
                   <CountUp value={s.value} />{s.suffix}
                 </p>
-                <p className="text-[11px] sm:text-xs mt-1" style={{ color: COFFEE.cream }}>{s.label}</p>
+                <p className="text-[11px] sm:text-xs mt-1 opacity-60" style={{ color: COFFEE.cream }}>{s.label}</p>
               </Reveal>
             );
           })}

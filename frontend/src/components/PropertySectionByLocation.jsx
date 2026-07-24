@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { MapPin, ChevronLeft, ArrowRight } from "lucide-react";
-import PropertyGrid from "./PropertyGrid";
+import PropertySlider from "./PropertySlider";
 import { COFFEE } from "../constants/constants";
 
 function PropertySectionByLocation({
@@ -108,11 +108,11 @@ function PropertySectionByLocation({
         </h2>
       </div>
 
-      <PropertyGrid
-        list={list}
+      <PropertySlider
+        properties={list}
         favorites={favorites}
         onToggleFav={onToggleFav}
-        onOpen={onOpen}
+        limit={5}
       />
     </div>
   );
