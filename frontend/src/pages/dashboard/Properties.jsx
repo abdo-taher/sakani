@@ -37,33 +37,23 @@ const [previewProperty, setPreviewProperty] = useState(null);
 
 const loadProperties = async () => {
   try {
-
     const data = await getProperties();
-
     setProperties(data);
-
-    const stuck = data.filter(
-      (p) => p.is_uploading
-    );
-    if (stuck.length > 0) {
-      await Promise.all(stuck.map((p) => markUploadComplete(p.id)));
-      const refreshed = await getProperties();
-      setProperties(refreshed);
-    }
-
   } catch (error) {
-
     errorToast("تعذر تحميل العقارات");
-
     console.error(error);
-
   }
 };
 
 const checkStuckUploads = async () => {
   try {
     const data = await getProperties();
-    const stuck = data.filter((p) => p.is_uploading);
+    const stuck = data.filter((p) => {
+      if (!p.is_uploading) return false;
+      const createdAt = new Date(p.created_at);
+      const minutesSince = (Date.now() - createdAt.getTime()) / 60000;
+      return minutesSince > 10;
+    });
     if (stuck.length > 0) {
       await Promise.all(stuck.map((p) => markUploadComplete(p.id)));
       const refreshed = await getProperties();
@@ -94,7 +84,7 @@ useEffect(() => {
   loadProperties();
   loadCategories();
   loadLocations();
-  const interval = setInterval(checkStuckUploads, 5000);
+  const interval = setInterval(checkStuckUploads, 30000);
   return () => clearInterval(interval);
 }, []);
   

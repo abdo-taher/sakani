@@ -24,7 +24,7 @@ function PropertyRow({
     >
       <td className="px-4 py-4">
         {uploading ? (
-          <div className="w-20 h-14 rounded-lg bg-stone-200 flex items-center justify-center">
+          <div className="w-20 h-14 rounded-lg bg-amber-100 flex items-center justify-center border border-amber-300">
             <Loader2 size={20} className="animate-spin text-amber-500" />
           </div>
         ) : property.images?.length ? (
@@ -44,8 +44,8 @@ function PropertyRow({
         <div className="flex items-center gap-2">
           {property.title}
           {uploading && (
-            <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-              <CloudUpload size={12} />
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full font-bold">
+              <Loader2 size={12} className="animate-spin" />
               جاري الرفع
             </span>
           )}
