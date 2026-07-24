@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Pencil, Trash2, ExternalLink, Loader2, CloudUpload, EyeOff } from "lucide-react";
+import { Eye, Pencil, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import PropertyStatus from "./PropertyStatus";
 import { COFFEE } from "../../constants/constants";
 import { fmtPrice, SAMPLE_IMG } from "../../utils/helpers";
@@ -13,7 +13,7 @@ function PropertyRow({
   onStatusChange,
 }) {
   const navigate = useNavigate();
-  const uploading = property.is_uploading;
+  const uploading = Boolean(property.is_uploading);
 
   return (
     <tr

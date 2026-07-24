@@ -16,7 +16,7 @@ function PropertyCard({ p, isFav, onToggleFav }) {
   const [imgError, setImgError] = useState(false);
   const navigate = useNavigate();
 
-  const isUploading = p.is_uploading;
+  const isUploading = Boolean(p.is_uploading);
   const hasVideo = (p.images && p.images.some(img => img.media_type === 'video')) || p.video_url;
 
   const firstVideo = p.images && p.images.find(img => img.media_type === 'video');
