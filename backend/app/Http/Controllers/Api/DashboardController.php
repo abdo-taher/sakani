@@ -17,18 +17,43 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $counts = ['properties' => 0, 'locations' => 0, 'categories' => 0, 'reservations' => 0, 'total_views' => 0];
+        $recentProperties = [];
+        $recentReservations = [];
+        $monthlyStats = collect();
+        $categoryDistribution = collect();
+        $visitorStats = ['today' => 0, 'month' => 0, 'all_time' => 0, 'total_visits' => 0];
+        $dailyVisitors = collect();
+
         try {
-            $counts = [
-                'properties'   => Property::count(),
-                'locations'    => Location::count(),
-                'categories'   => Category::count(),
-                'reservations' => Reservation::count(),
-                'total_views'  => (int) Property::sum('views'),
-            ];
+            $counts['properties'] = Property::count();
+        } catch (Exception $e) { Log::warning('Dashboard count properties: ' . $e->getMessage()); }
 
-            $recentProperties   = Property::latest()->take(5)->get();
+        try {
+            $counts['locations'] = Location::count();
+        } catch (Exception $e) { Log::warning('Dashboard count locations: ' . $e->getMessage()); }
+
+        try {
+            $counts['categories'] = Category::count();
+        } catch (Exception $e) { Log::warning('Dashboard count categories: ' . $e->getMessage()); }
+
+        try {
+            $counts['reservations'] = Reservation::count();
+        } catch (Exception $e) { Log::warning('Dashboard count reservations: ' . $e->getMessage()); }
+
+        try {
+            $counts['total_views'] = (int) Property::sum('views');
+        } catch (Exception $e) { Log::warning('Dashboard sum views: ' . $e->getMessage()); }
+
+        try {
+            $recentProperties = Property::latest()->take(5)->get();
+        } catch (Exception $e) { Log::warning('Dashboard recent properties: ' . $e->getMessage()); }
+
+        try {
             $recentReservations = Reservation::latest()->take(5)->get();
+        } catch (Exception $e) { Log::warning('Dashboard recent reservations: ' . $e->getMessage()); }
 
+        try {
             $months = collect(range(5, 0))->map(function ($i) {
                 return now()->subMonths($i)->format('Y-m');
             })->values();
@@ -50,7 +75,9 @@ class DashboardController extends Controller
                     'reservations' => $reservationsMonthly[$month] ?? 0,
                 ];
             });
+        } catch (Exception $e) { Log::warning('Dashboard monthly stats: ' . $e->getMessage()); }
 
+        try {
             $categoryDistribution = Property::selectRaw('category_id, COUNT(*) as total')
                 ->groupBy('category_id')
                 ->get()
@@ -61,7 +88,9 @@ class DashboardController extends Controller
                         'value' => $row->total,
                     ];
                 });
+        } catch (Exception $e) { Log::warning('Dashboard category distribution: ' . $e->getMessage()); }
 
+        try {
             $today     = now()->startOfDay();
             $monthStart = now()->startOfMonth();
 
@@ -77,28 +106,16 @@ class DashboardController extends Controller
                 ->groupBy('date')
                 ->pluck('unique_visits', 'date')
                 ->mapWithKeys(fn ($val, $key) => [$key => (int) $val]);
+        } catch (Exception $e) { Log::warning('Dashboard visitor stats: ' . $e->getMessage()); }
 
-            return response()->json([
-                'counts'                => $counts,
-                'recent_properties'     => $recentProperties,
-                'recent_reservations'   => $recentReservations,
-                'monthly_stats'         => $monthlyStats,
-                'category_distribution' => $categoryDistribution,
-                'visitor_stats'         => $visitorStats,
-                'daily_visitors'        => $dailyVisitors,
-            ]);
-        } catch (Exception $e) {
-            Log::error('Dashboard error: ' . $e->getMessage());
-            return response()->json([
-                'counts'                => ['properties' => 0, 'locations' => 0, 'categories' => 0, 'reservations' => 0, 'total_views' => 0],
-                'recent_properties'     => [],
-                'recent_reservations'   => [],
-                'monthly_stats'         => [],
-                'category_distribution' => [],
-                'visitor_stats'         => ['today' => 0, 'month' => 0, 'all_time' => 0, 'total_visits' => 0],
-                'daily_visitors'        => [],
-                'error'                 => $e->getMessage(),
-            ], 200);
-        }
+        return response()->json([
+            'counts'                => $counts,
+            'recent_properties'     => $recentProperties,
+            'recent_reservations'   => $recentReservations,
+            'monthly_stats'         => $monthlyStats,
+            'category_distribution' => $categoryDistribution,
+            'visitor_stats'         => $visitorStats,
+            'daily_visitors'        => $dailyVisitors,
+        ]);
     }
 }

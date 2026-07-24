@@ -52,7 +52,7 @@ class PropertyController extends Controller
             $property->images_by_type = $property->images->groupBy('image_type');
             $property->total_images = $property->images->count();
             $property->is_favorite = $property->isFavoritedBy($user);
-            $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
+            $property->cached_views = ($property->views ?? 0) + (Cache::get("property_views_{$property->id}", 0));
             return $property;
         });
 
@@ -325,6 +325,9 @@ class PropertyController extends Controller
     {
         $user = $request->user();
 
+        $property = null;
+
+        // Try with all relations first
         try {
             $property = Property::with([
                 'category', 
@@ -346,19 +349,43 @@ class PropertyController extends Controller
                 'message' => 'العقار غير موجود'
             ], 404);
         } catch (\Exception $e) {
-            Log::error("Property show error for id {$id}: " . $e->getMessage());
-
-            $property = Property::with([
-                'category', 
-                'propertyType', 
-                'location', 
-                'images' => function($query) {
-                    $query->ordered();
-                }, 
-                'amenities',
-            ])->findOrFail($id);
+            Log::error("Property show eager load failed for id {$id}: " . $e->getMessage());
         }
-        
+
+        // Fallback: try with only essential relations
+        if (!$property) {
+            try {
+                $property = Property::with([
+                    'category', 
+                    'propertyType', 
+                    'location', 
+                    'images' => function($query) {
+                        $query->ordered();
+                    }, 
+                    'amenities',
+                ])->findOrFail($id);
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'العقار غير موجود'
+                ], 404);
+            } catch (\Exception $e) {
+                Log::error("Property show basic load failed for id {$id}: " . $e->getMessage());
+            }
+        }
+
+        // Last resort: load property without any eager loading
+        if (!$property) {
+            try {
+                $property = Property::findOrFail($id);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'العقار غير موجود'
+                ], 404);
+            }
+        }
+
         // Add computed attributes for frontend display
         $property->primary_image = $property->images->where('is_primary', true)->first();
         $property->images_by_type = $property->images->groupBy('image_type')->map(function ($typeImages, $type) {
@@ -370,7 +397,7 @@ class PropertyController extends Controller
             ];
         });
         $property->total_images = $property->images->count();
-        $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
+        $property->cached_views = ($property->views ?? 0) + (Cache::get("property_views_{$property->id}", 0));
         
         // Add favorite status
         $property->is_favorite = $property->isFavoritedBy($user);
@@ -561,7 +588,11 @@ class PropertyController extends Controller
         Cache::put($key, $count + 1, now()->addMinutes(30));
 
         if (($count + 1) % 10 === 0) {
-            $property->increment('views', $count + 1);
+            try {
+                $property->increment('views', $count + 1);
+            } catch (\Exception $e) {
+                Log::warning("Failed to increment views for property {$id}: " . $e->getMessage());
+            }
             Cache::put($key, 0, now()->addMinutes(30));
         }
 
@@ -570,19 +601,31 @@ class PropertyController extends Controller
 
     public function topViewed()
     {
-        $properties = Property::with([
-            'category', 'propertyType', 'location', 'images', 'amenities'
-        ])
-        ->where('status', 'available')
-        ->where('is_uploading', false)
-        ->orderByDesc('views')
-        ->limit(2)
-        ->get();
+        try {
+            $properties = Property::with([
+                'category', 'propertyType', 'location', 'images', 'amenities'
+            ])
+            ->where('status', 'available')
+            ->where('is_uploading', false)
+            ->orderByDesc('views')
+            ->limit(2)
+            ->get();
+        } catch (\Exception $e) {
+            Log::warning('topViewed query failed: ' . $e->getMessage());
+            $properties = Property::with([
+                'category', 'propertyType', 'location', 'images', 'amenities'
+            ])
+            ->where('status', 'available')
+            ->where('is_uploading', false)
+            ->latest()
+            ->limit(2)
+            ->get();
+        }
 
         $properties->transform(function ($property) {
             $property->primary_image = $property->images->where('is_primary', true)->first();
             $property->total_images = $property->images->count();
-            $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
+            $property->cached_views = ($property->views ?? 0) + (Cache::get("property_views_{$property->id}", 0));
             return $property;
         });
 
@@ -607,16 +650,28 @@ class PropertyController extends Controller
             ->limit(8)
             ->get();
         } catch (\Exception $e) {
-            Log::error('bestProperties eager load failed: ' . $e->getMessage());
-            $properties = Property::with([
-                'category', 'propertyType', 'location', 'images', 'amenities'
-            ])
-            ->where('status', 'available')
-            ->where('is_uploading', false)
-            ->orderByDesc('featured')
-            ->orderByDesc('views')
-            ->limit(8)
-            ->get();
+            Log::warning('bestProperties eager load failed: ' . $e->getMessage());
+            try {
+                $properties = Property::with([
+                    'category', 'propertyType', 'location', 'images', 'amenities'
+                ])
+                ->where('status', 'available')
+                ->where('is_uploading', false)
+                ->orderByDesc('featured')
+                ->orderByDesc('views')
+                ->limit(8)
+                ->get();
+            } catch (\Exception $e2) {
+                Log::warning('bestProperties fallback also failed: ' . $e2->getMessage());
+                $properties = Property::with([
+                    'category', 'propertyType', 'location', 'images', 'amenities'
+                ])
+                ->where('status', 'available')
+                ->where('is_uploading', false)
+                ->latest()
+                ->limit(8)
+                ->get();
+            }
         }
 
         $properties->transform(function ($property) use ($user) {
@@ -624,7 +679,7 @@ class PropertyController extends Controller
             $property->images_by_type = $property->images->groupBy('image_type');
             $property->total_images = $property->images->count();
             $property->is_favorite = $property->isFavoritedBy($user);
-            $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
+            $property->cached_views = ($property->views ?? 0) + (Cache::get("property_views_{$property->id}", 0));
             return $property;
         });
 
@@ -721,7 +776,7 @@ class PropertyController extends Controller
             $property->images_by_type = $property->images->groupBy('image_type');
             $property->total_images = $property->images->count();
             $property->is_favorite = $property->isFavoritedBy($user);
-            $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
+            $property->cached_views = ($property->views ?? 0) + (Cache::get("property_views_{$property->id}", 0));
             return $property;
         });
 
