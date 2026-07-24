@@ -164,7 +164,7 @@ class PropertyController extends Controller
                 'bathrooms' => $request->bathrooms,
                 'floor' => $request->floor,
                 'balconies' => $request->balconies,
-                'finishing' => $request->finishing,
+                'finishing' => $request->filled('finishing') ? $request->finishing : 'red_brick',
                 'furnishing' => $request->filled('furnishing') ? $request->furnishing : 'unfurnished',
                 'status' => $request->status ?? 'available',
                 'featured' => $request->featured ?? false,

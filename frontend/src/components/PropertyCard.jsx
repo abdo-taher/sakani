@@ -54,6 +54,7 @@ function PropertyCard({ p, isFav, onToggleFav }) {
             src={mainImage}
             alt={p.title}
             onError={() => setImgError(true)}
+            loading="lazy"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (

@@ -223,14 +223,17 @@ function PropertyDetail() {
           <div className="relative rounded-3xl overflow-hidden bg-stone-100" style={{ aspectRatio: "16/10" }}>
             {currentMedia.type === "video" ? (
               <video
+                key={currentMedia.url}
                 src={currentMedia.url}
                 controls
+                preload="none"
                 className="w-full h-full object-cover"
               />
             ) : (
               <img
                 src={currentMedia.url}
                 alt={property.title}
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
             )}
@@ -284,7 +287,7 @@ function PropertyDetail() {
                       </div>
                     </div>
                   ) : (
-                    <img src={m.url} alt="" className="w-full h-full object-cover" />
+                    <img src={m.url} alt="" loading="lazy" className="w-full h-full object-cover" />
                   )}
                 </button>
               ))}

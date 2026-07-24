@@ -3,9 +3,11 @@ import { useState, useRef, useEffect } from "react";
 function VideoThumb({ src, className = "", alt = "" }) {
   const videoRef = useRef(null);
   const [thumb, setThumb] = useState(null);
+  const abortRef = useRef(false);
 
   useEffect(() => {
     if (!src) return;
+    abortRef.current = false;
     const v = document.createElement("video");
     v.src = src;
     v.muted = true;
@@ -13,6 +15,7 @@ function VideoThumb({ src, className = "", alt = "" }) {
     v.preload = "metadata";
     v.currentTime = 0.5;
     const onLoaded = () => {
+      if (abortRef.current) { v.remove(); return; }
       try {
         const c = document.createElement("canvas");
         c.width = v.videoWidth || 320;
@@ -23,12 +26,18 @@ function VideoThumb({ src, className = "", alt = "" }) {
       v.remove();
     };
     v.onloadeddata = onLoaded;
-    v.onerror = () => v.remove();
-    return () => v.remove();
+    v.onerror = () => { if (!abortRef.current) v.remove(); };
+    return () => {
+      abortRef.current = true;
+      v.pause();
+      v.removeAttribute("src");
+      v.load();
+      v.remove();
+    };
   }, [src]);
 
   if (thumb) {
-    return <img src={thumb} alt={alt} className={className} />;
+    return <img src={thumb} alt={alt} className={className} loading="lazy" />;
   }
 
   return (
@@ -37,7 +46,7 @@ function VideoThumb({ src, className = "", alt = "" }) {
       src={src}
       muted
       playsInline
-      preload="metadata"
+      preload="none"
       className={className}
     />
   );

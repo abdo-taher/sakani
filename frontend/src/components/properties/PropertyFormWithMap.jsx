@@ -23,6 +23,7 @@ import { getLocations } from "../../services/locationService";
 import {
   createProperty,
   updateProperty,
+  markUploadComplete,
 } from "../../services/propertyService";
 import { getCategories } from "../../services/categoryService";
 import { getAmenities } from "../../services/amenityService";
@@ -353,7 +354,11 @@ function PropertyFormWithMap({
       }
 
       setSavingMessage("تم الحفظ بنجاح!");
-      
+
+      if (!property) {
+        try { await markUploadComplete(newPropertyId); } catch { /* empty */ }
+      }
+
       setTimeout(() => {
         setSaving(false);
         successToast(property ? "تم تحديث العقار بنجاح" : "تم إنشاء العقار بنجاح");

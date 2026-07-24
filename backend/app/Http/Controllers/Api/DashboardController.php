@@ -8,6 +8,7 @@ use App\Models\Location;
 use App\Models\Property;
 use App\Models\Reservation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class DashboardController extends Controller
@@ -29,12 +30,12 @@ class DashboardController extends Controller
                 return now()->subMonths($i)->format('Y-m');
             })->values();
 
-            $propertiesMonthly = Property::selectRaw("strftime('%Y-%m', created_at) as month, COUNT(*) as total")
+            $propertiesMonthly = Property::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as total")
                 ->where('created_at', '>=', now()->subMonths(5)->startOfMonth())
                 ->groupBy('month')
                 ->pluck('total', 'month');
 
-            $reservationsMonthly = Reservation::selectRaw("strftime('%Y-%m', created_at) as month, COUNT(*) as total")
+            $reservationsMonthly = Reservation::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as total")
                 ->where('created_at', '>=', now()->subMonths(5)->startOfMonth())
                 ->groupBy('month')
                 ->pluck('total', 'month');
@@ -66,6 +67,7 @@ class DashboardController extends Controller
                 'category_distribution' => $categoryDistribution,
             ]);
         } catch (Exception $e) {
+            Log::error('Dashboard error: ' . $e->getMessage());
             return response()->json([
                 'counts'                => ['properties' => 0, 'locations' => 0, 'categories' => 0, 'reservations' => 0],
                 'recent_properties'     => [],
