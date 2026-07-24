@@ -13,19 +13,23 @@ function PropertyRow({
   onEdit,
   onDelete,
   onStatusChange,
-  onRefresh, // Add refresh callback
+  onRefresh,
 }) {
   const navigate = useNavigate();
   const uploading = Boolean(property.is_uploading);
+  const [isMarkingComplete, setIsMarkingComplete] = React.useState(false);
 
   const handleMarkComplete = async () => {
+    setIsMarkingComplete(true);
     try {
       await markUploadComplete(property.id);
       toast.success("تم إنهاء رفع الوسائط بنجاح");
-      if (onRefresh) onRefresh(); // Refresh the properties list
+      if (onRefresh) await onRefresh();
     } catch (error) {
       console.error("Failed to mark upload complete:", error);
       toast.error("فشل في إنهاء رفع الوسائط");
+    } finally {
+      setIsMarkingComplete(false);
     }
   };
 
@@ -109,10 +113,15 @@ function PropertyRow({
           {uploading && (
             <button
               onClick={handleMarkComplete}
-              className="w-9 h-9 rounded-lg hover:bg-green-50 flex items-center justify-center transition"
+              disabled={isMarkingComplete}
+              className="w-9 h-9 rounded-lg hover:bg-green-50 flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed"
               title="إنهاء رفع الوسائط"
             >
-              <CheckCircle size={18} color="#059669" />
+              {isMarkingComplete ? (
+                <Loader2 size={18} className="animate-spin text-green-600" />
+              ) : (
+                <CheckCircle size={18} color="#059669" />
+              )}
             </button>
           )}
 

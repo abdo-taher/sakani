@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --max-w-12xl: 90rem;
+}
+
 @layer base {
   html { scroll-behavior: smooth; }
 

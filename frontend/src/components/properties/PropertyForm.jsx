@@ -501,12 +501,12 @@ function PropertyForm({
               }
 
               await markUploadComplete(propertyId);
-              await loadProperties(); // Refresh after upload is complete
+              window.dispatchEvent(new Event("property-uploaded"));
               successToast("تم رفع جميع الوسائط بنجاح");
             } catch (err) {
               console.error("Background upload failed:", err);
               await markUploadComplete(propertyId);
-              await loadProperties(); // Refresh even on error
+              window.dispatchEvent(new Event("property-uploaded"));
               errorToast("حدث خطأ أثناء رفع بعض الوسائط");
             }
           })();

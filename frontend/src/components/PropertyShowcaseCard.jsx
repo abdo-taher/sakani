@@ -79,14 +79,6 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
         </div>
       )}
 
-      {/* Featured Badge */}
-      {isFeatured && (
-        <div className="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1 bg-amber-400 text-amber-900 shadow-md">
-          <Star className="w-3 h-3 fill-current" />
-          مميز
-        </div>
-      )}
-
       {/* Image / Video */}
       <div className="relative w-full h-52 overflow-hidden bg-stone-100">
         {mainVideo ? (
@@ -220,7 +212,7 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
           {p.rent_duration && <span className="text-xs" style={{ color: "#aaa" }}>/{p.rent_duration}</span>}
         </div>
 
-        {isRent && p.has_detailed_rooms && (() => {
+        {/* {isRent && p.has_detailed_rooms && (() => {
           const rooms = Array.isArray(p.rooms) ? p.rooms : Array.isArray(p.detailed_rooms) ? p.detailed_rooms : [];
           const availableCount = rooms.filter(r => r.status === "available").length;
           return availableCount > 0 && (
@@ -228,7 +220,7 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
               {availableCount} غرف متاحة
             </p>
           );
-        })()}
+        })()} */}
       </div>
     </div>
   );

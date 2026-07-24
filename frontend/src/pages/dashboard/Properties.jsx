@@ -84,7 +84,14 @@ useEffect(() => {
   loadCategories();
   loadLocations();
   const interval = setInterval(checkStuckUploads, 30000);
-  return () => clearInterval(interval);
+
+  const onPropertyUploaded = () => loadProperties();
+  window.addEventListener("property-uploaded", onPropertyUploaded);
+
+  return () => {
+    clearInterval(interval);
+    window.removeEventListener("property-uploaded", onPropertyUploaded);
+  };
 }, []);
   
 

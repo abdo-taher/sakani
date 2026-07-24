@@ -103,7 +103,7 @@ class PropertyController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'price' => 'required|numeric',
+            'price' => 'nullable|numeric',
             'property_type_id' => 'required|exists:property_types,id',
             'category_id' => 'required|exists:categories,id',
             'location_id' => 'required|exists:locations,id',
