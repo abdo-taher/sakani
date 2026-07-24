@@ -7,7 +7,7 @@ import { COFFEE } from "./constants/constants";
 
 import Footer from "./components/Footer";
 import { loadFavorites, saveFavorites } from "./utils/storage";
-import { getProperties as fetchPropertiesAPI } from "./services/propertyService";
+import { getPropertiesCached as fetchPropertiesAPI } from "./services/propertyService";
 import { getFavorites, toggleFavorite as toggleFavoriteAPI } from "./services/favoriteService";
 
 import Navbar from "./components/Navbar";

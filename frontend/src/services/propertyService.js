@@ -2,6 +2,11 @@ import api, { cachedGet } from "./api";
 import { clearCache } from "./cache";
 
 export const getProperties = async () => {
+  const response = await api.get("/properties");
+  return response.data;
+};
+
+export const getPropertiesCached = async () => {
   return cachedGet("/properties", { ttl: 30000 });
 };
 

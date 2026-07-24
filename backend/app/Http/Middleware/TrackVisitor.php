@@ -9,20 +9,32 @@ use Illuminate\Support\Facades\Cache;
 
 class TrackVisitor
 {
+    // Paths that should not be tracked
+    private array $skipPaths = [
+        'health',
+        'config',
+    ];
+
     public function handle(Request $request, Closure $next)
     {
-        $ip = $request->ip();
-        $path = $request->path();
-
-        // Skip admin/api/asset routes
-        if (
-            str_starts_with($path, 'api/') ||
-            str_starts_with($path, 'admin/') ||
-            str_contains($path, '.') ||
-            $request->is('storage/*')
-        ) {
+        // Only track GET requests (page views)
+        if ($request->method() !== 'GET') {
             return $next($request);
         }
+
+        // Skip non-public paths (login, admin credentials, notifications, etc.)
+        $path = $request->path();
+
+        if (in_array($path, $this->skipPaths)) {
+            return $next($request);
+        }
+
+        // Skip any path containing a dot (file extensions, asset requests)
+        if (str_contains($path, '.')) {
+            return $next($request);
+        }
+
+        $ip = $request->ip();
 
         // Deduplicate: one log per IP per 5 minutes per path
         $cacheKey = "visitor_{$ip}_" . md5($path);
