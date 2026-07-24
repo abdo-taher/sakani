@@ -14,6 +14,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             CategorySeeder::class,
+            DamiettaLocationSeeder::class,
+            PropertyTypeSeeder::class,
+            AmenitySeeder::class,
+            TagSeeder::class,
         ]);
     }
 }
