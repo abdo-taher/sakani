@@ -5,8 +5,14 @@ import { getTopViewed } from "../services/propertyService";
 import { COFFEE } from "../constants/constants";
 import { fmtPrice } from "../utils/helpers";
 
-const STORAGE_KEY = "sakani_top_viewed_shown";
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const STORAGE_KEY = "sakani_random_notice_shown";
+const MIN_DELAY_MS = 10 * 60 * 1000;
+
+function getRandomDelay() {
+  const min = 10 * 60 * 1000;
+  const max = 60 * 60 * 1000;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
 export default function TopViewedNotice() {
   const navigate = useNavigate();
@@ -15,69 +21,61 @@ export default function TopViewedNotice() {
     const lastShown = parseInt(localStorage.getItem(STORAGE_KEY) || "0", 10);
     const now = Date.now();
 
-    if (now - lastShown < ONE_DAY_MS) return;
+    if (now - lastShown < MIN_DELAY_MS) {
+      const remaining = MIN_DELAY_MS - (now - lastShown);
+      const timer = setTimeout(() => showNotice(), remaining);
+      return () => clearTimeout(timer);
+    }
 
-    let cancelled = false;
+    const delay = getRandomDelay();
+    const timer = setTimeout(() => showNotice(), delay);
+    return () => clearTimeout(timer);
 
-    getTopViewed()
-      .then((data) => {
-        if (cancelled || !data || data.length === 0) return;
+    function showNotice() {
+      getTopViewed()
+        .then((data) => {
+          if (!data || data.length === 0) return;
 
-        localStorage.setItem(STORAGE_KEY, String(now));
-
-        const top = data[0];
-        const second = data[1] || null;
-
-        const buildCard = (p, index) => {
+          const p = data[Math.floor(Math.random() * data.length)];
           const img = p.primary_image?.image_url || p.images?.[0]?.image_url || "";
           const location = p.location?.name || "";
           const views = p.cached_views || p.views || 0;
-          const border = index === 0 ? `2px solid ${COFFEE.gold}` : `1px solid ${COFFEE.gold}40`;
-          return `
-            <div data-prop-id="${p.id}" style="cursor:pointer;display:flex;gap:12px;align-items:center;padding:10px;border-radius:12px;background:${COFFEE.creamSoft};border:${border};margin-bottom:8px;transition:transform 0.2s"
+
+          localStorage.setItem(STORAGE_KEY, String(Date.now()));
+
+          const html = `
+            <div data-prop-id="${p.id}" style="direction:rtl;text-align:right;cursor:pointer;display:flex;gap:12px;align-items:center;padding:10px;border-radius:12px;background:${COFFEE.creamSoft};border:2px solid ${COFFEE.gold};transition:transform 0.2s"
               onmouseover="this.style.transform='scale(1.02)'"
               onmouseout="this.style.transform='scale(1)'">
-              ${img ? `<img src="${img}" style="width:64px;height:48px;object-fit:cover;border-radius:8px" />` : ""}
-              <div style="flex:1;text-align:right">
-                <div style="font-weight:700;color:${COFFEE.darkest};font-size:14px">${p.title}</div>
-                <div style="font-size:12px;color:${COFFEE.gold};margin-top:2px">${location} — ${fmtPrice(p.price)}</div>
-              </div>
-              <div style="text-align:center;min-width:50px">
-                <div style="font-size:18px;font-weight:800;color:${COFFEE.gold}">${views}</div>
-                <div style="font-size:10px;color:#888">مشاهدة</div>
+              ${img ? `<img src="${img}" style="width:80px;height:60px;object-fit:cover;border-radius:8px" />` : ""}
+              <div style="flex:1">
+                <div style="font-weight:700;color:${COFFEE.darkest};font-size:15px">${p.title}</div>
+                <div style="font-size:13px;color:${COFFEE.gold};margin-top:4px">${location} — ${fmtPrice(p.price)}</div>
+                <div style="font-size:11px;color:#888;margin-top:2px">${views} مشاهدة</div>
               </div>
             </div>
           `;
-        };
 
-        let html = `<div style="direction:rtl;text-align:right">`;
-        html += buildCard(top, 0);
-        if (second) html += buildCard(second, 1);
-        html += `</div>`;
-
-        Swal.fire({
-          title: "🔥 الأكثر مشاهدة",
-          html,
-          confirmButtonText: "تم",
-          confirmButtonColor: COFFEE.gold,
-          background: COFFEE.creamSoft,
-          width: 420,
-          didOpen: (popup) => {
-            popup.querySelectorAll("[data-prop-id]").forEach((el) => {
-              el.addEventListener("click", () => {
-                const id = el.getAttribute("data-prop-id");
-                Swal.close();
-                navigate(`/property/${id}`);
-              });
-            });
-          },
-        });
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
+          Swal.fire({
+            title: "قد تعجبك",
+            html,
+            confirmButtonText: "تم",
+            confirmButtonColor: COFFEE.gold,
+            background: COFFEE.creamSoft,
+            width: 400,
+            didOpen: (popup) => {
+              const card = popup.querySelector("[data-prop-id]");
+              if (card) {
+                card.addEventListener("click", () => {
+                  Swal.close();
+                  navigate(`/property/${p.id}`);
+                });
+              }
+            },
+          });
+        })
+        .catch(() => {});
+    }
   }, [navigate]);
 
   return null;
