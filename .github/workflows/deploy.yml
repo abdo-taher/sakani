@@ -10,45 +10,39 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: 📚 Checkout code
+    - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: 🐘 Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql
-        
-    - name: 📦 Install Backend Dependencies
-      run: composer install --no-dev --optimize-autoloader --no-interaction
-      working-directory: ./backend
-
-    - name: 🔧 Setup Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '22'
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
         
-    - name: 🏗️ Build Frontend
+    - name: Build Frontend
       run: |
         npm ci
         npm run build
       working-directory: ./frontend
-      
-    - name: 📤 Upload Backend Files
+
+    - name: Tar Backend Source (no vendor)
+      run: |
+        tar czf backend-src.tar.gz --exclude='vendor' --exclude='storage/logs' --exclude='storage/framework/cache' --exclude='storage/framework/sessions' --exclude='storage/framework/views' --exclude='.env' --exclude='node_modules' backend/
+
+    - name: Upload Backend Source
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
         password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
-        source: "backend/*"
+        source: "backend-src.tar.gz"
         target: "~/domains/sakani.site/public_html/"
-        strip_components: 0
-        overwrite: true
+        timeout: 5m
+        command_timeout: 5m
 
-    - name: 🚀 Deploy Backend to Hostinger
+    - name: Deploy & Configure
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -58,107 +52,58 @@ jobs:
         timeout: 60s
         command_timeout: 15m
         script: |
-          echo "🔍 Starting backend deployment..."
-          echo "Current user: $(whoami)"
-          echo "Home directory: $HOME"
-          
-          # Navigate to backend directory
-          cd ~/domains/sakani.site/public_html/backend
-          echo "📂 Current directory: $(pwd)"
-          
-          # Install/update composer dependencies
-          echo "📦 Installing Composer dependencies..."
-          composer install --no-dev --optimize-autoloader --no-interaction --verbose
-          
-          # Create/update .env for production with SQLite
+          set -e
+          cd ~/domains/sakani.site/public_html
+
+          echo "Extracting backend source..."
+          tar xzf backend-src.tar.gz
+          rm backend-src.tar.gz
+
+          cd backend
+
+          echo "Installing composer dependencies..."
+          composer install --no-dev --optimize-autoloader --no-interaction --no-progress 2>&1
+
+          # Configure .env (preserve existing values)
           if [ ! -f .env ]; then
-            echo "📝 Creating .env file from template..."
             cp .env.example .env
-          else
-            echo "📝 Updating existing .env file..."
           fi
-          
-          # Configure for production
+
           sed -i "s/APP_NAME=.*/APP_NAME=Sakani/" .env
           sed -i "s/APP_ENV=.*/APP_ENV=production/" .env
           sed -i "s/APP_DEBUG=.*/APP_DEBUG=false/" .env
           sed -i "s|APP_URL=.*|APP_URL=https://api.sakani.site|" .env
-          
-          # Add other production settings
           sed -i "s/LOG_CHANNEL=.*/LOG_CHANNEL=single/" .env
           sed -i "s/LOG_LEVEL=.*/LOG_LEVEL=error/" .env
-          
-          # Session and cache settings for database
           sed -i "s/SESSION_DRIVER=.*/SESSION_DRIVER=database/" .env
           sed -i "s/CACHE_STORE=.*/CACHE_STORE=database/" .env
           sed -i "s/QUEUE_CONNECTION=.*/QUEUE_CONNECTION=database/" .env
-          
-          # Generate application key if not set
-          if ! grep -q "^APP_KEY=base64:" .env; then
-            echo "🔑 Generating application key..."
-            php artisan key:generate --force 2>/dev/null || {
-              echo "⚠️ Key generate failed (proc_open), generating manually..."
-              # Generate key manually
-              KEY=$(php -r "echo base64_encode(random_bytes(32));")
-              sed -i "s/APP_KEY=.*/APP_KEY=base64:$KEY/" .env
-              echo "✅ Application key generated manually"
-            }
-          else
-            echo "✅ Application key already exists"
-          fi
-          
-          # Clear all caches first
-          echo "🧹 Clearing all caches..."
-          php artisan cache:clear || echo "Cache clear failed, continuing..."
-          php artisan config:clear || echo "Config clear failed, continuing..."
-          php artisan route:clear || echo "Route clear failed, continuing..."
-          php artisan view:clear || echo "View clear failed, continuing..."
-          php artisan event:clear || echo "Event clear failed, continuing..."
-          
-          # Run migrations (safe — only applies new migrations, never drops data)
-          echo "🗄️ Running migrations..."
-          php artisan migrate --force 2>/dev/null || echo "⚠️ Migrations failed, continuing..."
-          
-          echo "✅ Database setup completed"
-          
-          # Optimize for production (with proc_open workarounds)
-          echo "⚡ Optimizing for production (Hostinger compatibility)..."
-          
-          # Try Laravel optimization commands, but don't fail if proc_open is disabled
-          php artisan config:cache 2>/dev/null || {
-            echo "⚠️ Config cache failed (proc_open disabled), using manual optimization..."
-            # Create config cache manually
-            php -r "
-            require_once 'bootstrap/app.php';
-            \$app = \$app ?? app();
-            file_put_contents(
-              'bootstrap/cache/config.php',
-              '<?php return ' . var_export(\$app->make('config')->all(), true) . ';'
-            );
-            echo 'Config cached manually\n';
-            " 2>/dev/null || echo "Manual config cache also failed"
-          }
-          
-          php artisan route:cache 2>/dev/null || echo "Route cache skipped (proc_open limitation)"
-          php artisan view:cache 2>/dev/null || echo "View cache skipped (proc_open limitation)" 
-          php artisan event:cache 2>/dev/null || echo "Event cache skipped (proc_open limitation)"
-          
-          # Try general optimize command
-          php artisan optimize 2>/dev/null || echo "General optimize skipped (proc_open limitation)"
-          
-          # Set correct permissions
-          echo "🔐 Setting file permissions..."
-          chmod -R 755 storage
-          chmod -R 755 bootstrap/cache
-          chmod -R 755 public
-          
-          # Test the application
-          echo "🧪 Testing Laravel installation..."
-          php artisan --version
-          
-          echo "✅ Backend deployment completed successfully!"
 
-    - name: 📤 Upload Frontend Build
+          # Generate APP_KEY if missing
+          if ! grep -q "^APP_KEY=base64:" .env; then
+            KEY=$(php -r "echo base64_encode(random_bytes(32));")
+            sed -i "s/APP_KEY=.*/APP_KEY=base64:$KEY/" .env
+            echo "Generated APP_KEY"
+          fi
+
+          # Clear caches
+          php artisan cache:clear 2>/dev/null || true
+          php artisan config:clear 2>/dev/null || true
+          php artisan route:clear 2>/dev/null || true
+          php artisan view:clear 2>/dev/null || true
+          php artisan event:clear 2>/dev/null || true
+
+          # Run migrations
+          echo "Running migrations..."
+          php artisan migrate --force 2>/dev/null || echo "Migration warning (continuing)"
+
+          # Permissions
+          chmod -R 755 storage bootstrap/cache public
+
+          echo "Backend deployed OK"
+          php artisan --version
+
+    - name: Upload Frontend Build
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -169,79 +114,10 @@ jobs:
         target: "~/domains/sakani.site/public_html/"
         strip_components: 2
         overwrite: true
+        timeout: 5m
+        command_timeout: 5m
 
-    - name: 🩺 Debug and Fix 500 Errors
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        port: ${{ secrets.SSH_PORT }}
-        timeout: 60s
-        script: |
-          cd ~/domains/sakani.site/public_html/backend
-          
-          echo "🔍 Debugging 500 errors..."
-          
-          # Check Laravel logs for errors
-          echo "📋 Latest Laravel errors:"
-          if [ -f "storage/logs/laravel.log" ]; then
-            tail -20 storage/logs/laravel.log || echo "No recent Laravel logs"
-          else
-            echo "Laravel log file doesn't exist yet"
-          fi
-          
-          # Check if .env file exists and is readable
-          echo "🔧 Checking .env file:"
-          if [ -f .env ]; then
-            echo "✅ .env exists"
-            # Check if APP_KEY is set
-            if grep -q "^APP_KEY=base64:" .env; then
-              echo "✅ APP_KEY is properly set"
-            else
-              echo "❌ APP_KEY missing or invalid - regenerating..."
-              php artisan key:generate --force
-            fi
-          else
-            echo "❌ .env file missing - creating..."
-            cp .env.example .env
-            php artisan key:generate --force
-          fi
-          
-          # Check database configuration
-          echo "🗄️ Testing database connection:"
-          php artisan migrate:status || echo "❌ Database connection failed"
-          
-          # Check if vendor directory exists
-          echo "📦 Checking composer dependencies:"
-          if [ -d "vendor" ]; then
-            echo "✅ Vendor directory exists"
-          else
-            echo "❌ Vendor missing - reinstalling..."
-            composer install --no-dev --optimize-autoloader
-          fi
-          
-          # Check file permissions
-          echo "🔐 Fixing file permissions:"
-          chmod -R 755 storage
-          chmod -R 755 bootstrap/cache
-          chmod -R 644 .env
-          chown -R $USER:$USER storage bootstrap/cache
-          
-          # Clear all caches to fix potential cache issues
-          echo "🧹 Clearing all caches:"
-          php artisan cache:clear
-          php artisan config:clear
-          php artisan route:clear
-          php artisan view:clear
-          
-          # Test if Laravel is responding
-          echo "🧪 Testing Laravel installation:"
-          php artisan --version || echo "❌ Laravel not responding"
-          
-          echo "✅ Debugging complete - check logs above for issues"
-
-    - name: 🧪 Test Backend Health
+    - name: Configure .htaccess
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -250,133 +126,50 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         timeout: 30s
         script: |
-          cd ~/domains/sakani.site/public_html/backend
-          
-          echo "🔍 Testing backend health..."
-          
-          # Test if Laravel is working (proc_open compatible)
-          echo "🧪 Testing Laravel installation (Hostinger compatible):"
-          
-          # Try artisan commands but don't fail if proc_open is disabled  
-          php artisan about 2>/dev/null || {
-            echo "⚠️ Artisan about failed (proc_open disabled)"
-            # Test PHP and Laravel bootstrap directly
-            php -r "
-            try {
-              require_once 'bootstrap/app.php';
-              echo 'Laravel bootstrap: SUCCESS\n';
-              echo 'PHP version: ' . phpversion() . '\n';
-            } catch (Exception \$e) {
-              echo 'Laravel bootstrap: FAILED - ' . \$e->getMessage() . '\n';
-            }
-            "
-          }
-          
-          # Check database configuration and connection (avoid proc_open)
-          echo "🗄️ Testing database connection (Hostinger compatible):"
-          
-          # Test database connection using PHP directly (avoiding artisan commands)
-          php -r "
-          try {
-            require_once 'bootstrap/app.php';
-            \$app = \$app ?? app();
-            \$db = \$app->make('db');
-            \$pdo = \$db->connection()->getPdo();
-            echo 'Database connection: SUCCESS\n';
-            
-            // Check if basic tables exist
-            \$tables = \$pdo->query('SELECT name FROM sqlite_master WHERE type=\"table\"')->fetchAll();
-            echo 'Tables found: ' . count(\$tables) . '\n';
-            if (count(\$tables) > 0) {
-              echo 'Sample tables: ';
-              foreach (array_slice(\$tables, 0, 5) as \$table) {
-                echo \$table['name'] . ' ';
-              }
-              echo '\n';
-            }
-          } catch (Exception \$e) {
-            echo 'Database connection: FAILED - ' . \$e->getMessage() . '\n';
-            exit(1);
-          }
-          " || echo "❌ Database connection test failed"
-          
-          # Alternative: try migrate:status but don't fail if proc_open is disabled
-          php artisan migrate:status 2>/dev/null || echo "⚠️ Migrate status unavailable (proc_open disabled)"
-          
-          # Check if key routes are working (avoid proc_open)
-          php artisan route:list 2>/dev/null | grep api || {
-            echo "⚠️ Route list failed (proc_open disabled)"
-            # Test routes using direct file check
-            if [ -f "routes/api.php" ]; then
-              echo "✅ API routes file exists"
-              grep -c "Route::" routes/api.php || echo "No routes found in api.php"
-            else
-              echo "❌ API routes file missing"
-            fi
-          }
-          
-          # Check web server error logs
-          echo "🚨 Checking web server error logs:"
-          if [ -f "/home/$USER/domains/sakani.site/logs/error.log" ]; then
-            echo "📋 Recent web server errors:"
-            tail -10 "/home/$USER/domains/sakani.site/logs/error.log" || echo "Cannot read error log"
-          else
-            echo "Web server error log not found at expected location"
-          fi
-          
-          # Test direct PHP execution
-          echo "🐘 Testing PHP execution:"
-          cd public
-          php -r "echo 'PHP is working: ' . phpversion() . PHP_EOL;"
-          
-          echo "🩺 Health check completed"
+          cd ~/domains/sakani.site/public_html
 
-    - name: 🔧 Configure Domain Routing
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        port: ${{ secrets.SSH_PORT }}
-        timeout: 30s
-        script: |
-          cd ~/domains/sakani.site/public_html/
-          
-          # Create main .htaccess for domain routing
-          echo "# Domain routing for Sakani
+          cat > .htaccess << 'HTACCESS'
           RewriteEngine On
-          
+
           # Force HTTPS
           RewriteCond %{HTTPS} off
           RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-          
-          # API subdomain routing (api.sakani.site)
+
+          # API subdomain routing
           RewriteCond %{HTTP_HOST} ^api\.
           RewriteRule ^(.*)$ backend/public/$1 [L]
-          
-          # Cache video files for 30 days
+
           <IfModule mod_headers.c>
-            <FilesMatch \"\.(mp4|webm|ogg|mov)$\">
-              Header set Cache-Control \"public, max-age=2592000, immutable\"
+            <FilesMatch "\.(mp4|webm|ogg|mov)$">
+              Header set Cache-Control "public, max-age=2592000, immutable"
             </FilesMatch>
-          
-            # Cache all static assets (JS, CSS, images) for 1 year (Vite adds content hashes)
-            <FilesMatch \"\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$\">
-              Header set Cache-Control \"public, max-age=31536000, immutable\"
+            <FilesMatch "\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$">
+              Header set Cache-Control "public, max-age=31536000, immutable"
             </FilesMatch>
           </IfModule>
-          
-          # Main domain - serve frontend files directly
-          # Handle React Router - redirect all non-file requests to index.html
+
+          # React Router fallback
           RewriteCond %{REQUEST_FILENAME} !-f
           RewriteCond %{REQUEST_FILENAME} !-d
           RewriteRule . /index.html [L]
-          " > .htaccess
-          
-          echo "✅ Domain routing configured"
+          HTACCESS
 
-    - name: ✅ Deployment Complete
+          echo ".htaccess configured"
+
+    - name: Health Check
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: ${{ secrets.SSH_PORT }}
+        timeout: 30s
+        script: |
+          cd ~/domains/sakani.site/public_html/backend
+          php artisan --version && echo "Laravel OK" || echo "Laravel FAILED"
+          ls -la storage/logs/ 2>/dev/null || true
+
+    - name: Deploy Complete
       run: |
-        echo "🎉 Deployment successful!"
         echo "Frontend: https://sakani.site"
         echo "API: https://api.sakani.site"
