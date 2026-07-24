@@ -42,7 +42,7 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
 
   const hasVideo = (p.images && p.images.some(img => img.media_type === "video")) || p.video_url;
   const firstVideo = p.images && p.images.find(img => img.media_type === "video");
-  const firstImage = p.images && p.images.find(img => (img.media_type || "image") === "image");
+  const firstImage = p.images && p.images.find(img => (img.media_type || "image") === "image" && !img.caption);
 
   const mainImage = !imgError && firstImage ? firstImage.image_url || firstImage.path : null;
   const mainVideo = hasVideo ? (firstVideo ? firstVideo.image_url : p.video_url) : null;

@@ -30,7 +30,7 @@ function PropertyModal({
   if (!property) return null;
 
   const images = (property.images || [])
-    .filter(img => (img.media_type || 'image') === 'image')
+    .filter(img => (img.media_type || 'image') === 'image' && !img.caption)
     .map(img => img.image_url);
 
   const videos = (property.images || [])

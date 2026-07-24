@@ -57,7 +57,7 @@ function PropertyPreviewModal({ property, onClose }) {
     bg: COFFEE.cream,
   };
 
-  const images = (property.images || []).filter(img => (img.media_type || 'image') === 'image');
+  const images = (property.images || []).filter(img => (img.media_type || 'image') === 'image' && !img.caption);
   const videos = (property.images || []).filter(img => img.media_type === 'video');
 
   if (videos.length === 0 && property.video_url) {
