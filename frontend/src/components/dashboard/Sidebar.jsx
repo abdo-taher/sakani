@@ -154,6 +154,9 @@ function Sidebar() {
     } finally {
 
       sessionStorage.clear();
+      localStorage.removeItem("token");
+      localStorage.removeItem("admin");
+      localStorage.removeItem("admin_remember");
 
       window.location.href = `/admin/${ADMIN_LOGIN_TOKEN}/login`;
 

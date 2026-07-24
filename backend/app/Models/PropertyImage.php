@@ -10,6 +10,7 @@ class PropertyImage extends Model
         'property_id',
         'image_url',
         'image_public_id',
+        'media_type',
         'sort_order',
         'image_type',
         'caption',

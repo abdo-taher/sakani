@@ -27,7 +27,7 @@ api.interceptors.request.use(async (config) => {
   }
   
   // Add auth token
-  const token = sessionStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -43,6 +43,9 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !isLoginRequest) {
       sessionStorage.clear();
+      localStorage.removeItem("token");
+      localStorage.removeItem("admin");
+      localStorage.removeItem("admin_remember");
       window.location.href = `/admin/${ADMIN_LOGIN_TOKEN}/login`;
     }
 

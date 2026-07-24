@@ -19,9 +19,6 @@ import { COFFEE } from "../constants/constants";
 import { SAMPLE_IMG, fmtPrice } from "../utils/helpers";
 
 
-/* -------------------------------------------------------------------- */
-/*  مكون: نافذة تفاصيل العقار (Lightbox)                                 */
-/* -------------------------------------------------------------------- */
 function PropertyModal({
   property,
   isFav,
@@ -29,14 +26,34 @@ function PropertyModal({
   onClose,
   onReserve,
 }) {
-  const [imgIndex, setImgIndex] = useState(0);
+  const [mediaIndex, setMediaIndex] = useState(0);
   if (!property) return null;
-  const images =
-    property.images && property.images.length
-      ? property.images.map((img) => img.image_url)
-      : [SAMPLE_IMG(property.id)];
-  const next = (e) => { e.stopPropagation(); setImgIndex((i) => (i + 1) % images.length); };
-  const prev = (e) => { e.stopPropagation(); setImgIndex((i) => (i - 1 + images.length) % images.length); };
+
+  const images = (property.images || [])
+    .filter(img => (img.media_type || 'image') === 'image')
+    .map(img => img.image_url);
+
+  const videos = (property.images || [])
+    .filter(img => img.media_type === 'video')
+    .map(img => img.image_url);
+
+  if (videos.length === 0 && property.video_url) {
+    videos.push(property.video_url);
+  }
+
+  const media = [
+    ...images.map(url => ({ type: 'image', url })),
+    ...videos.map(url => ({ type: 'video', url })),
+  ];
+
+  if (media.length === 0) {
+    media.push({ type: 'image', url: SAMPLE_IMG(property.id) });
+  }
+
+  const totalMedia = media.length;
+  const currentMedia = media[mediaIndex] || media[0];
+  const next = (e) => { e.stopPropagation(); setMediaIndex((i) => (i + 1) % totalMedia); };
+  const prev = (e) => { e.stopPropagation(); setMediaIndex((i) => (i - 1 + totalMedia) % totalMedia); };
 
   const isAvailable = property.status === "available";
 
@@ -58,10 +75,20 @@ function PropertyModal({
         onClick={(e) => e.stopPropagation()}
         dir="rtl"
       >
-        {/* الصورة */}
+        {/* Media Area */}
         <div className="relative h-64 sm:h-96 w-full overflow-hidden group shrink-0">
-          <img key={imgIndex} src={images[imgIndex]} alt={property.title} className="w-full h-full object-cover animate-fadePop" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          {currentMedia.type === 'video' ? (
+            <video
+              key={mediaIndex}
+              src={currentMedia.url}
+              controls
+              autoPlay
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img key={mediaIndex} src={currentMedia.url} alt={property.title} className="w-full h-full object-cover animate-fadePop" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
           <button onClick={onClose} className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/85 flex items-center justify-center hover:rotate-90 transition-transform duration-300">
             <X className="w-5 h-5" style={{ color: COFFEE.dark }} />
           </button>
@@ -71,7 +98,7 @@ function PropertyModal({
           >
             <Heart className="w-4 h-4" fill={isFav ? "#e0435c" : "none"} style={{ color: isFav ? "#e0435c" : COFFEE.mid }} />
           </button>
-          {images.length > 1 && (
+          {totalMedia > 1 && (
             <>
               <button onClick={prev} className="absolute top-1/2 -translate-y-1/2 right-3 w-9 h-9 rounded-full bg-white/80 flex items-center justify-center hover:scale-110 transition-transform">
                 <ChevronRight className="w-5 h-5" style={{ color: COFFEE.dark }} />
@@ -80,17 +107,21 @@ function PropertyModal({
                 <ChevronLeft className="w-5 h-5" style={{ color: COFFEE.dark }} />
               </button>
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                {images.map((_, i) => (
+                {media.map((m, i) => (
                   <button
                     key={i}
-                    onClick={(e) => { e.stopPropagation(); setImgIndex(i); }}
+                    onClick={(e) => { e.stopPropagation(); setMediaIndex(i); }}
                     className="h-1.5 rounded-full transition-all duration-300"
-                    style={{ width: i === imgIndex ? "20px" : "6px", backgroundColor: i === imgIndex ? COFFEE.gold : "rgba(255,255,255,0.7)" }}
+                    style={{ width: i === mediaIndex ? "20px" : "6px", backgroundColor: i === mediaIndex ? COFFEE.gold : "rgba(255,255,255,0.7)" }}
                   />
                 ))}
               </div>
             </>
           )}
+          {/* Media counter */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white bg-black/50">
+            {mediaIndex + 1} / {totalMedia}
+          </div>
         </div>
 
         {/* المحتوى */}
@@ -195,26 +226,6 @@ function PropertyModal({
                   </span>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* فيديو العقار */}
-          {property.video_url && (
-            <div className="mb-7 pt-6 border-t" style={{ borderColor: "#EADFD0" }}>
-              <h3
-                className="text-lg font-bold mb-3"
-                style={{ color: COFFEE.dark }}
-              >
-                فيديو العقار
-              </h3>
-
-              <video
-                controls
-                className="w-full rounded-2xl shadow-lg"
-              >
-                <source src={property.video_url} type="video/mp4" />
-                المتصفح لا يدعم تشغيل الفيديو.
-              </video>
             </div>
           )}
 

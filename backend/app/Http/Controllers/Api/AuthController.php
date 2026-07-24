@@ -15,6 +15,7 @@ class AuthController extends Controller
         $request->validate([
             'username' => 'required|string|max:255',
             'password' => 'required|string|min:6',
+            'remember_me' => 'sometimes|boolean',
         ]);
 
         // Rate limiting by IP
@@ -62,7 +63,8 @@ class AuthController extends Controller
         // Revoke old tokens for security
         $user->tokens()->delete();
 
-        $token = $user->createToken('admin-token', ['*'], now()->addDays(1))->plainTextToken;
+        $expiry = $request->boolean('remember_me') ? now()->addDays(7) : now()->addDay();
+        $token = $user->createToken('admin-token', ['*'], $expiry)->plainTextToken;
 
         return response()->json([
             'message' => 'تم تسجيل الدخول بنجاح',

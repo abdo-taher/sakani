@@ -11,6 +11,9 @@ export default function useIdleLogout() {
 
         sessionStorage.removeItem("token");
         sessionStorage.removeItem("admin");
+        localStorage.removeItem("token");
+        localStorage.removeItem("admin");
+        localStorage.removeItem("admin_remember");
 
         navigate(`/admin/${ADMIN_LOGIN_TOKEN}/login`, { replace: true });
 
@@ -24,11 +27,15 @@ export default function useIdleLogout() {
 
             logout();
 
-        }, 30 * 60 * 1000); // 10 ثواني (تجربة) - غيّرها للقيمة الحقيقية قبل الإنتاج
+        }, 30 * 60 * 1000);
 
     };
 
     useEffect(() => {
+
+        // Skip idle logout if user chose "remember me"
+        const hasRememberMe = localStorage.getItem("admin_remember") === "true";
+        if (hasRememberMe) return;
 
         resetTimer();
 

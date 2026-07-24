@@ -27,7 +27,7 @@ export default function App() {
   const [favoritesOpen, setFavoritesOpen] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const isAdmin = !!sessionStorage.getItem("token");
+  const isAdmin = !!(sessionStorage.getItem("token") || localStorage.getItem("token"));
 
   useEffect(() => {
     (async () => {

@@ -14,6 +14,7 @@ import DashboardLayout from "../pages/dashboard/DashboardLayout";
 import Locations from "../pages/dashboard/Locations";
 import Categories from "../pages/dashboard/Categories";
 import CategoryDetails from "../pages/dashboard/CategoryDetails";
+import PropertyDetail from "../pages/dashboard/PropertyDetail";
 import Reservations from "../pages/dashboard/Reservations";
 import Statistics from "../pages/dashboard/Statistics";
 import Settings from "../pages/dashboard/Settings";
@@ -133,6 +134,11 @@ function AppRoutes({
         deleteProperty={deleteProperty}
       />
     }
+  />
+
+  <Route
+    path="properties/:id"
+    element={<PropertyDetail />}
   />
 <Route
   path="locations"

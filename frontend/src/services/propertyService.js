@@ -5,6 +5,11 @@ export const getProperties = async () => {
   return response.data;
 };
 
+export const getPropertyById = async (id) => {
+  const response = await api.get(`/properties/${id}`);
+  return response.data;
+};
+
 export const getPropertiesByCategory = async (category) => {
   const response = await api.get(`/properties/category/${category}`);
   return response.data;

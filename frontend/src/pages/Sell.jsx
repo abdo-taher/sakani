@@ -14,7 +14,7 @@ export default function Sell({
     <ListingPage
       title="شقق للبيع"
       subtitle="أفضل الوحدات المتاحة للبيع حاليًا"
-      list={properties.filter((p) => p.category === "sell")}
+      list={properties.filter((p) => p.category?.slug === "sell")}
       icon={Tag}
       favorites={favorites}
       onToggleFav={onToggleFav}

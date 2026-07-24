@@ -16,6 +16,9 @@ function AdminLogin() {
   const [showPass, setShowPass] = useState(false);
   const [shake, setShake] = useState(false);
   const [lockTime, setLockTime] = useState(0);
+  const [rememberMe, setRememberMe] = useState(() => {
+    return localStorage.getItem("admin_remember") === "true";
+  });
 const navigate = useNavigate();
   const submit = async (e) => {
     // أهم سطر في الدالة: يمنع أي reload/native submit مهما كان السبب
@@ -30,10 +33,20 @@ const navigate = useNavigate();
     const response = await login({
       username: user,
       password: pass,
+      remember_me: rememberMe,
     });
 
-   sessionStorage.setItem("token", response.token);
-sessionStorage.setItem("admin", JSON.stringify(response.user));
+    if (rememberMe) {
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("admin", JSON.stringify(response.user));
+      localStorage.setItem("admin_remember", "true");
+    } else {
+      sessionStorage.setItem("token", response.token);
+      sessionStorage.setItem("admin", JSON.stringify(response.user));
+      localStorage.removeItem("admin_remember");
+      localStorage.removeItem("token");
+      localStorage.removeItem("admin");
+    }
 
     setError("");
 
@@ -270,7 +283,17 @@ sessionStorage.setItem("admin", JSON.stringify(response.user));
         </div>
 
         <div>
-         
+          <label className="flex items-center gap-3 mb-6 cursor-pointer select-none group/remember">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-5 h-5 rounded-md border-2 cursor-pointer accent-amber-600"
+            />
+            <span className="text-base font-semibold transition-colors group-hover/remember:text-stone-800" style={{ color: COFFEE.stone }}>
+              تذكرني لمدة أسبوع
+            </span>
+          </label>
 
           <button
   type="submit"

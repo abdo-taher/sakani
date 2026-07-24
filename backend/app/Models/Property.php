@@ -9,6 +9,7 @@ use App\Models\PropertyImage;
 use App\Models\Amenity;
 use App\Models\PropertyType;
 use App\Models\User;
+use App\Models\Reservation;
 
 class Property extends Model
 {
@@ -82,6 +83,11 @@ class Property extends Model
     public function amenities()
     {
         return $this->belongsToMany(Amenity::class, 'property_amenities');
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class)->latest();
     }
 
     /**

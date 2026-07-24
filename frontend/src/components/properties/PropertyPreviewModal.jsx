@@ -1,4 +1,5 @@
-import { X, MapPin, Layers, Ruler, BedDouble, Bath, ArrowUpDown, Paintbrush, Sofa, Building2, ImageIcon, Video, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { X, MapPin, Layers, Ruler, BedDouble, Bath, ArrowUpDown, Paintbrush, Sofa, Building2, ImageIcon, Video, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 
 const STATUS_MAP = {
@@ -45,6 +46,7 @@ function InfoCard({ icon: Icon, label, value }) {
 }
 
 function PropertyPreviewModal({ property, onClose }) {
+  const [mediaIndex, setMediaIndex] = useState(0);
   if (!property) return null;
 
   const statusInfo = STATUS_MAP[property.status] || {
@@ -53,8 +55,21 @@ function PropertyPreviewModal({ property, onClose }) {
     bg: COFFEE.cream,
   };
 
-  const images = property.images || [];
+  const images = (property.images || []).filter(img => (img.media_type || 'image') === 'image');
+  const videos = (property.images || []).filter(img => img.media_type === 'video');
+
+  if (videos.length === 0 && property.video_url) {
+    videos.push({ image_url: property.video_url });
+  }
   const amenities = property.amenities || [];
+
+  const media = [
+    ...images.map(img => ({ type: 'image', url: img.image_url, id: img.id })),
+    ...videos.map(img => ({ type: 'video', url: img.image_url, id: img.id })),
+  ];
+
+  const totalMedia = media.length;
+  const currentMedia = totalMedia > 0 ? media[mediaIndex] : null;
 
   return (
     <div
@@ -94,49 +109,83 @@ function PropertyPreviewModal({ property, onClose }) {
           </div>
         </div>
 
+        {/* Media Slider */}
+        {totalMedia > 0 && (
+          <div className="relative w-full h-64 sm:h-80 shrink-0 bg-black overflow-hidden">
+            {currentMedia.type === 'video' ? (
+              <video
+                key={mediaIndex}
+                src={currentMedia.url}
+                controls
+                autoPlay
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                key={mediaIndex}
+                src={currentMedia.url}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            )}
+
+            {totalMedia > 1 && (
+              <>
+                <button
+                  onClick={() => setMediaIndex((i) => (i + 1) % totalMedia)}
+                  className="absolute top-1/2 -translate-y-1/2 right-3 w-9 h-9 rounded-full bg-white/80 flex items-center justify-center hover:scale-110 transition-transform"
+                >
+                  <ChevronRight className="w-5 h-5" style={{ color: COFFEE.dark }} />
+                </button>
+                <button
+                  onClick={() => setMediaIndex((i) => (i - 1 + totalMedia) % totalMedia)}
+                  className="absolute top-1/2 -translate-y-1/2 left-3 w-9 h-9 rounded-full bg-white/80 flex items-center justify-center hover:scale-110 transition-transform"
+                >
+                  <ChevronLeft className="w-5 h-5" style={{ color: COFFEE.dark }} />
+                </button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {media.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setMediaIndex(i)}
+                      className="h-1.5 rounded-full transition-all duration-300"
+                      style={{ width: i === mediaIndex ? "20px" : "6px", backgroundColor: i === mediaIndex ? COFFEE.gold : "rgba(255,255,255,0.7)" }}
+                    />
+                  ))}
+                </div>
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white bg-black/50">
+                  {mediaIndex + 1} / {totalMedia}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Thumbnail Strip */}
+        {totalMedia > 1 && (
+          <div className="flex gap-2 overflow-x-auto px-8 py-3 shrink-0 bg-white border-b" style={{ borderColor: COFFEE.line }}>
+            {media.map((m, idx) => (
+              <button
+                key={m.id || idx}
+                onClick={() => setMediaIndex(idx)}
+                className={`relative shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                  idx === mediaIndex ? 'border-amber-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'
+                }`}
+              >
+                {m.type === 'video' ? (
+                  <div className="w-16 h-12 bg-gray-900 flex items-center justify-center">
+                    <Video size={14} color="white" />
+                  </div>
+                ) : (
+                  <img src={m.url} alt="" className="w-16 h-12 object-cover" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Body (scrollable) */}
         <div className="overflow-y-auto p-8">
-          {/* الصور */}
-          {images.length > 0 && (
-            <div className="mb-8">
-              <div className="flex items-center gap-2 mb-3">
-                <ImageIcon size={18} color={COFFEE.gold} />
-                <h3 className="font-bold" style={{ color: COFFEE.dark }}>
-                  الصور ({images.length})
-                </h3>
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-        {images.map((img, idx) => (
-  <img
-    key={img.id || idx}
-    src={img.image_url}
-    alt={`صورة ${idx + 1}`}
-    className="w-40 h-28 rounded-2xl object-cover shrink-0 border"
-    style={{ borderColor: COFFEE.line }}
-  />
-))}
-              </div>
-            </div>
-          )}
-
-          {/* الفيديو */}
-          {property.video_url && (
-  <div className="mb-8">
-    <div className="flex items-center gap-2 mb-3">
-      <Video size={18} color={COFFEE.gold} />
-      <h3 className="font-bold" style={{ color: COFFEE.dark }}>
-        فيديو العقار
-      </h3>
-    </div>
-    <video
-      src={property.video_url}
-      controls
-      className="w-full max-h-64 rounded-2xl border"
-      style={{ borderColor: COFFEE.line }}
-    />
-  </div>
-)}
-
           {/* البيانات الأساسية */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
             <InfoCard icon={Layers} label="النوع" value={property.category?.name} />

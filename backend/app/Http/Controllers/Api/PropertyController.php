@@ -292,7 +292,8 @@ class PropertyController extends Controller
             'images' => function($query) {
                 $query->ordered();
             }, 
-            'amenities'
+            'amenities',
+            'reservations',
         ])->findOrFail($id);
         
         // Add computed attributes for frontend display
@@ -340,6 +341,8 @@ class PropertyController extends Controller
             'video_driver' => 'sometimes|nullable|string',
             'video_file_path' => 'sometimes|nullable|string',
             'remove_video' => 'sometimes|boolean',
+            'remove_images' => 'sometimes|array',
+            'remove_images.*' => 'integer|exists:property_images,id',
             'status' => 'sometimes|nullable|in:available,reserved,sold,rented',
             'featured' => 'sometimes|boolean',
             'amenities' => 'sometimes|array',
@@ -361,6 +364,8 @@ class PropertyController extends Controller
             } catch (Exception $e) {
                 Log::warning('Failed to delete old video: ' . $e->getMessage());
             }
+
+            $property->images()->where('media_type', 'video')->delete();
 
             $updateData = array_merge($updateData, [
                 'video_url' => null,
@@ -419,6 +424,11 @@ class PropertyController extends Controller
         }
 
         $property->update($updateData);
+
+        // Remove specified images
+        if ($request->has('remove_images') && is_array($request->remove_images)) {
+            $property->images()->whereIn('id', $request->remove_images)->delete();
+        }
 
         // Update amenities if provided
         if ($request->has('amenities')) {

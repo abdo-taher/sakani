@@ -75,11 +75,20 @@ function PropertyForm({
     status: "available",
     features: [],
     images: [],
-    video: null,
+    videos: [],
+    existingImages: [],
+    removedImageIds: [],
+    removeVideo: false,
+    existingVideoUrl: null,
+    existingVideoPublicId: null,
   });
 
   useEffect(() => {
     if (property) {
+      const existingImages = (property.images || []).filter(img => (img.media_type || 'image') === 'image');
+      const existingVideos = (property.images || []).filter(img => img.media_type === 'video');
+      const firstVideo = existingVideos.length > 0 ? existingVideos[0] : null;
+
       setPropertyData({
         category: property.category_id || property.category?.id || "",
         section: property.property_type_id || property.propertyType?.id || "",
@@ -101,8 +110,13 @@ function PropertyForm({
         features: property.amenities
           ? property.amenities.map(item => item.id)
           : [],
-        images: property.images || [],
-        video: property.video || null,
+        images: [],
+        videos: [],
+        existingImages,
+        removedImageIds: [],
+        removeVideo: false,
+        existingVideoUrl: firstVideo?.image_url || property.video_url || null,
+        existingVideoPublicId: firstVideo?.image_public_id || property.video_public_id || null,
       });
     }
   }, [property]);
@@ -125,11 +139,44 @@ function PropertyForm({
   };
 
   const handleImages = (e) => {
-    setPropertyData((prev) => ({ ...prev, images: Array.from(e.target.files) }));
+    const newFiles = Array.from(e.target.files);
+    setPropertyData((prev) => ({ ...prev, images: [...prev.images, ...newFiles] }));
   };
 
   const handleVideo = (e) => {
-    setPropertyData((prev) => ({ ...prev, video: e.target.files[0] }));
+    const newFiles = Array.from(e.target.files);
+    setPropertyData((prev) => ({ ...prev, videos: [...prev.videos, ...newFiles] }));
+  };
+
+  const removeNewVideo = (index) => {
+    setPropertyData((prev) => ({
+      ...prev,
+      videos: prev.videos.filter((_, i) => i !== index),
+    }));
+  };
+
+  const removeNewImage = (index) => {
+    setPropertyData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  const removeExistingImage = (id) => {
+    setPropertyData((prev) => ({
+      ...prev,
+      existingImages: prev.existingImages.filter((img) => img.id !== id),
+      removedImageIds: [...prev.removedImageIds, id],
+    }));
+  };
+
+  const removeExistingVideo = () => {
+    setPropertyData((prev) => ({
+      ...prev,
+      existingVideoUrl: null,
+      existingVideoPublicId: null,
+      removeVideo: true,
+    }));
   };
 
   const [locations, setLocations] = useState([]);
@@ -214,46 +261,68 @@ function PropertyForm({
     setSaving(true);
     try {
 
-      let videoUrl = null;
-      let videoPublicId = null;
-
-      if (propertyData.video) {
-        setSavingMessage("جاري رفع الفيديو، قد يستغرق ذلك بعض الوقت...");
-        const uploadedVideo = await uploadToCloudinary(
-          propertyData.video,
-          "sakani/properties/videos"
-        );
-        videoUrl = uploadedVideo.secure_url;
-        videoPublicId = uploadedVideo.public_id;
-      }
-
       const data = {
-  title: propertyData.title,
-  description: propertyData.description,
-  price: propertyData.price,
-  category_id: propertyData.category,
-  property_type_id: propertyData.section,
-  location_id: propertyData.location,
-  area: propertyData.area,
-  rooms: propertyData.rooms,
-  bathrooms: propertyData.bathrooms,
-  floor: propertyData.floor,
-  balconies: 0,
-  finishing: propertyData.finishing || null,
-  furnishing: propertyData.furnishing || null,
-  status: "available",
-  featured: false,
-
-  amenities: propertyData.features,
-
-  video_url: videoUrl,
-  video_public_id: videoPublicId,
-};;
+        title: propertyData.title,
+        description: propertyData.description,
+        price: propertyData.price,
+        category_id: propertyData.category,
+        property_type_id: propertyData.section,
+        location_id: propertyData.location,
+        area: propertyData.area,
+        rooms: propertyData.rooms,
+        bathrooms: propertyData.bathrooms,
+        floor: propertyData.floor,
+        balconies: 0,
+        finishing: propertyData.finishing || null,
+        furnishing: propertyData.furnishing || null,
+        status: "available",
+        featured: false,
+        amenities: propertyData.features,
+      };
 
       if (property) {
+        data.remove_images = propertyData.removedImageIds;
+        data.remove_video = propertyData.removeVideo;
+
+        if (propertyData.removeVideo) {
+          data.video_url = null;
+          data.video_public_id = null;
+        }
 
         setSavingMessage("جاري حفظ التعديلات...");
         await updateProperty(property.id, data);
+
+        let uploadedCount = 0;
+        const totalNew = propertyData.images.filter(i => i instanceof File).length + propertyData.videos.length;
+
+        // Upload new images
+        const newImages = propertyData.images.filter(i => i instanceof File);
+        for (const image of newImages) {
+          setSavingMessage(`جاري رفع الصور (${uploadedCount + 1}/${totalNew})...`);
+          const uploaded = await uploadToCloudinary(image, "sakani/properties/images");
+          await uploadPropertyImage(
+            property.id,
+            uploaded.secure_url,
+            uploaded.public_id,
+            propertyData.existingImages.length === 0 && uploadedCount === 0,
+            "image"
+          );
+          uploadedCount++;
+        }
+
+        // Upload new videos as property_images
+        for (const video of propertyData.videos) {
+          setSavingMessage(`جاري رفع الفيديوهات (${uploadedCount + 1}/${totalNew})...`);
+          const uploaded = await uploadToCloudinary(video, "sakani/properties/videos");
+          await uploadPropertyImage(
+            property.id,
+            uploaded.secure_url,
+            uploaded.public_id,
+            false,
+            "video"
+          );
+          uploadedCount++;
+        }
 
         successToast("تم تعديل العقار بنجاح");
 
@@ -264,27 +333,35 @@ function PropertyForm({
 
         const propertyId = response.data.property.id;
 
-        if (propertyData.images.length > 0) {
-          setSavingMessage(`جاري رفع الصور (0/${propertyData.images.length})...`);
-        }
-
+        const totalMedia = propertyData.images.length + propertyData.videos.length;
         let uploadedCount = 0;
+
+        // Upload images
         for (const image of propertyData.images) {
-
-          const uploaded = await uploadToCloudinary(
-            image,
-            "sakani/properties/images"
-          );
-
+          setSavingMessage(`جاري رفع الصور (${uploadedCount + 1}/${totalMedia})...`);
+          const uploaded = await uploadToCloudinary(image, "sakani/properties/images");
           await uploadPropertyImage(
             propertyId,
             uploaded.secure_url,
             uploaded.public_id,
-            uploadedCount === 0
+            uploadedCount === 0,
+            "image"
           );
-
           uploadedCount++;
-          setSavingMessage(`جاري رفع الصور (${uploadedCount}/${propertyData.images.length})...`);
+        }
+
+        // Upload videos as property_images
+        for (const video of propertyData.videos) {
+          setSavingMessage(`جاري رفع الفيديوهات (${uploadedCount + 1}/${totalMedia})...`);
+          const uploaded = await uploadToCloudinary(video, "sakani/properties/videos");
+          await uploadPropertyImage(
+            propertyId,
+            uploaded.secure_url,
+            uploaded.public_id,
+            false,
+            "video"
+          );
+          uploadedCount++;
         }
 
         successToast("تم إضافة العقار بنجاح");
@@ -732,6 +809,63 @@ function PropertyForm({
               <div>
                 <SectionTitle icon={ImagePlus}>الصور والفيديو</SectionTitle>
 
+                {/* Existing Images in edit mode */}
+                {property && propertyData.existingImages.length > 0 && (
+                  <div className="mb-6">
+                    <div className="text-xs font-bold mb-3" style={{ color: COFFEE.stone }}>
+                      الصور الحالية ({propertyData.existingImages.length})
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {propertyData.existingImages.map((img) => (
+                        <div key={img.id} className="relative group">
+                          <img
+                            src={img.image_url}
+                            alt=""
+                            className="w-24 h-24 rounded-xl object-cover border-2"
+                            style={{ borderColor: img.is_primary ? COFFEE.gold : COFFEE.line }}
+                          />
+                          {img.is_primary && (
+                            <span className="absolute -top-2 -right-2 text-[10px] font-bold px-2 py-0.5 rounded-full text-white pop-in" style={{ background: COFFEE.gold }}>
+                              رئيسية
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeExistingImage(img.id)}
+                            className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold hover:bg-red-600"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Existing Video in edit mode */}
+                {property && propertyData.existingVideoUrl && !propertyData.removeVideo && (
+                  <div className="mb-6">
+                    <div className="text-xs font-bold mb-3" style={{ color: COFFEE.stone }}>
+                      فيديو العقار الحالي
+                    </div>
+                    <div className="relative inline-block group">
+                      <video
+                        src={propertyData.existingVideoUrl}
+                        className="w-64 h-36 rounded-xl object-cover border-2"
+                        style={{ borderColor: COFFEE.line }}
+                      />
+                      <button
+                        type="button"
+                        onClick={removeExistingVideo}
+                        className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold hover:bg-red-600"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* New Images Upload */}
                 <UploadBox
                   icon={ImagePlus}
                   title="صور العقار"
@@ -741,22 +875,75 @@ function PropertyForm({
                   onChange={handleImages}
                   info={
                     propertyData.images.length > 0
-                      ? `تم اختيار ${propertyData.images.length} صورة`
+                      ? `تم اختيار ${propertyData.images.length} صورة جديدة`
                       : null
                   }
                   color={COFFEE}
                 />
 
+                {/* New Images Preview */}
+                {propertyData.images.length > 0 && (
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    {propertyData.images.map((file, idx) => (
+                      <div key={idx} className="relative group">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt=""
+                          className="w-24 h-24 rounded-xl object-cover border-2"
+                          style={{ borderColor: COFFEE.gold }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeNewImage(idx)}
+                          className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold hover:bg-red-600"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Video Upload */}
                 <div className="mt-8">
                   <UploadBox
                     icon={Video}
-                    title="فيديو العقار (اختياري)"
-                    hint="اضغط لاختيار فيديو للعقار"
+                    title="فيديوهات العقار (اختياري)"
+                    hint="اضغط لاختيار فيديوهات للعقار (يمكن اختيار أكثر من فيديو)"
                     accept="video/*"
+                    multiple
                     onChange={handleVideo}
-                    info={propertyData.video ? propertyData.video.name : null}
+                    info={propertyData.videos.length > 0 ? `تم اختيار ${propertyData.videos.length} فيديو` : null}
                     color={COFFEE}
                   />
+                  {propertyData.videos.length > 0 && (
+                    <div className="flex flex-wrap gap-3 mt-4">
+                      {propertyData.videos.map((file, idx) => (
+                        <div key={idx} className="relative group">
+                          <video
+                            src={URL.createObjectURL(file)}
+                            className="w-32 h-20 rounded-xl object-cover border-2"
+                            style={{ borderColor: COFFEE.gold }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeNewVideo(idx)}
+                            className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold hover:bg-red-600"
+                          >
+                            ✕
+                          </button>
+                          <div className="text-[10px] mt-1 text-stone-400 truncate max-w-[128px]">{file.name}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Total count */}
+                <div className="mt-4 text-sm font-bold" style={{ color: COFFEE.stone }}>
+                  الإجمالي: {propertyData.existingImages.length + propertyData.images.length} صورة
+                  {propertyData.existingVideoUrl && !propertyData.removeVideo ? " + فيديو" : ""}
+                  {propertyData.videos.length > 0 ? ` + ${propertyData.videos.length} فيديو جديد` : ""}
                 </div>
               </div>
             )}
@@ -779,7 +966,7 @@ function PropertyForm({
                   <ReviewCard title="الدور" value={propertyData.floor || "—"} color={COFFEE} />
                   <ReviewCard title="التشطيب" value={finishingLabel || "—"} color={COFFEE} />
                   <ReviewCard title="التأثيث" value={furnishingLabel || "—"} color={COFFEE} />
-                  <ReviewCard title="الصور / الفيديو" value={`${propertyData.images.length} صورة${propertyData.video ? " + فيديو" : ""}`} color={COFFEE} />
+                  <ReviewCard title="الصور / الفيديو" value={`${(propertyData.existingImages?.length || 0) + propertyData.images.length} صورة${((propertyData.existingVideoUrl && !propertyData.removeVideo) || propertyData.videos.length > 0) ? " + فيديو" : ""}`} color={COFFEE} />
                 </div>
 
                 <div className="mt-5">

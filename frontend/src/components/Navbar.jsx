@@ -10,26 +10,25 @@ import {
   Heart,
   Building2,
   Bell,
+  Menu,
+  X,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { COFFEE } from "../constants/constants";
-import { getUnreadCount } from "../services/notificationService";
 
-/* -------------------------------------------------------------------- */
-/*  مكون: بار التنقل                                                     */
-/* -------------------------------------------------------------------- */
 function Navbar({ isAdmin, favoritesCount = 0, unreadCount = 0, onOpenFavorites }) {
   const [scrolled, setScrolled] = useState(false);
   const [pulseHeart, setPulseHeart] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
-const location = useLocation();
+  const location = useLocation();
 
-const page =
-  location.pathname === "/"
-    ? "home"
-    : location.pathname.replace("/", "");
+  const page =
+    location.pathname === "/"
+      ? "home"
+      : location.pathname.replace("/", "");
   const prevFav = useRef(favoritesCount);
-  
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -47,38 +46,13 @@ const page =
   }, [favoritesCount]);
 
   const items = [
- {
-  key: "home",
-  path: "/",
-  label: "الرئيسية",
-  icon: HomeIcon,
-},
-{
-  key: "need",
-  path: "/need",
-  label: "محتاج اي؟",
-  icon: HelpCircle,
-},
-{
-  key: "rent",
-  path: "/rent",
-  label: "إيجار",
-  icon: KeyRound,
-},
-{
-  key: "buy",
-  path: "/buy",
-  label: "شراء",
-  icon: ShoppingBag,
-},
+    { key: "home", path: "/", label: "الرئيسية", icon: HomeIcon },
+    { key: "need", path: "/need", label: "محتاج اي؟", icon: HelpCircle },
+    { key: "rent", path: "/rent", label: "إيجار", icon: KeyRound },
+    { key: "buy", path: "/buy", label: "شراء", icon: ShoppingBag },
+    { key: "contact", path: "/contact", label: "تواصل معنا", icon: Phone },
+  ];
 
-{
-  key: "contact",
-  path: "/contact",
-  label: "تواصل معنا",
-  icon: Phone,
-},
-];
   const navRef = useRef(null);
   const btnRefs = useRef({});
   const [pill, setPill] = useState({ left: 0, width: 0, top: 0, height: 0, ready: false });
@@ -101,7 +75,6 @@ const page =
 
   useLayoutEffect(() => {
     measurePill();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, scrolled]);
 
   useEffect(() => {
@@ -109,17 +82,17 @@ const page =
     return () => window.removeEventListener("resize", measurePill);
   }, []);
 
-  const mobileRefs = useRef({});
+  // Close mobile menu on navigate
   useEffect(() => {
-    const el = mobileRefs.current[page];
-    if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  }, [page]);
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   return (
     <header
       className={`w-full sticky top-0 z-50 transition-all duration-300 ${scrolled ? "shadow-xl backdrop-blur-md" : "shadow-md"}`}
       style={{ backgroundColor: scrolled ? `${COFFEE.darkest}f2` : COFFEE.darkest }}
     >
+      {/* Gold shimmer line */}
       <div className="relative h-[2px] w-full overflow-hidden">
         <div
           className="absolute inset-0 animate-shimmerLine"
@@ -130,19 +103,20 @@ const page =
         />
       </div>
 
+      {/* Main bar */}
       <div
-        className="max-w-7xl mx-auto px-6 sm:px-10 flex items-center justify-between transition-all duration-300 gap-6"
-        style={{ height: scrolled ? "68px" : "84px" }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 flex items-center justify-between transition-all duration-300 gap-3 sm:gap-6"
+        style={{ height: scrolled ? "60px" : "72px" }}
         dir="rtl"
       >
-        {/* اللوجو */}
-        <button onClick={() => navigate("/")} className="flex items-center gap-3 shrink-0 group">
+        {/* Logo */}
+        <button onClick={() => navigate("/")} className="flex items-center gap-2 sm:gap-3 shrink-0 group">
           <div
-            className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center group-hover:rotate-[20deg] transition-transform duration-300 animate-float"
+            className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center group-hover:rotate-[20deg] transition-transform duration-300 animate-float"
             style={{ backgroundColor: COFFEE.gold }}
           >
             <span className="absolute inset-0 rounded-full animate-haloPulse" />
-            <Building2 className="w-5 h-5 sm:w-[22px] sm:h-[22px] relative z-10" style={{ color: COFFEE.darkest }} />
+            <Building2 className="w-4 h-4 sm:w-[22px] sm:h-[22px] relative z-10" style={{ color: COFFEE.darkest }} />
           </div>
           <span
             className="text-lg sm:text-2xl font-bold tracking-wide transition-all duration-300 group-hover:tracking-wider"
@@ -152,8 +126,8 @@ const page =
           </span>
         </button>
 
-        {/* روابط سطح المكتب */}
-       <nav ref={navRef} className="hidden md:flex items-center gap-4 lg:gap-5 relative flex-1 justify-center">
+        {/* Desktop nav */}
+        <nav ref={navRef} className="hidden md:flex items-center gap-4 lg:gap-5 relative flex-1 justify-center">
           <div
             className="absolute rounded-full transition-all duration-500 ease-[cubic-bezier(.65,.05,.36,1)]"
             style={{
@@ -174,29 +148,22 @@ const page =
                 key={it.key}
                 ref={(el) => (btnRefs.current[it.key] = el)}
                 onClick={() => navigate(it.path)}
-                className="relative z-10 flex items-center gap-2 px-6 lg:px-7 py-3 rounded-full text-base lg:text-lg font-semibold transition-all duration-300 hover:scale-105 group/item whitespace-nowrap"
+                className="relative z-10 flex items-center gap-2 px-5 lg:px-7 py-3 rounded-full text-base lg:text-lg font-semibold transition-all duration-300 hover:scale-105 group/item whitespace-nowrap"
                 style={{ color: active ? COFFEE.darkest : COFFEE.cream }}
               >
-                <Icon
-                 className={`w-5 h-5 transition-transform duration-300 ${active ? "scale-110" : "group-hover/item:-translate-y-0.5"}`}
-                />
+                <Icon className={`w-5 h-5 transition-transform duration-300 ${active ? "scale-110" : "group-hover/item:-translate-y-0.5"}`} />
                 {it.label}
-                {!active && (
-                  <span
-                    className="absolute bottom-1 right-1/2 translate-x-1/2 h-[2px] w-0 group-hover/item:w-[60%] transition-all duration-300 rounded-full"
-                    style={{ backgroundColor: COFFEE.gold }}
-                  />
-                )}
               </button>
             );
           })}
         </nav>
 
-        {/* المفضلة + الأدمن */}
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+        {/* Right actions: favorites + admin + mobile menu */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Favorites */}
           <button
             onClick={onOpenFavorites}
-            className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 hover:scale-110 active:scale-95 transition-transform"
+            className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 hover:scale-110 active:scale-95 transition-transform"
             style={{ borderColor: COFFEE.gold }}
             title="المفضلة"
           >
@@ -210,24 +177,26 @@ const page =
             {favoritesCount > 0 && (
               <span
                 key={favoritesCount}
-                className="animate-fadePop absolute -top-1.5 -left-1.5 min-w-[19px] h-[19px] px-1 rounded-full text-[10px] font-extrabold flex items-center justify-center"
+                className="animate-fadePop absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-extrabold flex items-center justify-center"
                 style={{ backgroundColor: COFFEE.gold, color: COFFEE.darkest }}
               >
                 {favoritesCount}
               </span>
             )}
           </button>
+
+          {/* Admin bell */}
           {isAdmin && (
             <button
               onClick={() => navigate("/dashboard/notifications")}
-              className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 hover:scale-110 active:scale-95 transition-transform"
+              className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 hover:scale-110 active:scale-95 transition-transform"
               style={{ borderColor: COFFEE.gold }}
               title="الإشعارات"
             >
               <Bell className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: COFFEE.gold }} />
               {unreadCount > 0 && (
                 <span
-                  className="animate-fadePop absolute -top-1.5 -left-1.5 min-w-[19px] h-[19px] px-1 rounded-full text-[10px] font-extrabold flex items-center justify-center"
+                  className="animate-fadePop absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-extrabold flex items-center justify-center"
                   style={{ backgroundColor: "#e0435c", color: "#fff" }}
                 >
                   {unreadCount}
@@ -235,28 +204,38 @@ const page =
               )}
             </button>
           )}
+
+          {/* Admin dashboard button - desktop only */}
           {isAdmin && (
             <button
-             onClick={() => navigate("/dashboard")}
-              className="btn-shimmer flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold border-2 hover:scale-105 active:scale-95 transition-transform whitespace-nowrap"
+              onClick={() => navigate("/dashboard")}
+              className="hidden md:flex btn-shimmer items-center gap-2 px-4 lg:px-5 py-2.5 rounded-full text-sm font-bold border-2 hover:scale-105 active:scale-95 transition-transform whitespace-nowrap"
               style={{ borderColor: COFFEE.gold, color: COFFEE.gold }}
             >
               <ShieldCheck className="w-4 h-4" />
-              <span className="hidden sm:inline">لوحة التحكم</span>
+              لوحة التحكم
             </button>
           )}
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className="md:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 hover:scale-110 active:scale-95 transition-transform"
+            style={{ borderColor: COFFEE.gold, color: COFFEE.gold }}
+          >
+            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </div>
 
-      {/* موبايل */}
-      <div className="md:hidden flex overflow-x-auto gap-2 px-4 pb-3 scrollbar-hide" dir="rtl">
+      {/* Desktop mobile scroll nav (tablet) */}
+      <div className="hidden md:hidden flex overflow-x-auto gap-2 px-4 pb-3 scrollbar-hide" dir="rtl">
         {items.map((it) => {
           const Icon = it.icon;
           const active = page === it.key;
           return (
             <button
               key={it.key}
-              ref={(el) => (mobileRefs.current[it.key] = el)}
               onClick={() => navigate(it.path)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap transition-all duration-300 ${active ? "scale-105" : "active:scale-95"}`}
               style={{
@@ -272,6 +251,68 @@ const page =
         })}
       </div>
 
+      {/* Mobile dropdown menu */}
+      {menuOpen && (
+        <div
+          className="md:hidden border-t animate-slideDown"
+          style={{ backgroundColor: COFFEE.darkest, borderColor: `${COFFEE.gold}33` }}
+          dir="rtl"
+        >
+          <div className="px-4 py-4 space-y-1">
+            {items.map((it) => {
+              const Icon = it.icon;
+              const active = page === it.key;
+              return (
+                <button
+                  key={it.key}
+                  onClick={() => navigate(it.path)}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all"
+                  style={{
+                    backgroundColor: active ? `${COFFEE.gold}22` : "transparent",
+                    color: active ? COFFEE.gold : COFFEE.cream,
+                  }}
+                >
+                  <Icon className="w-5 h-5" />
+                  {it.label}
+                </button>
+              );
+            })}
+
+            {isAdmin && (
+              <>
+                <div className="border-t my-2" style={{ borderColor: `${COFFEE.gold}22` }} />
+                <button
+                  onClick={() => navigate("/dashboard/notifications")}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all"
+                  style={{ color: COFFEE.cream }}
+                >
+                  <div className="relative">
+                    <Bell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span
+                        className="absolute -top-1.5 -left-1.5 min-w-[16px] h-[16px] px-0.5 rounded-full text-[9px] font-extrabold flex items-center justify-center"
+                        style={{ backgroundColor: "#e0435c", color: "#fff" }}
+                      >
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  الإشعارات
+                </button>
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all"
+                  style={{ color: COFFEE.gold }}
+                >
+                  <ShieldCheck className="w-5 h-5" />
+                  لوحة التحكم
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes shimmerLine {
           0% { transform: translateX(-150%); }
@@ -284,6 +325,11 @@ const page =
           100% { box-shadow: 0 0 0 0 transparent; }
         }
         .animate-haloPulse { animation: haloPulse 2.4s ease-out infinite; }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slideDown { animation: slideDown 0.25s ease-out; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>

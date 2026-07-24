@@ -9,7 +9,7 @@ function ProtectedRoute({ children }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = sessionStorage.getItem("token");
+      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
       if (!token) {
         setAuthorized(false);
@@ -24,10 +24,16 @@ function ProtectedRoute({ children }) {
           setAuthorized(true);
         } else {
           sessionStorage.clear();
+          localStorage.removeItem("token");
+          localStorage.removeItem("admin");
+          localStorage.removeItem("admin_remember");
           setAuthorized(false);
         }
       } catch (error) {
         sessionStorage.clear();
+        localStorage.removeItem("token");
+        localStorage.removeItem("admin");
+        localStorage.removeItem("admin_remember");
         setAuthorized(false);
       }
 

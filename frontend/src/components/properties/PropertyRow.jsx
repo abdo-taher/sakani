@@ -1,5 +1,6 @@
 import React from "react";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Eye, Pencil, Trash2, ExternalLink } from "lucide-react";
 import PropertyStatus from "./PropertyStatus";
 import { COFFEE } from "../../constants/constants";
 
@@ -10,6 +11,8 @@ function PropertyRow({
   onDelete,
   onStatusChange,
 }) {
+  const navigate = useNavigate();
+
   return (
     <tr className="border-t border-stone-100 hover:bg-stone-50 transition">
       <td className="px-4 py-4">
@@ -51,6 +54,14 @@ function PropertyRow({
 
       <td className="px-4 py-4">
         <div className="flex justify-center gap-1.5">
+          <button
+            onClick={() => navigate(`/dashboard/properties/${property.id}`)}
+            className="w-9 h-9 rounded-lg hover:bg-amber-50 flex items-center justify-center transition"
+            title="تفاصيل العقار"
+          >
+            <ExternalLink size={18} color={COFFEE.gold} />
+          </button>
+
           <button
             onClick={() => onPreview(property)}
             className="w-9 h-9 rounded-lg hover:bg-stone-100 flex items-center justify-center transition"

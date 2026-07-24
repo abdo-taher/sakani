@@ -84,13 +84,13 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
         <video
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out"
           style={{ transform: `scale(1.08) translate(${heroTilt.x * 0.6}px, ${heroTilt.y * 0.6}px)` }}
-          src="/ytdowncom-shorts-media-femhoqd6ss8-001-720p_d8v8hPP0.mp4"
+          src="/hero.mp4"
           poster="https://picsum.photos/seed/herohouse/1600/900"
           autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
           onError={(e) => { e.target.style.display = 'none'; }}
         />
         <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, rgba(43,27,18,0.35) 0%, rgba(43,27,18,0.75) 100%)` }} />

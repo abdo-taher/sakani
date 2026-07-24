@@ -156,6 +156,7 @@ class PropertyImageController extends Controller
                 'image_type' => 'sometimes|string|in:' . implode(',', array_keys(PropertyImage::IMAGE_TYPES)),
                 'caption' => 'sometimes|string|max:255',
                 'is_primary' => 'sometimes|boolean',
+                'media_type' => 'sometimes|string|in:image,video',
             ]);
 
             $propertyId = $request->property_id;
@@ -168,8 +169,8 @@ class PropertyImageController extends Controller
                 $publicId = $this->extractPublicIdFromUrl($imageUrl);
             }
 
-            // Validate URL format and domain (Cloudinary) in production
-            if (!str_contains($imageUrl, 'cloudinary.com') && !app()->environment('local')) {
+            // Validate URL format and domain (Cloudinary) in production (skip for videos)
+            if ($request->input('media_type', 'image') === 'image' && !str_contains($imageUrl, 'cloudinary.com') && !app()->environment('local')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid image URL. Only Cloudinary URLs are allowed.'
@@ -196,6 +197,7 @@ class PropertyImageController extends Controller
                     'property_id' => $propertyId,
                     'image_url' => $imageUrl,
                     'image_public_id' => $publicId,
+                    'media_type' => $request->input('media_type', 'image'),
                     'sort_order' => $sortOrder,
                     'image_type' => $request->input('image_type', 'property'),
                     'caption' => $request->input('caption'),
