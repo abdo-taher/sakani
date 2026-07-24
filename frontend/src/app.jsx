@@ -9,7 +9,6 @@ import Footer from "./components/Footer";
 import { loadFavorites, saveFavorites } from "./utils/storage";
 import { getProperties as fetchPropertiesAPI } from "./services/propertyService";
 import { getFavorites, toggleFavorite as toggleFavoriteAPI } from "./services/favoriteService";
-import { getUnreadCount } from "./services/notificationService";
 
 import Navbar from "./components/Navbar";
 import PropertyModal from "./components/PropertyModal";
@@ -28,7 +27,6 @@ export default function App() {
   const [reservationOpen, setReservationOpen] = useState(false);
   const [favoritesOpen, setFavoritesOpen] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const isAdmin = !!(sessionStorage.getItem("token") || localStorage.getItem("token"));
   const isDashboard = location.pathname.startsWith("/dashboard");
@@ -64,19 +62,6 @@ export default function App() {
       setLoaded(true);
     })();
   }, []);
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    const fetchCount = async () => {
-      try {
-        const res = await getUnreadCount();
-        if (res?.unread_count !== undefined) setUnreadCount(res.unread_count);
-      } catch { /* empty */ }
-    };
-    fetchCount();
-    const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
-  }, [isAdmin]);
 
   const addProperty = (prop) => {
     setProperties((prev) => [prop, ...prev]);
@@ -132,7 +117,6 @@ export default function App() {
         <Navbar
           isAdmin={isAdmin}
           favoritesCount={favorites.size}
-          unreadCount={unreadCount}
           onOpenFavorites={() => setFavoritesOpen(true)}
         />
       )}
