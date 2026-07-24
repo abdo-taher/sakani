@@ -1,5 +1,5 @@
 import React from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, MapPin } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 
 function LocationRow({
@@ -9,6 +9,24 @@ function LocationRow({
 }) {
   return (
     <tr className="border-t border-stone-100 hover:bg-stone-50 transition">
+      {/* الصورة */}
+      <td className="px-4 py-4">
+        {location.image_url ? (
+          <img
+            src={location.image_url}
+            alt={location.name}
+            className="w-16 h-12 rounded-lg object-cover bg-stone-100"
+          />
+        ) : (
+          <div
+            className="w-16 h-12 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: COFFEE.cream }}
+          >
+            <MapPin size={18} color={COFFEE.gold} />
+          </div>
+        )}
+      </td>
+
       {/* اسم المكان */}
       <td className="px-6 py-5 font-semibold text-stone-800">
         {location.name}

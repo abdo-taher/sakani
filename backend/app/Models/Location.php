@@ -11,6 +11,8 @@ class Location extends Model
         'latitude',
         'longitude',
         'address',
+        'image_url',
+        'image_public_id',
     ];
     public function properties()
 {

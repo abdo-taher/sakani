@@ -24,6 +24,8 @@ class LocationController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'address' => 'nullable|string|max:500',
+            'image_url' => 'nullable|string|max:1000',
+            'image_public_id' => 'nullable|string|max:500',
         ]);
 
         $location = Location::create([
@@ -31,6 +33,8 @@ class LocationController extends Controller
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'address' => $request->address,
+            'image_url' => $request->image_url,
+            'image_public_id' => $request->image_public_id,
         ]);
 
         return response()->json([
@@ -57,6 +61,8 @@ class LocationController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'address' => 'nullable|string|max:500',
+            'image_url' => 'nullable|string|max:1000',
+            'image_public_id' => 'nullable|string|max:500',
         ]);
 
         $location->update([
@@ -64,6 +70,8 @@ class LocationController extends Controller
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'address' => $request->address,
+            'image_url' => $request->image_url,
+            'image_public_id' => $request->image_public_id,
         ]);
 
         return response()->json([

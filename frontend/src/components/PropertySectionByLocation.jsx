@@ -27,41 +27,56 @@ function PropertySectionByLocation({
   if (!selectedLocation) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Object.entries(grouped).map(([location, list]) => (
+        {Object.entries(grouped).map(([location, list]) => {
+          const locationObj = list[0]?.location;
+          const locationImage = locationObj?.image_url;
+
+          return (
           <button
             key={location}
             onClick={() => setSelectedLocation(location)}
-            className="text-right bg-white rounded-3xl border shadow-sm hover:shadow-lg transition p-8 flex flex-col items-start gap-4"
+            className="text-right bg-white rounded-3xl border shadow-sm hover:shadow-lg transition overflow-hidden flex flex-col"
             style={{ borderColor: "#eee" }}
           >
-            <div
-              className="w-14 h-14 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: COFFEE.gold }}
-            >
-              <MapPin className="w-6 h-6" style={{ color: COFFEE.darkest }} />
-            </div>
-
-            <div>
-              <h3
-                className="text-xl font-extrabold"
-                style={{ color: COFFEE.dark }}
+            {locationImage ? (
+              <img
+                src={locationImage}
+                alt={location}
+                className="w-full h-40 object-cover"
+              />
+            ) : (
+              <div
+                className="w-full h-32 flex items-center justify-center"
+                style={{ backgroundColor: COFFEE.cream }}
               >
-                {location}
-              </h3>
-              <p className="mt-2 text-gray-500">
-                {list.length} عقار متاح
-              </p>
-            </div>
+                <MapPin className="w-10 h-10" style={{ color: COFFEE.gold }} />
+              </div>
+            )}
 
-            <span
-              className="flex items-center gap-1 font-bold mt-2"
-              style={{ color: COFFEE.gold }}
-            >
-              اذهب الآن
-              <ChevronLeft className="w-4 h-4" />
-            </span>
+            <div className="p-6 flex flex-col items-start gap-3">
+              <div>
+                <h3
+                  className="text-xl font-extrabold"
+                  style={{ color: COFFEE.dark }}
+                >
+                  {location}
+                </h3>
+                <p className="mt-2 text-gray-500">
+                  {list.length} عقار متاح
+                </p>
+              </div>
+
+              <span
+                className="flex items-center gap-1 font-bold mt-2"
+                style={{ color: COFFEE.gold }}
+              >
+                اذهب الآن
+                <ChevronLeft className="w-4 h-4" />
+              </span>
+            </div>
           </button>
-        ))}
+          );
+        })}
       </div>
     );
   }

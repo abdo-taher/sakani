@@ -15,6 +15,10 @@ function LocationTable({
         <table className="w-full text-base">
           <thead className="bg-stone-100">
             <tr>
+              <th className="px-4 py-5 text-center font-bold text-stone-600 w-24">
+                الصورة
+              </th>
+
               <th className="px-6 py-5 text-right font-bold text-stone-600">
                 اسم المكان
               </th>
@@ -29,7 +33,7 @@ function LocationTable({
             {locations.length === 0 ? (
               <tr>
                 <td
-                  colSpan={2}
+                  colSpan={3}
                   className="py-20 text-center text-stone-400 font-semibold text-lg"
                 >
                   لا توجد أماكن حالياً
