@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, ChevronDown } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 
 function ReservationToolbar({
@@ -9,7 +9,7 @@ function ReservationToolbar({
   setStatus,
 }) {
   const selectClass =
-    "w-full rounded-xl border border-stone-300 px-4 py-3.5 text-base outline-none focus:border-yellow-600 focus:ring-2 focus:ring-yellow-100 bg-white appearance-none cursor-pointer transition";
+    "w-full rounded-xl border border-stone-300 pl-10 pr-4 py-3.5 text-base outline-none focus:border-yellow-600 focus:ring-2 focus:ring-yellow-100 bg-white cursor-pointer transition";
 
   return (
     <div
@@ -60,18 +60,21 @@ function ReservationToolbar({
             حالة الطلب
           </label>
 
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">كل الطلبات</option>
-            <option value="new">طلب جديد</option>
-            <option value="contacted">تم التواصل</option>
-            <option value="rented">تم الإيجار</option>
-            <option value="sold">تم البيع</option>
-            <option value="cancelled">ملغي</option>
-          </select>
+          <div className="relative">
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className={selectClass}
+            >
+              <option value="">كل الطلبات</option>
+              <option value="new">طلب جديد</option>
+              <option value="contacted">تم التواصل</option>
+              <option value="rented">تم الإيجار</option>
+              <option value="sold">تم البيع</option>
+              <option value="cancelled">ملغي</option>
+            </select>
+            <ChevronDown size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+          </div>
         </div>
 
       </div>

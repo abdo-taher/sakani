@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, ChevronDown } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 
 function PropertyToolbar({
@@ -15,7 +15,7 @@ function PropertyToolbar({
 locations = [],
 }) {
   const selectClass =
-    "w-full rounded-xl border border-stone-300 px-4 py-3.5 text-base outline-none focus:border-yellow-600 focus:ring-2 focus:ring-yellow-100 bg-white appearance-none cursor-pointer transition";
+    "w-full rounded-xl border border-stone-300 pl-10 pr-4 py-3.5 text-base outline-none focus:border-yellow-600 focus:ring-2 focus:ring-yellow-100 bg-white cursor-pointer transition";
 
   return (
     <div
@@ -55,22 +55,25 @@ locations = [],
           <label className="block text-base font-bold mb-2.5 text-stone-600">
             النوع
           </label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className={selectClass}
-          >
-           <option value="">كل الأقسام</option>
- 
-            {categories.map((category) => (
-              <option
-                key={category.id}
-                value={category.name}
-              >
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className={selectClass}
+            >
+             <option value="">كل الأقسام</option>
+   
+              {categories.map((category) => (
+                <option
+                  key={category.id}
+                  value={category.name}
+                >
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+          </div>
         </div>
 
         {/* الحالة */}
@@ -78,17 +81,20 @@ locations = [],
           <label className="block text-base font-bold mb-2.5 text-stone-600">
             الحالة
           </label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">الكل</option>
-            <option value="available">متاح</option>
-            <option value="reserved">محجوز</option>
-            <option value="sold">تم البيع</option>
-            <option value="rented">تم التأجير</option>
-          </select>
+          <div className="relative">
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className={selectClass}
+            >
+              <option value="">الكل</option>
+              <option value="available">متاح</option>
+              <option value="reserved">محجوز</option>
+              <option value="sold">تم البيع</option>
+              <option value="rented">تم التأجير</option>
+            </select>
+            <ChevronDown size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+          </div>
         </div>
 
         {/* المكان */}
@@ -96,21 +102,24 @@ locations = [],
           <label className="block text-base font-bold mb-2.5 text-stone-600">
             المكان
           </label>
-          <select
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">كل الأماكن</option>
-           {locations.map((location) => (
-              <option
-                key={location.id}
-                value={location.name}
-              >
-                {location.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className={selectClass}
+            >
+              <option value="">كل الأماكن</option>
+             {locations.map((location) => (
+                <option
+                  key={location.id}
+                  value={location.name}
+                >
+                  {location.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+          </div>
         </div>
       </div>
     </div>
