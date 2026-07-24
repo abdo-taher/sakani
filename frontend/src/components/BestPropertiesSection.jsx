@@ -25,14 +25,6 @@ function BestPropertiesSection({ favorites, onToggleFav }) {
     const load = async () => {
       try {
         const data = await getBestProperties();
-        console.log("🔍 DEBUG: Raw API response:", data);
-        console.log("🔍 DEBUG: First property:", data?.[0]);
-        console.log("🔍 DEBUG: First property category:", data?.[0]?.category);
-        console.log("🔍 DEBUG: All categories in data:", data?.map(p => ({
-          id: p.id,
-          title: p.title?.slice(0, 30),
-          category: p.category
-        })));
         setProperties(data);
       } catch (err) {
         console.error("Failed to load best properties", err);
@@ -45,23 +37,11 @@ function BestPropertiesSection({ favorites, onToggleFav }) {
 
   useEffect(() => {
     let filtered = properties || [];
-    console.log("🔍 DEBUG: Total properties:", filtered.length);
-    console.log("🔍 DEBUG: Active filter:", activeFilter);
     
     if (activeFilter !== "all") {
-      filtered = filtered.filter((p) => {
-        console.log("🔍 DEBUG: Property:", {
-          id: p?.id,
-          category: p?.category,
-          categorySlug: p?.category?.slug,
-          activeFilter: activeFilter,
-          matches: p?.category?.slug === activeFilter
-        });
-        return p?.category?.slug === activeFilter;
-      });
+      filtered = filtered.filter(p => p?.category?.slug === activeFilter);
     }
     
-    console.log("🔍 DEBUG: Filtered properties count:", filtered.length);
     // Limit the number of properties shown
     setFilteredProperties(filtered.slice(0, PROPERTIES_LIMIT));
   }, [properties, activeFilter]);
@@ -74,7 +54,7 @@ function BestPropertiesSection({ favorites, onToggleFav }) {
     scrollContainerRef.current?.scrollBy({ left: 300, behavior: 'smooth' });
   };
 
-  if (loading || properties.length === 0) return null;
+  if (loading) return null;
 
   return (
     <section className="py-10 sm:py-14 px-4 sm:px-6" style={{ backgroundColor: COFFEE.creamSoft }} dir="rtl">
@@ -97,23 +77,6 @@ function BestPropertiesSection({ favorites, onToggleFav }) {
 
         {/* Category filter pills */}
         <Reveal delay={100}>
-          <div className="flex flex-wrap justify-center gap-2 mb-4">
-            {/* Temporary debug button */}
-            <button
-              onClick={() => {
-                console.log("🔍 Current state debug:", {
-                  totalProperties: properties?.length || 0,
-                  filteredProperties: filteredProperties?.length || 0,
-                  activeFilter,
-                  sampleProperty: properties?.[0],
-                  allCategories: properties?.map(p => p.category?.slug).filter(Boolean)
-                });
-              }}
-              className="px-3 py-1 text-xs bg-red-500 text-white rounded"
-            >
-              Debug Info
-            </button>
-          </div>
           <div className="flex flex-wrap justify-center gap-2 mb-8">
             {categories.map((cat) => (
               <button
@@ -127,11 +90,6 @@ function BestPropertiesSection({ favorites, onToggleFav }) {
                 }}
               >
                 {cat.icon} {cat.label}
-                {/* Show count for debugging */}
-                <span className="ml-1 text-[10px] opacity-70">
-                  ({cat.value === "all" ? properties?.length || 0 : 
-                    properties?.filter(p => p?.category?.slug === cat.value)?.length || 0})
-                </span>
               </button>
             ))}
           </div>
