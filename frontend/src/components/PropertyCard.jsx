@@ -166,9 +166,10 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         </div>
         {p.category?.slug === "rent" && p.has_detailed_rooms && (() => {
           const rooms = Array.isArray(p.rooms) ? p.rooms : Array.isArray(p.detailed_rooms) ? p.detailed_rooms : [];
-          return rooms.length > 0 ? (
+          const availableCount = rooms.filter(r => r.status === "available").length;
+          return availableCount > 0 ? (
             <p className="text-xs mt-1 font-bold" style={{ color: COFFEE.gold }}>
-              {rooms.filter(r => r.status === "available").length || 0} غرف متاحة
+              {availableCount} غرف متاحة
             </p>
           ) : null;
         })()}

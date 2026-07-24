@@ -155,8 +155,8 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
         </div>
       </section>
 
-      {/* ----------------------------- أفضل العروض ------------------------------ */}
-      <BestOffersSection favorites={favorites} onToggleFav={onToggleFav} />
+      {/* --------------------------- أفضل العقارات -------------------------- */}
+      <BestPropertiesSection favorites={favorites} onToggleFav={onToggleFav} />
 
       {/* ----------------------------- من نحن ------------------------------ */}
       <section className="py-10 sm:py-14 px-4 sm:px-6" style={{ backgroundColor: COFFEE.creamSoft }} dir="rtl">

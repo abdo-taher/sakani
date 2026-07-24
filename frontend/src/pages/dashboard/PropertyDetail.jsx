@@ -395,7 +395,7 @@ function PropertyDetail() {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <p className="text-sm font-bold" style={{ color: COFFEE.stone }}>
-                      {property.detailed_rooms?.length || 0} غرف
+                      {property.detailed_rooms?.length ? `${property.detailed_rooms.length} غرف` : "لا توجد غرف"}
                     </p>
                     <button
                       onClick={() => navigate(`/dashboard/properties/${property.id}/rooms/create`)}

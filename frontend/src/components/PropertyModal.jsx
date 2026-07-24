@@ -273,9 +273,10 @@ function PropertyModal({
               </span>
               {property.has_detailed_rooms && (() => {
                 const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
-                return rooms.length > 0 ? (
+                const availableCount = rooms.filter(r => r.status === "available").length;
+                return availableCount > 0 ? (
                   <p className="text-xs mt-1" style={{ color: COFFEE.stone }}>
-                    {rooms.filter(r => r.status === "available").length || 0} غرف متاحة
+                    {availableCount} غرف متاحة
                   </p>
                 ) : null;
               })()}
