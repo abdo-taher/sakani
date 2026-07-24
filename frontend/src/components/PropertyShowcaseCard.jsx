@@ -184,26 +184,39 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
               {p.area} م²
             </div>
           )}
+          {/* Add spacer if no stats to show proper spacing */}
+          {(!p.rooms || p.rooms <= 0) && (!p.bathrooms || p.bathrooms <= 0) && (!p.area || p.area <= 0 || isRent) && (
+            <span>&nbsp;</span>
+          )}
         </div>
 
         {/* Price + available rooms */}
         <div className="flex items-center justify-between">
           {isRent && p.has_detailed_rooms && (() => {
             const rooms = Array.isArray(p.rooms) ? p.rooms : Array.isArray(p.detailed_rooms) ? p.detailed_rooms : [];
-            return rooms.length > 0 ? (
+            const prices = rooms.map(r => r.price).filter(price => price && price > 0);
+            return prices.length > 0 ? (
               <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>
-                يبدأ من {fmtPrice(Math.min(...rooms.map(r => r.price || 0)))}
+                يبدأ من {fmtPrice(Math.min(...prices))}
+              </span>
+            ) : p.price && p.price > 0 ? (
+              <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>
+                {fmtPrice(p.price)}
               </span>
             ) : (
-              <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>
-                {fmtPrice(p.price || 0)}
+              <span className="font-bold text-sm" style={{ color: "#888" }}>
+                اتصل للسعر
               </span>
             );
-          })() || (
+          })() || (p.price && p.price > 0 ? (
             <span className="font-extrabold text-lg" style={{ color: COFFEE.mid }}>
-              {fmtPrice(p.price || 0)}
+              {fmtPrice(p.price)}
             </span>
-          )}
+          ) : (
+            <span className="font-bold text-sm" style={{ color: "#888" }}>
+              اتصل للسعر
+            </span>
+          ))}
           {p.rent_duration && <span className="text-xs" style={{ color: "#aaa" }}>/{p.rent_duration}</span>}
         </div>
 

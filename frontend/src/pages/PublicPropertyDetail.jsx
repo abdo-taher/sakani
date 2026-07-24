@@ -419,10 +419,11 @@ function PublicPropertyDetail() {
                   {selectedRoomId ? (() => {
                     const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
                     const selectedRoom = rooms.find(r => r.id === selectedRoomId);
-                    return `${fmtPrice(selectedRoom?.price || 0)}`;
+                    return selectedRoom?.price && selectedRoom.price > 0 ? `${fmtPrice(selectedRoom.price)}` : "اتصل للسعر";
                   })() : (() => {
                     const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
-                    return rooms.length > 0 ? `${fmtPrice(Math.min(...rooms.map(r => r.price || 0)))}` : `${fmtPrice(property.price || 0)}`;
+                    const prices = rooms.map(r => r.price).filter(price => price && price > 0);
+                    return prices.length > 0 ? `${fmtPrice(Math.min(...prices))}` : property.price && property.price > 0 ? `${fmtPrice(property.price)}` : "اتصل للسعر";
                   })()}
                 </p>
                 {selectedRoomId && (

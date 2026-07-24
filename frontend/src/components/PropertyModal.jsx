@@ -268,8 +268,9 @@ function PropertyModal({
               <span className="font-extrabold text-3xl sm:text-4xl" style={{ color: COFFEE.gold }}>
                 {property.has_detailed_rooms && (() => {
                   const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
-                  return rooms.length > 0 ? fmtPrice(Math.min(...rooms.map(r => r.price || 0))) : fmtPrice(property.price || 0);
-                })() || fmtPrice(property.price || 0)}
+                  const prices = rooms.map(r => r.price).filter(price => price && price > 0);
+                  return prices.length > 0 ? fmtPrice(Math.min(...prices)) : property.price && property.price > 0 ? fmtPrice(property.price) : "اتصل للسعر";
+                })() || (property.price && property.price > 0 ? fmtPrice(property.price) : "اتصل للسعر")}
               </span>
               {property.has_detailed_rooms && (() => {
                 const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];

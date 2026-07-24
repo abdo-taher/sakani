@@ -159,20 +159,29 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         <div className="flex items-center justify-between">
           {p.category?.slug === "rent" && p.has_detailed_rooms && (() => {
             const rooms = Array.isArray(p.rooms) ? p.rooms : Array.isArray(p.detailed_rooms) ? p.detailed_rooms : [];
-            return rooms.length > 0 ? (
+            const prices = rooms.map(r => r.price).filter(price => price && price > 0);
+            return prices.length > 0 ? (
               <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>
-                يبدأ من {fmtPrice(Math.min(...rooms.map(r => r.price || 0)))}
+                يبدأ من {fmtPrice(Math.min(...prices))}
+              </span>
+            ) : p.price && p.price > 0 ? (
+              <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>
+                {fmtPrice(p.price)}
               </span>
             ) : (
-              <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>
-                {fmtPrice(p.price || 0)}
+              <span className="font-bold text-sm" style={{ color: "#888" }}>
+                اتصل للسعر
               </span>
             );
-          })() || (
+          })() || (p.price && p.price > 0 ? (
             <span className="font-extrabold text-lg" style={{ color: isUploading ? "#D97706" : COFFEE.mid }}>
-              {fmtPrice(p.price || 0)}
+              {fmtPrice(p.price)}
             </span>
-          )}
+          ) : (
+            <span className="font-bold text-sm" style={{ color: "#888" }}>
+              اتصل للسعر
+            </span>
+          ))}
           {p.rent_duration && <span className="text-xs text-stone-400">/{p.rent_duration}</span>}
         </div>
         {p.category?.slug === "rent" && p.has_detailed_rooms && (() => {
