@@ -23,6 +23,7 @@ import ContactMessages from "../pages/dashboard/ContactMessages";
 import MarketingMail from "../pages/dashboard/MarketingMail";
 import Notifications from "../pages/dashboard/Notifications";
 import NotFound from "../pages/NotFound";
+import PublicPropertyDetail from "../pages/PublicPropertyDetail";
 import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
 import { Navigate } from "react-router-dom";
 
@@ -96,6 +97,8 @@ function AppRoutes({
       />
 
       <Route path="/contact" element={<Contact />} />
+
+      <Route path="/property/:id" element={<PublicPropertyDetail />} />
 
       <Route path="/admin/:token/login" element={
         <AdminLoginGuard>

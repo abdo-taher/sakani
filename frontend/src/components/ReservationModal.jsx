@@ -2,12 +2,16 @@ import React, { useState } from "react";
 import { X, User, Phone, MapPin, CheckCircle2, Home, MessageSquare } from "lucide-react";
 import { COFFEE } from "../constants/constants";
 import { SAMPLE_IMG, fmtPrice } from "../utils/helpers";
-import { createReservation } from "../services/reservationService";
+import { createReservation, checkReservation } from "../services/reservationService";
+import { formatPhone, getPhoneError } from "../utils/phoneValidator";
 
 function ReservationModal({ open, property, onClose }) {
   const [form, setForm] = useState({ name: "", phone: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
+  const [alreadyReserved, setAlreadyReserved] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   if (!open || !property) return null;
 
@@ -20,8 +24,28 @@ function ReservationModal({ open, property, onClose }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const checkIfReserved = async (phone) => {
+    if (!phone || phone.length < 11) return;
+    setChecking(true);
+    try {
+      const res = await checkReservation(property.id, phone);
+      setAlreadyReserved(res.reserved);
+    } catch {
+      setAlreadyReserved(false);
+    } finally {
+      setChecking(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const err = getPhoneError(form.phone);
+    if (err) { setPhoneError(err); return; }
+    setPhoneError("");
+
+    if (alreadyReserved) return;
+
     setLoading(true);
 
     try {
@@ -43,6 +67,8 @@ function ReservationModal({ open, property, onClose }) {
   const handleClose = () => {
     setSuccess(false);
     setForm({ name: "", phone: "", message: "" });
+    setPhoneError("");
+    setAlreadyReserved(false);
     onClose();
   };
 
@@ -185,12 +211,27 @@ function ReservationModal({ open, property, onClose }) {
                       name="phone"
                       placeholder="01xxxxxxxxx"
                       value={form.phone}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        const val = formatPhone(e.target.value);
+                        setForm({ ...form, phone: val });
+                        if (phoneError) setPhoneError(getPhoneError(val) || "");
+                        if (alreadyReserved) setAlreadyReserved(false);
+                      }}
+                      onBlur={() => checkIfReserved(form.phone)}
                       dir="ltr"
-                      className="w-full border rounded-xl py-3 pr-12 pl-4 text-[15px] text-right outline-none transition focus:ring-2"
-                      style={{ borderColor: "#E5DED2" }}
+                      className={`w-full border rounded-xl py-3 pr-12 pl-4 text-[15px] text-right outline-none transition focus:ring-2 ${phoneError ? "border-red-400 focus:ring-red-200" : alreadyReserved ? "border-amber-400" : ""}`}
+                      style={!phoneError && !alreadyReserved ? { borderColor: "#E5DED2" } : {}}
                       required
                     />
+                    {phoneError && (
+                      <p className="text-red-500 text-xs mt-1.5 px-1 font-semibold">{phoneError}</p>
+                    )}
+                    {alreadyReserved && !phoneError && (
+                      <p className="text-amber-600 text-xs mt-1.5 px-1 font-semibold">لقد قمت بحجز هذا العقار بالفعل</p>
+                    )}
+                    {checking && !phoneError && (
+                      <p className="text-stone-400 text-xs mt-1.5 px-1">جاري التحقق...</p>
+                    )}
                   </div>
                 </div>
 
@@ -216,14 +257,14 @@ function ReservationModal({ open, property, onClose }) {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || alreadyReserved}
                   className="w-full py-3.5 rounded-xl font-bold text-base transition hover:scale-[1.01] disabled:opacity-60 disabled:hover:scale-100 mt-2"
                   style={{
-                    backgroundColor: COFFEE.gold,
-                    color: COFFEE.darkest,
+                    backgroundColor: alreadyReserved ? "#16A34A" : COFFEE.gold,
+                    color: alreadyReserved ? "#fff" : COFFEE.darkest,
                   }}
                 >
-                  {loading ? "جاري الإرسال..." : "إرسال طلب الحجز"}
+                  {alreadyReserved ? "تم الحجز بالفعل" : loading ? "جاري الإرسال..." : "إرسال طلب الحجز"}
                 </button>
               </form>
             </div>

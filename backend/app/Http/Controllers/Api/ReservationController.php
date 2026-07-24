@@ -91,4 +91,20 @@ $reservation->update([
             'message' => 'Reservation deleted successfully'
         ]);
     }
+
+    public function check(Request $request)
+    {
+        $request->validate([
+            'property_id' => 'required|exists:properties,id',
+            'phone' => 'required|string|max:20',
+        ]);
+
+        $exists = Reservation::where('property_id', $request->property_id)
+            ->where('phone', $request->phone)
+            ->exists();
+
+        return response()->json([
+            'reserved' => $exists,
+        ]);
+    }
 }

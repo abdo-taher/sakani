@@ -38,6 +38,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login-status', [AuthController::class, 'loginStatus']);
 Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 Route::post('/reservations', [ReservationController::class, 'store']);
+Route::post('/reservations/check', [ReservationController::class, 'check']);
 Route::get('/properties', [PropertyController::class, 'index']);
 Route::get('/properties/{property}', [PropertyController::class, 'show']);
 Route::get('/properties/category/{category}', [PropertyController::class, 'byCategory']);

@@ -11,6 +11,7 @@ import Reveal from "../components/Reveal";
 
 import { COFFEE } from "../constants/constants";
 import { sendContactMessage } from "../services/contactService";
+import { formatPhone, getPhoneError } from "../utils/phoneValidator";
 
 
 /* -------------------------------------------------------------------- */
@@ -23,6 +24,7 @@ function Contact() {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   return (
     <div
       className="min-h-[70vh] w-full overflow-x-hidden py-16 px-4 sm:px-6 flex justify-center"
@@ -65,7 +67,7 @@ function Contact() {
           >
             <ImageIcon className="w-6 h-6 mb-3 animate-float-slow" style={{ color: COFFEE.gold }} />
             <p className="font-bold text-sm break-words" style={{ color: COFFEE.dark }}>
-              sakani.eg23@gmail.com
+              info@sakani.site
             </p>
           </Reveal>
         </div>
@@ -115,13 +117,19 @@ function Contact() {
               </label>
               <input
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  const val = formatPhone(e.target.value);
+                  setPhone(val);
+                  if (phoneError) setPhoneError(getPhoneError(val) || "");
+                }}
                 placeholder="01xxxxxxxxx"
-                className="w-full box-border rounded-xl border-2 px-5 py-4 text-base focus:ring-2 outline-none transition-all"
-                style={{ borderColor: "#EADFD0" }}
+                dir="ltr"
+                className={`w-full box-border rounded-xl border-2 px-5 py-4 text-base focus:ring-2 outline-none transition-all ${phoneError ? "border-red-400" : ""}`}
+                style={!phoneError ? { borderColor: "#EADFD0" } : {}}
                 onFocus={(e) => (e.target.style.borderColor = COFFEE.gold)}
                 onBlur={(e) => (e.target.style.borderColor = "#EADFD0")}
               />
+              {phoneError && <p className="text-red-500 text-xs mt-1 font-semibold">{phoneError}</p>}
             </div>
 
             <div className="sm:col-span-2">

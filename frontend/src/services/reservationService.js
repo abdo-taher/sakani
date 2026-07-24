@@ -18,3 +18,11 @@ export const updateReservation = async (id, data) => {
 export const deleteReservation = async (id) => {
   await api.delete(`/reservations/${id}`);
 };
+
+export const checkReservation = async (propertyId, phone) => {
+  const response = await api.post("/reservations/check", {
+    property_id: propertyId,
+    phone,
+  });
+  return response.data;
+};

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Heart, Bed, Bath, Maximize, MapPin, PlayCircle } from "lucide-react";
 import { COFFEE } from "../constants/constants";
 
@@ -13,8 +14,9 @@ function fmtPrice(price) {
   return new Intl.NumberFormat("ar-EG").format(price);
 }
 
-function PropertyCard({ p, isFav, onToggleFav, onOpen }) {
+function PropertyCard({ p, isFav, onToggleFav }) {
   const [imgError, setImgError] = useState(false);
+  const navigate = useNavigate();
 
   const mainImage =
     !imgError && p.images && p.images.length > 0
@@ -25,7 +27,7 @@ function PropertyCard({ p, isFav, onToggleFav, onOpen }) {
 
   return (
     <div
-      onClick={() => onOpen && onOpen(p)}
+      onClick={() => navigate(`/property/${p.id}`)}
       className="group relative bg-white rounded-2xl overflow-hidden border cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
       style={{ borderColor: "#eee" }}
       dir="rtl"

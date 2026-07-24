@@ -15,6 +15,7 @@
 import Swal from "sweetalert2";
 
 import { createNeedRequest } from "../services/needRequestService";
+import { formatPhone, getPhoneError } from "../utils/phoneValidator";
 
   /* الفيلد مكوّن ثابت برّه BuyRequestForm عشان مايتعملوش remount مع كل حرف */
   function Field({ icon: Icon, label, children }) {
@@ -44,14 +45,25 @@ import { createNeedRequest } from "../services/needRequestService";
       phone: "",
     });
     const [sent, setSent] = useState(false);
+    const [phoneError, setPhoneError] = useState("");
   
     const change = (e) => {
-      setForm({ ...form, [e.target.name]: e.target.value });
+      const { name, value } = e.target;
+      if (name === "phone") {
+        const val = formatPhone(value);
+        setForm({ ...form, phone: val });
+        if (phoneError) setPhoneError(getPhoneError(val) || "");
+      } else {
+        setForm({ ...form, [name]: value });
+      }
     };
      
     
 
 const submit = async () => {
+  const phoneErr = getPhoneError(form.phone);
+  if (phoneErr) { setPhoneError(phoneErr); return; }
+  setPhoneError("");
   try {
 
     await createNeedRequest({
@@ -227,11 +239,14 @@ onClose();
                   name="phone"
                   value={form.phone}
                   onChange={change}
-                  className={inputBase}
-                  style={{ borderColor: "#EADFD0" }}
+                  placeholder="01xxxxxxxxx"
+                  dir="ltr"
+                  className={`${inputBase} ${phoneError ? "border-red-400" : ""}`}
+                  style={!phoneError ? { borderColor: "#EADFD0" } : {}}
                   onFocus={(e) => (e.target.style.borderColor = COFFEE.gold)}
                   onBlur={(e) => (e.target.style.borderColor = "#EADFD0")}
                 />
+                {phoneError && <p className="text-red-500 text-xs mt-1 font-semibold">{phoneError}</p>}
               </Field>
             </div>
 
