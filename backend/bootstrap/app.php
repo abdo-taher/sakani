@@ -46,4 +46,13 @@
             $exceptions->shouldRenderJsonWhen(
                 fn (Request $request) => $request->is('api/*'),
             );
+
+            $exceptions->renderable(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, Request $request) {
+                if ($request->is('api/*')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'العنصر غير موجود'
+                    ], 404);
+                }
+            });
         })->create();

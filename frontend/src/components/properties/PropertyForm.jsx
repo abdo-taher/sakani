@@ -30,6 +30,7 @@ import {
 import { getCategories } from "../../services/categoryService";
 import { getAmenities } from "../../services/amenityService";
 import { getPropertyTypes } from "../../services/propertyTypeService";
+import { getTags } from "../../services/tagService";
 import { uploadPropertyImage } from "../../services/propertyImageService";
 import {
   successToast,
@@ -80,6 +81,7 @@ function PropertyForm({
     furnishing: "",
     status: "available",
     features: [],
+    tags: [],
     images: [],
     videos: [],
     existingImages: [],
@@ -116,6 +118,9 @@ function PropertyForm({
         features: property.amenities
           ? property.amenities.map(item => item.id)
           : [],
+        tags: property.tags
+          ? property.tags.map(item => item.id)
+          : [],
         images: [],
         videos: [],
         existingImages,
@@ -141,6 +146,15 @@ function PropertyForm({
       features: prev.features.includes(feature)
         ? prev.features.filter((item) => item !== feature)
         : [...prev.features, feature],
+    }));
+  };
+
+  const handleTagChange = (tagId) => {
+    setPropertyData((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tagId)
+        ? prev.tags.filter((id) => id !== tagId)
+        : [...prev.tags, tagId],
     }));
   };
 
@@ -189,6 +203,7 @@ function PropertyForm({
   const [categories, setCategories] = useState([]);
   const [propertyTypes, setPropertyTypes] = useState([]);
   const [amenities, setAmenities] = useState([]);
+  const [allTags, setAllTags] = useState([]);
   const [saving, setSaving] = useState(false);
   const [savingMessage, setSavingMessage] = useState("");
 
@@ -206,6 +221,9 @@ function PropertyForm({
 
         const propertyTypesData = await getPropertyTypes();
         setPropertyTypes(propertyTypesData);
+
+        const tagsData = await getTags();
+        setAllTags(tagsData);
 
       } catch (error) {
         console.log(error.response);
@@ -257,6 +275,13 @@ function PropertyForm({
     }
   };
 
+  const bodyRef = React.useRef(null);
+  useEffect(() => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTop = 0;
+    }
+  }, [step]);
+
   const handleSave = async () => {
     if (!propertyData.category || !propertyData.section || !propertyData.location) {
       errorToast("فيه بيانات تصنيف ناقصة (نوع العملية / القسم / المكان)، ارجع لخطوة التصنيف");
@@ -284,6 +309,7 @@ function PropertyForm({
         status: "available",
         featured: false,
         amenities: propertyData.features,
+        tags: propertyData.tags,
       };
 
       if (property) {
@@ -512,7 +538,7 @@ function PropertyForm({
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto p-8 min-h-0">
+      <div ref={bodyRef} className="flex-1 overflow-y-auto p-8 min-h-0" style={{ scrollBehavior: "auto" }}>
           <div key={step} className={direction === "next" ? "step-anim-next" : "step-anim-prev"}>
             {step === 1 && (
               <div>
@@ -791,6 +817,36 @@ function PropertyForm({
                     );
                   })}
                 </div>
+
+                {allTags.length > 0 && (
+                  <div className="mt-6">
+                    <SectionTitle icon={Sparkles}>التاغات (للعقارات المشابهة)</SectionTitle>
+                    <p className="text-xs mb-3" style={{ color: COFFEE.stone }}>
+                      اختر التاغات لتسهيل العثور على عقارات مشابهة
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {allTags.map((tag) => {
+                        const selected = propertyData.tags.includes(tag.id);
+                        return (
+                          <button
+                            type="button"
+                            key={tag.id}
+                            onClick={() => handleTagChange(tag.id)}
+                            className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 border-2"
+                            style={{
+                              borderColor: selected ? COFFEE.gold : COFFEE.line,
+                              background: selected ? COFFEE.gold : "white",
+                              color: selected ? "white" : COFFEE.dark,
+                            }}
+                          >
+                            {selected && <Check size={14} className="inline ml-1" />}
+                            {tag.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -983,6 +1039,28 @@ function PropertyForm({
                     )}
                   </div>
                 </div>
+
+                {propertyData.tags.length > 0 && (
+                  <div className="mt-4">
+                    <div className="text-xs font-bold mb-2" style={{ color: COFFEE.stone }}>
+                      التاغات
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {allTags.filter(t => propertyData.tags.includes(t.id)).map((tag) => (
+                        <span
+                          key={tag.id}
+                          className="px-3 py-1.5 rounded-full text-xs font-bold pop-in"
+                          style={{
+                            background: COFFEE.gold,
+                            color: "white",
+                          }}
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
           )}
         </div>

@@ -19,6 +19,7 @@ import Reveal from "../components/Reveal";
 import CountUp from "../components/CountUp";
 import PropertyCard from "../components/PropertyCard";
 import TopViewedNotice from "../components/TopViewedNotice";
+import BestPropertiesSection from "../components/BestPropertiesSection";
 
 import { COFFEE } from "../constants/constants";
 import { useNavigate } from "react-router-dom";
@@ -315,6 +316,9 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
 
         </div>
       </section>
+
+      {/* --------------------------- أفضل العقارات -------------------------- */}
+      <BestPropertiesSection favorites={favorites} onToggleFav={onToggleFav} />
     </div>
   );
 }

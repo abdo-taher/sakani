@@ -16,6 +16,7 @@ import {
   Heart,
   CheckCircle2,
   ImageIcon,
+  Tag,
 } from "lucide-react";
 import usePageTitle from "../hooks/usePageTitle";
 import { getPropertyById, recordView } from "../services/propertyService";
@@ -25,6 +26,7 @@ import { COFFEE } from "../constants/constants";
 import { successToast, errorToast } from "../utils/toast";
 import { SAMPLE_IMG, fmtPrice } from "../utils/helpers";
 import VideoThumb from "../components/VideoThumb";
+import RelatedPropertiesSection from "../components/RelatedPropertiesSection";
 
 const STATUS_MAP = {
   available: { label: "متاح", color: "#16A34A", bg: "#DCFCE7" },
@@ -51,6 +53,7 @@ function PublicPropertyDetail() {
   const navigate = useNavigate();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [mediaIndex, setMediaIndex] = useState(0);
 
   const [form, setForm] = useState({ name: "", phone: "", message: "" });
@@ -72,8 +75,12 @@ function PublicPropertyDetail() {
       recordView(id).catch(() => {});
     } catch (error) {
       console.error(error);
-      errorToast("تعذر تحميل بيانات العقار");
-      navigate(-1);
+      const status = error?.response?.status;
+      if (status === 404) {
+        setError("العقار غير موجود");
+      } else {
+        setError("تعذر تحميل بيانات العقار");
+      }
     } finally {
       setLoading(false);
     }
@@ -124,6 +131,26 @@ function PublicPropertyDetail() {
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="font-bold" style={{ color: COFFEE.stone }}>جاري تحميل البيانات...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Building2 className="w-16 h-16 mx-auto mb-4 text-stone-300" />
+            <h2 className="text-xl font-bold mb-2" style={{ color: COFFEE.stone }}>{error}</h2>
+            <button
+              onClick={() => navigate("/")}
+              className="mt-4 px-6 py-2 rounded-lg text-white font-bold"
+              style={{ background: COFFEE.amber }}
+            >
+              العودة للرئيسية
+            </button>
           </div>
         </div>
       </div>
@@ -265,6 +292,20 @@ function PublicPropertyDetail() {
                   {property.amenities.map((a) => (
                     <span key={a.id} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ background: COFFEE.cream, color: COFFEE.dark }}>
                       {a.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {property.tags?.length > 0 && (
+              <div className="mt-6">
+                <h3 className="font-bold mb-3" style={{ color: COFFEE.dark }}>الوسوم</h3>
+                <div className="flex flex-wrap gap-2">
+                  {property.tags.map((t) => (
+                    <span key={t.id} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold" style={{ background: COFFEE.gold, color: "white" }}>
+                      <Tag size={13} />
+                      {t.name}
                     </span>
                   ))}
                 </div>
@@ -495,6 +536,13 @@ function PublicPropertyDetail() {
           </div>
         </div>
       </div>
+
+      {/* Related Properties */}
+      <RelatedPropertiesSection
+        propertyId={property.id}
+        favorites={null}
+        onToggleFav={null}
+      />
     </div>
   );
 }

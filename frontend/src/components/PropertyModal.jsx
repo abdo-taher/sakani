@@ -229,6 +229,33 @@ function PropertyModal({
             </div>
           )}
 
+          {/* الوسوم */}
+          {property.tags && property.tags.length > 0 && (
+            <div className="mb-7">
+              <h3
+                className="text-lg font-bold mb-3"
+                style={{ color: COFFEE.dark }}
+              >
+                الوسوم
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {property.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold"
+                    style={{
+                      backgroundColor: COFFEE.gold,
+                      color: "white",
+                    }}
+                  >
+                    <Tag className="w-3.5 h-3.5" />
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* السعر + زر الحجز */}
           <div className="flex items-center justify-between flex-wrap gap-4 pt-6 border-t animate-heroFade-3" style={{ borderColor: "#EADFD0" }}>
             <div>

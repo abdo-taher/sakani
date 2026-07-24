@@ -26,14 +26,25 @@ class PropertyController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $properties = Property::with([
-            'category', 
-            'propertyType', 
-            'location', 
-            'images', 
-            'amenities',
-            'tags'
-        ])->latest()->get();
+        try {
+            $properties = Property::with([
+                'category', 
+                'propertyType', 
+                'location', 
+                'images', 
+                'amenities',
+                'tags'
+            ])->latest()->get();
+        } catch (\Exception $e) {
+            Log::error('Property index eager load failed: ' . $e->getMessage());
+            $properties = Property::with([
+                'category', 
+                'propertyType', 
+                'location', 
+                'images', 
+                'amenities',
+            ])->latest()->get();
+        }
 
         // Add primary image and images grouped by type for each property
         $properties->transform(function ($property) use ($user) {
@@ -51,16 +62,29 @@ class PropertyController extends Controller
     public function byCategory(Request $request, $category)
     {
         $user = $request->user();
-        $properties = Property::with([
-            'category', 
-            'propertyType', 
-            'location', 
-            'images', 
-            'amenities',
-            'tags'
-        ])->whereHas('category', function ($query) use ($category) {
-            $query->where('slug', $category);
-        })->latest()->get();
+        try {
+            $properties = Property::with([
+                'category', 
+                'propertyType', 
+                'location', 
+                'images', 
+                'amenities',
+                'tags'
+            ])->whereHas('category', function ($query) use ($category) {
+                $query->where('slug', $category);
+            })->latest()->get();
+        } catch (\Exception $e) {
+            Log::error('Property byCategory eager load failed: ' . $e->getMessage());
+            $properties = Property::with([
+                'category', 
+                'propertyType', 
+                'location', 
+                'images', 
+                'amenities',
+            ])->whereHas('category', function ($query) use ($category) {
+                $query->where('slug', $category);
+            })->latest()->get();
+        }
 
         // Add primary image and images grouped by type for each property
         $properties->transform(function ($property) use ($user) {
@@ -300,22 +324,40 @@ class PropertyController extends Controller
     public function show(Request $request, $id)
     {
         $user = $request->user();
-        $property = Property::with([
-            'category', 
-            'propertyType', 
-            'location', 
-            'images' => function($query) {
-                $query->ordered();
-            }, 
-            'amenities',
-            'tags',
-            'reservations' => function($query) {
-                $query->with('room');
-            },
-            'rooms' => function($query) {
-                $query->with('roomImages');
-            },
-        ])->findOrFail($id);
+
+        try {
+            $property = Property::with([
+                'category', 
+                'propertyType', 
+                'location', 
+                'images' => function($query) {
+                    $query->ordered();
+                }, 
+                'amenities',
+                'tags',
+                'reservations',
+                'rooms' => function($query) {
+                    $query->with('roomImages');
+                },
+            ])->findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'العقار غير موجود'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error("Property show error for id {$id}: " . $e->getMessage());
+
+            $property = Property::with([
+                'category', 
+                'propertyType', 
+                'location', 
+                'images' => function($query) {
+                    $query->ordered();
+                }, 
+                'amenities',
+            ])->findOrFail($id);
+        }
         
         // Add computed attributes for frontend display
         $property->primary_image = $property->images->where('is_primary', true)->first();
@@ -509,12 +551,17 @@ class PropertyController extends Controller
 
     public function recordView($id)
     {
+        $property = Property::find($id);
+        if (!$property) {
+            return response()->json(['success' => false], 404);
+        }
+
         $key = "property_views_{$id}";
         $count = Cache::get($key, 0);
         Cache::put($key, $count + 1, now()->addMinutes(30));
 
         if (($count + 1) % 10 === 0) {
-            Property::where('id', $id)->increment('views', $count + 1);
+            $property->increment('views', $count + 1);
             Cache::put($key, 0, now()->addMinutes(30));
         }
 
@@ -549,15 +596,28 @@ class PropertyController extends Controller
     {
         $user = $request->user();
 
-        $properties = Property::with([
-            'category', 'propertyType', 'location', 'images', 'amenities', 'tags'
-        ])
-        ->where('status', 'available')
-        ->where('is_uploading', false)
-        ->orderByDesc('featured')
-        ->orderByDesc('views')
-        ->limit(8)
-        ->get();
+        try {
+            $properties = Property::with([
+                'category', 'propertyType', 'location', 'images', 'amenities', 'tags'
+            ])
+            ->where('status', 'available')
+            ->where('is_uploading', false)
+            ->orderByDesc('featured')
+            ->orderByDesc('views')
+            ->limit(8)
+            ->get();
+        } catch (\Exception $e) {
+            Log::error('bestProperties eager load failed: ' . $e->getMessage());
+            $properties = Property::with([
+                'category', 'propertyType', 'location', 'images', 'amenities'
+            ])
+            ->where('status', 'available')
+            ->where('is_uploading', false)
+            ->orderByDesc('featured')
+            ->orderByDesc('views')
+            ->limit(8)
+            ->get();
+        }
 
         $properties->transform(function ($property) use ($user) {
             $property->primary_image = $property->images->where('is_primary', true)->first();
@@ -577,7 +637,15 @@ class PropertyController extends Controller
     public function relatedProperties(Request $request, $id)
     {
         $user = $request->user();
-        $property = Property::with(['tags', 'category', 'location'])->findOrFail($id);
+
+        try {
+            $property = Property::with(['tags', 'category', 'location'])->findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([]);
+        } catch (\Exception $e) {
+            Log::error("Related properties error for id {$id}: " . $e->getMessage());
+            $property = Property::with(['category', 'location'])->findOrFail($id);
+        }
 
         $budgetMin = $property->price * 0.5;
         $budgetMax = $property->price * 2;
@@ -585,7 +653,7 @@ class PropertyController extends Controller
         $relatedIds = collect();
 
         // 1. Properties sharing tags (highest priority)
-        if ($property->tags->count() > 0) {
+        if ($property->relationLoaded('tags') && $property->tags->count() > 0) {
             $tagIds = $property->tags->pluck('id');
             $tagRelated = Property::whereHas('tags', function ($query) use ($tagIds) {
                 $query->whereIn('tags.id', $tagIds);
@@ -628,11 +696,20 @@ class PropertyController extends Controller
         // Deduplicate while preserving priority order
         $relatedIds = $relatedIds->unique()->take(6);
 
-        $properties = Property::with([
-            'category', 'propertyType', 'location', 'images', 'amenities', 'tags'
-        ])
-        ->whereIn('id', $relatedIds)
-        ->get();
+        try {
+            $properties = Property::with([
+                'category', 'propertyType', 'location', 'images', 'amenities', 'tags'
+            ])
+            ->whereIn('id', $relatedIds)
+            ->get();
+        } catch (\Exception $e) {
+            Log::error('relatedProperties eager load failed: ' . $e->getMessage());
+            $properties = Property::with([
+                'category', 'propertyType', 'location', 'images', 'amenities'
+            ])
+            ->whereIn('id', $relatedIds)
+            ->get();
+        }
 
         // Re-order to match priority
         $properties = $properties->sortBy(function ($p) use ($relatedIds) {
