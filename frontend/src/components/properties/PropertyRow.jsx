@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Pencil, Trash2, ExternalLink, Loader2, CloudUpload } from "lucide-react";
+import { Eye, Pencil, Trash2, ExternalLink, Loader2, CloudUpload, EyeOff } from "lucide-react";
 import PropertyStatus from "./PropertyStatus";
 import { COFFEE } from "../../constants/constants";
 
@@ -73,6 +73,15 @@ function PropertyRow({
         <span className={uploading ? "text-amber-600" : ""}>
           {property.price?.toLocaleString()} ج.م
         </span>
+      </td>
+
+      <td className="px-4 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-1.5">
+          <Eye size={14} className={uploading ? "text-amber-400" : "text-stone-400"} />
+          <span className={`text-sm font-bold ${uploading ? "text-amber-600" : "text-stone-600"}`}>
+            {property.cached_views ?? property.views ?? 0}
+          </span>
+        </div>
       </td>
 
       <td className="px-4 py-4">

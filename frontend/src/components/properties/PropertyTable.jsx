@@ -14,14 +14,15 @@ function PropertyTable({
       dir="rtl"
     >
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-base table-fixed">
+        <table className="w-full min-w-[1000px] text-base table-fixed">
           <colgroup>
             <col className="w-[110px]" />
-            <col className="w-[220px]" />
+            <col className="w-[200px]" />
             <col className="w-[100px]" />
-            <col className="w-[160px]" />
+            <col className="w-[150px]" />
+            <col className="w-[120px]" />
+            <col className="w-[100px]" />
             <col className="w-[130px]" />
-            <col className="w-[140px]" />
             <col className="w-[140px]" />
           </colgroup>
 
@@ -43,6 +44,9 @@ function PropertyTable({
                 السعر
               </th>
               <th className="px-4 py-5 text-right font-bold text-stone-600 whitespace-nowrap">
+                المشاهدات
+              </th>
+              <th className="px-4 py-5 text-right font-bold text-stone-600 whitespace-nowrap">
                 الحالة
               </th>
               <th className="px-4 py-5 text-center font-bold text-stone-600 whitespace-nowrap">
@@ -55,7 +59,7 @@ function PropertyTable({
             {properties.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="py-20 text-center text-stone-400 font-semibold text-lg"
                 >
                   لا توجد عقارات حالياً

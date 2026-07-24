@@ -689,16 +689,18 @@ function PropertyForm({
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-5">
-                  <NumberField
-                    icon={Ruler}
-                    label="المساحة م²"
-                    name="area"
-                    value={propertyData.area}
-                    onChange={handleChange}
-                    inputClass={inputClass}
-                    labelClass={labelClass}
-                    color={COFFEE.dark}
-                  />
+                  {selectedCategory?.slug !== "rent" && (
+                    <NumberField
+                      icon={Ruler}
+                      label="المساحة م²"
+                      name="area"
+                      value={propertyData.area}
+                      onChange={handleChange}
+                      inputClass={inputClass}
+                      labelClass={labelClass}
+                      color={COFFEE.dark}
+                    />
+                  )}
                   <NumberField
                     icon={BedDouble}
                     label="الغرف"
@@ -982,7 +984,9 @@ function PropertyForm({
                   <ReviewCard title="المكان" value={selectedLocation?.name || "—"} color={COFFEE} />
                   <ReviewCard title="اسم العقار" value={propertyData.title || "—"} color={COFFEE} />
                   <ReviewCard title="السعر" value={propertyData.price ? `${propertyData.price} جنيه` : "—"} color={COFFEE} />
-                  <ReviewCard title="المساحة" value={propertyData.area ? `${propertyData.area} م²` : "—"} color={COFFEE} />
+                  {selectedCategory?.slug !== "rent" && (
+                    <ReviewCard title="المساحة" value={propertyData.area ? `${propertyData.area} م²` : "—"} color={COFFEE} />
+                  )}
                   <ReviewCard title="الغرف / الحمامات" value={`${propertyData.rooms || "—"} / ${propertyData.bathrooms || "—"}`} color={COFFEE} />
                   <ReviewCard title="الدور" value={propertyData.floor || "—"} color={COFFEE} />
                   <ReviewCard title="التشطيب" value={finishingLabel || "—"} color={COFFEE} />

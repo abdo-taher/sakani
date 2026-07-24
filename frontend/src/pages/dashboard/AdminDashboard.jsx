@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Globe,
   BarChart3,
+  Eye,
 } from "lucide-react";
 
 import StatCard from "../../components/dashboard/StatCard";
@@ -86,7 +87,7 @@ function AdminDashboard() {
 
       {/* الإحصائيات الأساسية */}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 mb-8">
 
         <StatCard
           title="عدد العقارات"
@@ -110,6 +111,12 @@ function AdminDashboard() {
           title="الأماكن"
           value={loading ? "..." : counts.locations}
           icon={MapPinned}
+        />
+
+        <StatCard
+          title="إجمالي مشاهدات العقارات"
+          value={loading ? "..." : (counts.total_views ?? 0).toLocaleString()}
+          icon={Eye}
         />
 
       </div>

@@ -9,6 +9,7 @@ use App\Models\Property;
 use App\Models\Reservation;
 use App\Models\VisitorLog;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
@@ -22,6 +23,7 @@ class DashboardController extends Controller
                 'locations'    => Location::count(),
                 'categories'   => Category::count(),
                 'reservations' => Reservation::count(),
+                'total_views'  => (int) Property::sum('views'),
             ];
 
             $recentProperties   = Property::latest()->take(5)->get();
@@ -88,7 +90,7 @@ class DashboardController extends Controller
         } catch (Exception $e) {
             Log::error('Dashboard error: ' . $e->getMessage());
             return response()->json([
-                'counts'                => ['properties' => 0, 'locations' => 0, 'categories' => 0, 'reservations' => 0],
+                'counts'                => ['properties' => 0, 'locations' => 0, 'categories' => 0, 'reservations' => 0, 'total_views' => 0],
                 'recent_properties'     => [],
                 'recent_reservations'   => [],
                 'monthly_stats'         => [],

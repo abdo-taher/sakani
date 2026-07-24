@@ -21,6 +21,7 @@ import {
   BadgeCheck,
   Trash2,
   Loader2,
+  Eye,
 } from "lucide-react";
 import usePageTitle from "../../hooks/usePageTitle";
 import { getPropertyById } from "../../services/propertyService";
@@ -188,6 +189,10 @@ function PropertyDetail() {
             style={{ background: statusInfo.bg, color: statusInfo.color }}
           >
             {statusInfo.label}
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold bg-stone-100 text-stone-600">
+            <Eye size={14} />
+            {(property.cached_views ?? property.views ?? 0).toLocaleString()} مشاهدة
           </div>
         </div>
       </div>

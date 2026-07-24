@@ -151,7 +151,7 @@ function PropertyModal({
             <MapPin className="w-4 h-4 shrink-0" />
             <span>
               {property.location?.name}
-              {property.area && ` · ${property.area} م²`}
+              {property.category?.slug !== "rent" && property.area && ` · ${property.area} م²`}
             </span>
           </div>
 

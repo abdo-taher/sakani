@@ -40,6 +40,7 @@ class PropertyController extends Controller
             $property->images_by_type = $property->images->groupBy('image_type');
             $property->total_images = $property->images->count();
             $property->is_favorite = $property->isFavoritedBy($user);
+            $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
             return $property;
         });
 
@@ -80,7 +81,7 @@ class PropertyController extends Controller
             'property_type_id' => 'required|exists:property_types,id',
             'category_id' => 'required|exists:categories,id',
             'location_id' => 'required|exists:locations,id',
-            'area' => 'required|integer',
+            'area' => 'nullable|integer',
             'rooms' => 'required|integer',
             'bathrooms' => 'required|integer',
             'floor' => 'nullable|integer',
@@ -311,6 +312,7 @@ class PropertyController extends Controller
             ];
         });
         $property->total_images = $property->images->count();
+        $property->cached_views = $property->views + (Cache::get("property_views_{$property->id}", 0));
         
         // Add favorite status
         $property->is_favorite = $property->isFavoritedBy($user);
@@ -339,7 +341,7 @@ class PropertyController extends Controller
             'property_type_id' => 'sometimes|required|exists:property_types,id',
             'category_id' => 'sometimes|required|exists:categories,id',
             'location_id' => 'sometimes|required|exists:locations,id',
-            'area' => 'sometimes|required|integer|min:1',
+            'area' => 'sometimes|nullable|integer|min:1',
             'rooms' => 'sometimes|required|integer|min:0',
             'bathrooms' => 'sometimes|required|integer|min:0',
             'floor' => 'sometimes|nullable|integer|min:0',

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, MapPin, Layers, Ruler, BedDouble, Bath, ArrowUpDown, Paintbrush, Sofa, Building2, ImageIcon, Video, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, MapPin, Layers, Ruler, BedDouble, Bath, ArrowUpDown, Paintbrush, Sofa, Building2, ImageIcon, Video, Sparkles, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 import VideoThumb from "../VideoThumb";
 
@@ -95,6 +95,10 @@ function PropertyPreviewModal({ property, onClose }) {
           </div>
 
           <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-sm font-bold" style={{ color: COFFEE.goldLight }}>
+              <Eye size={14} />
+              {(property.cached_views ?? property.views ?? 0).toLocaleString()} مشاهدة
+            </span>
             <span
               className="px-4 py-2 rounded-full text-sm font-bold"
               style={{ background: statusInfo.bg, color: statusInfo.color }}

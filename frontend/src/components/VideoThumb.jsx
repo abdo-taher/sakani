@@ -1,13 +1,16 @@
 import { useState, useRef, useEffect } from "react";
+import { Video } from "lucide-react";
 
 function VideoThumb({ src, className = "", alt = "" }) {
-  const videoRef = useRef(null);
   const [thumb, setThumb] = useState(null);
+  const [failed, setFailed] = useState(false);
   const abortRef = useRef(false);
 
   useEffect(() => {
-    if (!src) return;
+    if (!src) { setFailed(true); return; }
     abortRef.current = false;
+    setThumb(null);
+    setFailed(false);
     const v = document.createElement("video");
     v.src = src;
     v.muted = true;
@@ -22,11 +25,11 @@ function VideoThumb({ src, className = "", alt = "" }) {
         c.height = v.videoHeight || 180;
         c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
         setThumb(c.toDataURL("image/jpeg", 0.6));
-      } catch {}
+      } catch { setFailed(true); }
       v.remove();
     };
+    v.onerror = () => { if (!abortRef.current) { setFailed(true); v.remove(); } };
     v.onloadeddata = onLoaded;
-    v.onerror = () => { if (!abortRef.current) v.remove(); };
     return () => {
       abortRef.current = true;
       v.pause();
@@ -40,15 +43,27 @@ function VideoThumb({ src, className = "", alt = "" }) {
     return <img src={thumb} alt={alt} className={className} loading="lazy" />;
   }
 
+  if (failed) {
+    return (
+      <div className={`flex items-center justify-center bg-stone-800 ${className}`}>
+        <Video size={24} color="white" className="opacity-60" />
+      </div>
+    );
+  }
+
   return (
-    <video
-      ref={videoRef}
-      src={src}
-      muted
-      playsInline
-      preload="none"
-      className={className}
-    />
+    <div className={`relative bg-stone-800 ${className}`}>
+      <video
+        src={src}
+        muted
+        playsInline
+        preload="metadata"
+        className="absolute inset-0 w-full h-full object-cover opacity-0"
+      />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <Video size={24} color="white" className="opacity-50" />
+      </div>
+    </div>
   );
 }
 

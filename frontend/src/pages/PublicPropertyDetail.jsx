@@ -287,7 +287,7 @@ function PublicPropertyDetail() {
                 { icon: Layers, label: "القسم", value: property.category?.name },
                 { icon: Building2, label: "نوع العقار", value: property.propertyType?.name },
                 { icon: MapPin, label: "المكان", value: property.location?.name },
-                { icon: Ruler, label: "المساحة", value: property.area ? `${property.area} م²` : null },
+                ...(!isRent && property.area ? [{ icon: Ruler, label: "المساحة", value: `${property.area} م²` }] : []),
                 { icon: BedDouble, label: "الغرف", value: property.rooms },
                 { icon: Bath, label: "الحمامات", value: property.bathrooms },
                 { icon: Layers, label: "الدور", value: property.floor },

@@ -137,10 +137,12 @@ function PropertyCard({ p, isFav, onToggleFav }) {
             <Bath className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
             {p.bathrooms}
           </div>
-          <div className="flex items-center gap-1">
-            <Maximize className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
-            {p.area} م²
-          </div>
+          {p.category?.slug !== "rent" && p.area && (
+            <div className="flex items-center gap-1">
+              <Maximize className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
+              {p.area} م²
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between">
