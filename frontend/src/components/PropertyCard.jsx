@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, Bed, Bath, Maximize, MapPin, PlayCircle } from "lucide-react";
+import { Heart, Bed, Bath, Maximize, MapPin, PlayCircle, Loader2 } from "lucide-react";
 import { COFFEE } from "../constants/constants";
 import VideoThumb from "./VideoThumb";
 
@@ -19,6 +19,7 @@ function PropertyCard({ p, isFav, onToggleFav }) {
   const [imgError, setImgError] = useState(false);
   const navigate = useNavigate();
 
+  const isUploading = p.is_uploading;
   const hasVideo = (p.images && p.images.some(img => img.media_type === 'video')) || p.video_url;
 
   const firstVideo = p.images && p.images.find(img => img.media_type === 'video');
@@ -36,8 +37,8 @@ function PropertyCard({ p, isFav, onToggleFav }) {
 
   return (
     <div
-      onClick={() => navigate(`/property/${p.id}`)}
-      className="group relative bg-white rounded-2xl overflow-hidden border cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      onClick={() => !isUploading && navigate(`/property/${p.id}`)}
+      className={`group relative bg-white rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${isUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       style={{ borderColor: "#eee" }}
       dir="rtl"
     >
@@ -73,6 +74,15 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         >
           {status.text}
         </div>
+
+        {isUploading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 text-white text-xs font-bold backdrop-blur-sm">
+              <Loader2 size={14} className="animate-spin" />
+              جاري رفع الوسائط...
+            </div>
+          </div>
+        )}
 
         <button
           onClick={(e) => {

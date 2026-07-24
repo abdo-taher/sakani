@@ -66,6 +66,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/properties', [PropertyController::class, 'store']);
 Route::put('/properties/{property}', [PropertyController::class, 'update']);
 Route::delete('/properties/{property}', [PropertyController::class, 'destroy']);
+Route::patch('/properties/{property}/upload-complete', [PropertyController::class, 'uploadComplete']);
     Route::apiResource('property-images', PropertyImageController::class);
     
     // Enhanced property image routes

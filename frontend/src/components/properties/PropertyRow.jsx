@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { Eye, Pencil, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import PropertyStatus from "./PropertyStatus";
 import { COFFEE } from "../../constants/constants";
 
@@ -30,7 +30,12 @@ function PropertyRow({
       </td>
 
       <td className="px-4 py-4 font-bold text-stone-800 truncate" title={property.title}>
-        {property.title}
+        <div className="flex items-center gap-2">
+          {property.title}
+          {property.is_uploading && (
+            <Loader2 size={14} className="animate-spin text-amber-500 shrink-0" title="جاري رفع الوسائط" />
+          )}
+        </div>
       </td>
 
       <td className="px-4 py-4 whitespace-nowrap">
@@ -71,14 +76,18 @@ function PropertyRow({
 
           <button
             onClick={() => onEdit(property)}
-            className="w-9 h-9 rounded-lg hover:bg-yellow-50 flex items-center justify-center transition"
+            disabled={property.is_uploading}
+            className="w-9 h-9 rounded-lg hover:bg-yellow-50 flex items-center justify-center transition disabled:opacity-30 disabled:cursor-not-allowed"
+            title={property.is_uploading ? "جاري رفع الوسائط" : "تعديل العقار"}
           >
             <Pencil size={18} color={COFFEE.gold} />
           </button>
 
           <button
             onClick={() => onDelete(property.id)}
-            className="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center transition"
+            disabled={property.is_uploading}
+            className="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center transition disabled:opacity-30 disabled:cursor-not-allowed"
+            title={property.is_uploading ? "جاري رفع الوسائط" : "حذف العقار"}
           >
             <Trash2 size={18} color="#DC2626" />
           </button>

@@ -23,7 +23,6 @@ import { formatPhone, getPhoneError } from "../utils/phoneValidator";
 import { COFFEE } from "../constants/constants";
 import { successToast, errorToast } from "../utils/toast";
 import { SAMPLE_IMG, fmtPrice } from "../utils/helpers";
-import Navbar from "../components/Navbar";
 import VideoThumb from "../components/VideoThumb";
 
 const STATUS_MAP = {
@@ -117,7 +116,6 @@ function PublicPropertyDetail() {
   if (loading) {
     return (
       <div>
-        <Navbar />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -157,7 +155,6 @@ function PublicPropertyDetail() {
 
   return (
     <div>
-      <Navbar />
       <div className="p-4 sm:p-8 space-y-8 max-w-6xl mx-auto" dir="rtl">
         {/* Back button */}
         <button

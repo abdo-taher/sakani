@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import { loadFavorites, saveFavorites } from "./utils/storage";
 import { getProperties as fetchPropertiesAPI } from "./services/propertyService";
 import { getFavorites, toggleFavorite as toggleFavoriteAPI } from "./services/favoriteService";
+import { getUnreadCount } from "./services/notificationService";
 
 import Navbar from "./components/Navbar";
 import PropertyModal from "./components/PropertyModal";
@@ -17,6 +18,7 @@ import FavoritesDrawer from "./components/FavoritesDrawer";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import ScrollToTop from "./components/ScrollToTop";
 import AppRoutes from "./routes/AppRoutes";
+import { useLocation } from "react-router-dom";
 
 export default function App() {
   const [properties, setProperties] = useState([]);
@@ -27,7 +29,9 @@ export default function App() {
   const [favoritesOpen, setFavoritesOpen] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const location = useLocation();
   const isAdmin = !!(sessionStorage.getItem("token") || localStorage.getItem("token"));
+  const isDashboard = location.pathname.startsWith("/dashboard");
 
   useEffect(() => {
     (async () => {
@@ -124,12 +128,14 @@ export default function App() {
         }}
       />
 
-      <Navbar
-        isAdmin={isAdmin}
-        favoritesCount={favorites.size}
-        unreadCount={unreadCount}
-        onOpenFavorites={() => setFavoritesOpen(true)}
-      />
+      {!isDashboard && (
+        <Navbar
+          isAdmin={isAdmin}
+          favoritesCount={favorites.size}
+          unreadCount={unreadCount}
+          onOpenFavorites={() => setFavoritesOpen(true)}
+        />
+      )}
       <div className="animate-pageIn">
         {loaded && (
           <AppRoutes
@@ -145,29 +151,33 @@ export default function App() {
         )}
       </div>
 
-      <PropertyModal
-        property={activeProperty}
-        isFav={activeProperty ? favorites.has(activeProperty.id) : false}
-        onToggleFav={toggleFav}
-        onClose={closeProperty}
-        onReserve={() => setReservationOpen(true)}
-      />
+      {!isDashboard && (
+        <>
+          <PropertyModal
+            property={activeProperty}
+            isFav={activeProperty ? favorites.has(activeProperty.id) : false}
+            onToggleFav={toggleFav}
+            onClose={closeProperty}
+            onReserve={() => setReservationOpen(true)}
+          />
 
-      <ReservationModal
-        open={reservationOpen}
-        property={activeProperty}
-        onClose={() => setReservationOpen(false)}
-      />
-      <FavoritesDrawer
-        open={favoritesOpen}
-        properties={properties}
-        favorites={favorites}
-        onToggleFav={toggleFav}
-        onOpenProperty={openProperty}
-        onClose={() => setFavoritesOpen(false)}
-      />
-      <Footer />
-      <FloatingWhatsApp />
+          <ReservationModal
+            open={reservationOpen}
+            property={activeProperty}
+            onClose={() => setReservationOpen(false)}
+          />
+          <FavoritesDrawer
+            open={favoritesOpen}
+            properties={properties}
+            favorites={favorites}
+            onToggleFav={toggleFav}
+            onOpenProperty={openProperty}
+            onClose={() => setFavoritesOpen(false)}
+          />
+          <Footer />
+          <FloatingWhatsApp />
+        </>
+      )}
       <ScrollToTop />
     </div>
   );

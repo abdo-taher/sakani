@@ -168,6 +168,7 @@ class PropertyController extends Controller
                 'furnishing' => $request->filled('furnishing') ? $request->furnishing : 'unfurnished',
                 'status' => $request->status ?? 'available',
                 'featured' => $request->featured ?? false,
+                'is_uploading' => true,
             ];
 
             // Merge video data if available
@@ -321,6 +322,13 @@ class PropertyController extends Controller
     {
         $property = Property::findOrFail($id);
 
+        if ($property->is_uploading) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن تعديل العقار أثناء رفع الوسائط'
+            ], 409);
+        }
+
         $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string|max:2000',
@@ -458,6 +466,17 @@ class PropertyController extends Controller
         $property->delete();
         
         return response()->json(['message' => 'Property deleted successfully']);
+    }
+
+    public function uploadComplete($id)
+    {
+        $property = Property::findOrFail($id);
+        $property->update(['is_uploading' => false]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم الانتهاء من رفع الوسائط'
+        ]);
     }
 
     /**

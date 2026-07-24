@@ -20,6 +20,7 @@ import {
   Clock,
   BadgeCheck,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import usePageTitle from "../../hooks/usePageTitle";
 import { getPropertyById } from "../../services/propertyService";
@@ -190,6 +191,20 @@ function PropertyDetail() {
           </div>
         </div>
       </div>
+
+      {/* Uploading Banner */}
+      {property.is_uploading && (
+        <div
+          className="rounded-2xl p-4 flex items-center gap-3 border"
+          style={{ background: "#FEF3C7", borderColor: "#FDE68A", color: "#92400E" }}
+        >
+          <Loader2 size={20} className="animate-spin shrink-0" />
+          <div>
+            <p className="font-bold text-sm">جاري رفع الوسائط في الخلفية</p>
+            <p className="text-xs mt-0.5 opacity-75">لا يمكنك تعديل هذا العقار حتى اكتمال الرفع</p>
+          </div>
+        </div>
+      )}
 
       {/* Title */}
       <div>

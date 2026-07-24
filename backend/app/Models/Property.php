@@ -34,6 +34,7 @@ class Property extends Model
         'video_file_path',
         'status',
         'featured',
+        'is_uploading',
     ];
 
     public function category()

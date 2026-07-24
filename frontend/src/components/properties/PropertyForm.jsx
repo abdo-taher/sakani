@@ -23,6 +23,7 @@ import { getLocations } from "../../services/locationService";
 import {
   createProperty,
   updateProperty,
+  markUploadComplete,
 } from "../../services/propertyService";
 import { getCategories } from "../../services/categoryService";
 import { getAmenities } from "../../services/amenityService";
@@ -295,7 +296,6 @@ function PropertyForm({
         let uploadedCount = 0;
         const totalNew = propertyData.images.filter(i => i instanceof File).length + propertyData.videos.length;
 
-        // Upload new images
         const newImages = propertyData.images.filter(i => i instanceof File);
         for (const image of newImages) {
           setSavingMessage(`جاري رفع الصور (${uploadedCount + 1}/${totalNew})...`);
@@ -310,7 +310,6 @@ function PropertyForm({
           uploadedCount++;
         }
 
-        // Upload new videos as property_images
         for (const video of propertyData.videos) {
           setSavingMessage(`جاري رفع الفيديوهات (${uploadedCount + 1}/${totalNew})...`);
           const uploaded = await uploadToCloudinary(video, "sakani/properties/videos");
@@ -325,6 +324,8 @@ function PropertyForm({
         }
 
         successToast("تم تعديل العقار بنجاح");
+        await loadProperties();
+        onClose();
 
       } else {
 
@@ -334,43 +335,56 @@ function PropertyForm({
         const propertyId = response.data.property.id;
 
         const totalMedia = propertyData.images.length + propertyData.videos.length;
-        let uploadedCount = 0;
 
-        // Upload images
-        for (const image of propertyData.images) {
-          setSavingMessage(`جاري رفع الصور (${uploadedCount + 1}/${totalMedia})...`);
-          const uploaded = await uploadToCloudinary(image, "sakani/properties/images");
-          await uploadPropertyImage(
-            propertyId,
-            uploaded.secure_url,
-            uploaded.public_id,
-            uploadedCount === 0,
-            "image"
-          );
-          uploadedCount++;
+        if (totalMedia === 0) {
+          await markUploadComplete(propertyId);
+          await loadProperties();
+          successToast("تم إضافة العقار بنجاح");
+          onClose();
+        } else {
+          successToast("تم إضافة العقار — جاري رفع الوسائط في الخلفية...");
+          onClose();
+
+          (async () => {
+            let uploadedCount = 0;
+            try {
+              for (const image of propertyData.images) {
+                const uploaded = await uploadToCloudinary(image, "sakani/properties/images");
+                await uploadPropertyImage(
+                  propertyId,
+                  uploaded.secure_url,
+                  uploaded.public_id,
+                  uploadedCount === 0,
+                  "image"
+                );
+                uploadedCount++;
+              }
+
+              for (const video of propertyData.videos) {
+                const uploaded = await uploadToCloudinary(video, "sakani/properties/videos");
+                await uploadPropertyImage(
+                  propertyId,
+                  uploaded.secure_url,
+                  uploaded.public_id,
+                  false,
+                  "video"
+                );
+                uploadedCount++;
+              }
+
+              await markUploadComplete(propertyId);
+              await loadProperties();
+              successToast("تم رفع جميع الوسائط بنجاح");
+            } catch (err) {
+              console.error("Background upload failed:", err);
+              await markUploadComplete(propertyId);
+              await loadProperties();
+              errorToast("حدث خطأ أثناء رفع بعض الوسائط");
+            }
+          })();
         }
-
-        // Upload videos as property_images
-        for (const video of propertyData.videos) {
-          setSavingMessage(`جاري رفع الفيديوهات (${uploadedCount + 1}/${totalMedia})...`);
-          const uploaded = await uploadToCloudinary(video, "sakani/properties/videos");
-          await uploadPropertyImage(
-            propertyId,
-            uploaded.secure_url,
-            uploaded.public_id,
-            false,
-            "video"
-          );
-          uploadedCount++;
-        }
-
-        successToast("تم إضافة العقار بنجاح");
 
       }
-
-      await loadProperties();
-
-      onClose();
 
     } catch (error) {
 

@@ -33,3 +33,8 @@ export const changePropertyStatus = async (id, status) => {
   const response = await api.put(`/properties/${id}`, { status });
   return response.data;
 };
+
+export const markUploadComplete = async (id) => {
+  const response = await api.patch(`/properties/${id}/upload-complete`);
+  return response.data;
+};
