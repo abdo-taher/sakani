@@ -13,6 +13,16 @@ use Exception;
 
 class RoomController extends Controller
 {
+    public function show($id)
+    {
+        $room = Room::with('roomImages')->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $room,
+        ]);
+    }
+
     public function store(Request $request, $propertyId)
     {
         $property = Property::findOrFail($propertyId);

@@ -75,6 +75,7 @@ Route::delete('/properties/{property}', [PropertyController::class, 'destroy']);
     Route::patch('/properties/{property}/upload-complete', [PropertyController::class, 'uploadComplete']);
 
     // Room routes
+    Route::get('/rooms/{room}', [RoomController::class, 'show']);
     Route::post('/properties/{id}/rooms', [RoomController::class, 'store']);
     Route::put('/rooms/{room}', [RoomController::class, 'update']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
@@ -104,9 +105,9 @@ Route::delete('/properties/{property}', [PropertyController::class, 'destroy']);
     Route::post('/cloudinary/signature', [CloudinaryController::class, 'signature']);
     Route::put('/admin/credentials', [AuthController::class, 'updateCredentials']);
 
-    // Marketing emails
-    Route::post('/marketing/send', [MarketingMailController::class, 'send']);
-    Route::post('/marketing/preview', [MarketingMailController::class, 'preview']);
+    // Marketing emails (disabled - controller missing)
+    // Route::post('/marketing/send', [MarketingMailController::class, 'send']);
+    // Route::post('/marketing/preview', [MarketingMailController::class, 'preview']);
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index']);

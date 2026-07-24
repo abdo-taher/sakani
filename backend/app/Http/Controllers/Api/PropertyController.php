@@ -122,6 +122,11 @@ class PropertyController extends Controller
             'status' => 'nullable|in:available,reserved,sold,rented',
             'featured' => 'boolean',
             'has_detailed_rooms' => 'boolean',
+            'rooms_data' => 'sometimes|array',
+            'rooms_data.*.name' => 'required|string|max:255',
+            'rooms_data.*.description' => 'nullable|string',
+            'rooms_data.*.price' => 'required|numeric|min:0',
+            'rooms_data.*.area' => 'nullable|integer|min:1',
             'tags' => 'sometimes|array',
             'tags.*' => 'exists:tags,id',
             
@@ -200,6 +205,7 @@ class PropertyController extends Controller
                 'status' => $request->status ?? 'available',
                 'featured' => $request->featured ?? false,
                 'is_uploading' => true,
+                'has_detailed_rooms' => $request->boolean('has_detailed_rooms', false),
             ];
 
             // Merge video data if available
@@ -213,6 +219,20 @@ class PropertyController extends Controller
 
             if ($request->filled('tags')) {
                 $property->tags()->sync($request->tags);
+            }
+
+            // Create rooms inline if provided
+            if ($request->filled('rooms_data') && $request->has_detailed_rooms) {
+                foreach ($request->rooms_data as $roomData) {
+                    $property->rooms()->create([
+                        'name' => $roomData['name'],
+                        'description' => $roomData['description'] ?? null,
+                        'price' => $roomData['price'],
+                        'area' => $roomData['area'] ?? null,
+                        'status' => 'available',
+                        'is_uploading' => true,
+                    ]);
+                }
             }
 
             // Handle image uploads
@@ -447,6 +467,11 @@ class PropertyController extends Controller
             'amenities.*' => 'exists:amenities,id',
             'tags' => 'sometimes|array',
             'tags.*' => 'exists:tags,id',
+            'rooms_data' => 'sometimes|array',
+            'rooms_data.*.name' => 'required|string|max:255',
+            'rooms_data.*.description' => 'nullable|string',
+            'rooms_data.*.price' => 'required|numeric|min:0',
+            'rooms_data.*.area' => 'nullable|integer|min:1',
         ]);
 
         $updateData = $request->only([
@@ -540,9 +565,23 @@ class PropertyController extends Controller
             $property->tags()->sync($request->tags);
         }
 
+        // Create rooms inline if provided
+        if ($request->filled('rooms_data')) {
+            foreach ($request->rooms_data as $roomData) {
+                $property->rooms()->create([
+                    'name' => $roomData['name'],
+                    'description' => $roomData['description'] ?? null,
+                    'price' => $roomData['price'],
+                    'area' => $roomData['area'] ?? null,
+                    'status' => 'available',
+                    'is_uploading' => true,
+                ]);
+            }
+        }
+
         return response()->json([
             'message' => 'Property updated successfully',
-            'data' => Property::with('category', 'propertyType', 'location', 'images', 'amenities', 'tags')->find($property->id)
+            'data' => Property::with(['category', 'propertyType', 'location', 'images', 'amenities', 'tags', 'rooms', 'rooms.roomImages'])->find($property->id)
         ]);
     }
 

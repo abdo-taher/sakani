@@ -38,6 +38,7 @@ import {
 } from "../../utils/toast";
 import { uploadToCloudinary } from "../../services/cloudinaryService";
 import { numbersOnly } from "../../utils/numbersOnly";
+import { fmtPrice } from "../../utils/helpers";
 
 const COFFEE = {
   dark: "#3B2618",
@@ -89,6 +90,8 @@ function PropertyForm({
     removeVideo: false,
     existingVideoUrl: null,
     existingVideoPublicId: null,
+    has_detailed_rooms: false,
+    roomsData: [],
   });
 
   useEffect(() => {
@@ -128,6 +131,13 @@ function PropertyForm({
         removeVideo: false,
         existingVideoUrl: firstVideo?.image_url || property.video_url || null,
         existingVideoPublicId: firstVideo?.image_public_id || property.video_public_id || null,
+        has_detailed_rooms: property.has_detailed_rooms || false,
+        roomsData: (property.rooms || []).map(r => ({
+          name: r.name || "",
+          description: r.description || "",
+          price: r.price || "",
+          area: r.area || "",
+        })),
       });
     }
   }, [property]);
@@ -155,6 +165,27 @@ function PropertyForm({
       tags: prev.tags.includes(tagId)
         ? prev.tags.filter((id) => id !== tagId)
         : [...prev.tags, tagId],
+    }));
+  };
+
+  const addRoom = () => {
+    setPropertyData((prev) => ({
+      ...prev,
+      roomsData: [...prev.roomsData, { name: "", description: "", price: "", area: "" }],
+    }));
+  };
+
+  const removeRoom = (index) => {
+    setPropertyData((prev) => ({
+      ...prev,
+      roomsData: prev.roomsData.filter((_, i) => i !== index),
+    }));
+  };
+
+  const updateRoom = (index, field, value) => {
+    setPropertyData((prev) => ({
+      ...prev,
+      roomsData: prev.roomsData.map((r, i) => (i === index ? { ...r, [field]: value } : r)),
     }));
   };
 
@@ -310,7 +341,12 @@ function PropertyForm({
         featured: false,
         amenities: propertyData.features,
         tags: propertyData.tags,
+        has_detailed_rooms: propertyData.has_detailed_rooms,
       };
+
+      if (propertyData.has_detailed_rooms && propertyData.roomsData.length > 0) {
+        data.rooms_data = propertyData.roomsData.filter(r => r.name && r.price);
+      }
 
       if (property) {
         data.remove_images = propertyData.removedImageIds;
@@ -776,6 +812,105 @@ function PropertyForm({
                     })}
                   </div>
                 </div>
+
+                {selectedCategory?.slug === "rent" && (
+                  <div className="mt-6">
+                    <div className={labelClass} style={{ color: COFFEE.dark }}>
+                      <BedDouble size={16} /> طريقة التأجير
+                    </div>
+                    <div className="flex gap-3 mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setField("has_detailed_rooms", false)}
+                        className="px-5 py-3 rounded-xl font-bold text-sm transition-all border-2 flex-1"
+                        style={{
+                          borderColor: !propertyData.has_detailed_rooms ? COFFEE.gold : COFFEE.line,
+                          background: !propertyData.has_detailed_rooms ? "rgba(204,154,58,0.10)" : "white",
+                          color: !propertyData.has_detailed_rooms ? COFFEE.dark : COFFEE.stone,
+                        }}
+                      >
+                        إيجار شامل (عقار كامل)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setField("has_detailed_rooms", true)}
+                        className="px-5 py-3 rounded-xl font-bold text-sm transition-all border-2 flex-1"
+                        style={{
+                          borderColor: propertyData.has_detailed_rooms ? COFFEE.gold : COFFEE.line,
+                          background: propertyData.has_detailed_rooms ? "rgba(204,154,58,0.10)" : "white",
+                          color: propertyData.has_detailed_rooms ? COFFEE.dark : COFFEE.stone,
+                        }}
+                      >
+                        إيجار بالغرف (غرف منفصلة)
+                      </button>
+                    </div>
+
+                    {propertyData.has_detailed_rooms && (
+                      <div>
+                        <p className="text-xs mb-4" style={{ color: COFFEE.stone }}>
+                          أضف كل غرفة بالتفصيل — اسم وسعر ومساحة. الصور تتم إضافتها بعد حفظ العقار.
+                        </p>
+                        {propertyData.roomsData.map((room, idx) => (
+                          <div
+                            key={idx}
+                            className="rounded-2xl border-2 p-4 mb-3 relative"
+                            style={{ borderColor: COFFEE.line, background: "white" }}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => removeRoom(idx)}
+                              className="absolute top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition hover:bg-red-50"
+                              style={{ color: "#DC2626" }}
+                            >
+                              ✕
+                            </button>
+                            <div className="text-xs font-bold mb-3" style={{ color: COFFEE.gold }}>
+                              غرفة {idx + 1}
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <input
+                                type="text"
+                                placeholder="اسم الغرفة *"
+                                value={room.name}
+                                onChange={(e) => updateRoom(idx, "name", e.target.value)}
+                                className={inputClass}
+                              />
+                              <input
+                                type="number"
+                                placeholder="السعر (ج.م/شهر) *"
+                                value={room.price}
+                                onChange={(e) => updateRoom(idx, "price", e.target.value)}
+                                className={inputClass}
+                              />
+                              <input
+                                type="number"
+                                placeholder="المساحة (م²)"
+                                value={room.area}
+                                onChange={(e) => updateRoom(idx, "area", e.target.value)}
+                                className={inputClass}
+                              />
+                              <input
+                                type="text"
+                                placeholder="وصف اختياري"
+                                value={room.description}
+                                onChange={(e) => updateRoom(idx, "description", e.target.value)}
+                                className={inputClass}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={addRoom}
+                          className="w-full py-3 rounded-xl font-bold text-sm border-2 border-dashed transition hover:bg-stone-50"
+                          style={{ borderColor: COFFEE.gold, color: COFFEE.dark }}
+                        >
+                          + إضافة غرفة
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1015,6 +1150,28 @@ function PropertyForm({
                   <ReviewCard title="التأثيث" value={furnishingLabel || "—"} color={COFFEE} />
                   <ReviewCard title="الصور / الفيديو" value={`${(propertyData.existingImages?.length || 0) + propertyData.images.length} صورة${((propertyData.existingVideoUrl && !propertyData.removeVideo) || propertyData.videos.length > 0) ? " + فيديو" : ""}`} color={COFFEE} />
                 </div>
+
+                {propertyData.has_detailed_rooms && propertyData.roomsData.length > 0 && (
+                  <div className="mt-5">
+                    <div className="text-xs font-bold mb-2" style={{ color: COFFEE.stone }}>
+                      الغرف بالتفصيل ({propertyData.roomsData.length} غرف)
+                    </div>
+                    <div className="space-y-2">
+                      {propertyData.roomsData.map((room, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-3 px-4 py-2.5 rounded-xl border"
+                          style={{ borderColor: COFFEE.line, background: "white" }}
+                        >
+                          <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: COFFEE.gold, color: "white" }}>{idx + 1}</span>
+                          <span className="font-bold text-sm" style={{ color: COFFEE.dark }}>{room.name}</span>
+                          <span className="text-xs" style={{ color: COFFEE.stone }}>{room.price ? `${fmtPrice(room.price)} ج.م/شهر` : ""}</span>
+                          {room.area && <span className="text-xs" style={{ color: COFFEE.stone }}>{room.area} م²</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-5">
                   <div className="text-xs font-bold mb-2" style={{ color: COFFEE.stone }}>
