@@ -10,17 +10,12 @@ import {
   ShoppingBag,
   KeyRound,
   HelpCircle,
-  ChevronLeft,
-  Quote,
-  Star,
 } from "lucide-react";
 
 import Reveal from "../components/Reveal";
 import CountUp from "../components/CountUp";
-import PropertyCard from "../components/PropertyCard";
 import TopViewedNotice from "../components/TopViewedNotice";
 import BestPropertiesSection from "../components/BestPropertiesSection";
-import BestOffersSection from "../components/BestOffersSection";
 
 import { COFFEE } from "../constants/constants";
 import { useNavigate } from "react-router-dom";
@@ -41,43 +36,37 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
     setHeroTilt({ x: px * 16, y: py * 12 });
   };
 
-  const featured = [];
-  const testimonials = [];
-
   const services = [
-  {
-    icon: HelpCircle,
-    title: "محتاج اي؟",
-    text: "أخبرنا بالعقار الذي تبحث عنه وسنساعدك في الوصول إليه.",
-    detail:
-      "اضغط هنا لتقديم طلبك، وسيتمكن الأدمن من مراجعته والتواصل معك لإيجاد العقار المناسب.",
-    key: "need",
-  },
-      {
-    icon: KeyRound,
-    title: "إيجار",
-    text: "شقق مفروشة وغير مفروشة للإيجار في أفضل المناطق.",
-    detail:
-      "اضغط هنا لمشاهدة جميع العقارات المتاحة داخل هذا القسم، وسيتم عرض البيانات التي يضيفها الأدمن مباشرة من قاعدة البيانات.",
-    key: "rent",
-  },
+    {
+      icon: HelpCircle,
+      title: "محتاج اي؟",
+      text: "أخبرنا بالعقار الذي تبحث عنه وسنساعدك في الوصول إليه.",
+      detail:
+        "اضغط هنا لتقديم طلبك، وسيتمكن الأدمن من مراجعته والتواصل معك لإيجاد العقار المناسب.",
+      key: "need",
+    },
+    {
+      icon: KeyRound,
+      title: "إيجار",
+      text: "شقق مفروشة وغير مفروشة للإيجار في أفضل المناطق.",
+      detail:
+        "اضغط هنا لمشاهدة جميع العقارات المتاحة داخل هذا القسم، وسيتم عرض البيانات التي يضيفها الأدمن مباشرة من قاعدة البيانات.",
+      key: "rent",
+    },
+    {
+      icon: ShoppingBag,
+      title: "شراء",
+      text: "ابحث عن العقار المناسب لك بأفضل الأسعار.",
+      detail:
+        "اضغط هنا لمشاهدة جميع العقارات المتاحة داخل هذا القسم، وسيتم عرض البيانات التي يضيفها الأدمن مباشرة من قاعدة البيانات.",
+      key: "buy",
+    },
+  ];
 
-  {
-    icon: ShoppingBag,
-    title: "شراء",
-    text: "ابحث عن العقار المناسب لك بأفضل الأسعار.",
-    detail:
-      "اضغط هنا لمشاهدة جميع العقارات المتاحة داخل هذا القسم، وسيتم عرض البيانات التي يضيفها الأدمن مباشرة من قاعدة البيانات.",
-    key: "buy",
-  },
-
-  
-  
- 
-];
   return (
     <div>
       <TopViewedNotice />
+
       {/* ------------------------------ Hero ------------------------------ */}
       <div
         ref={heroRef}
@@ -94,9 +83,9 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
           loop
           playsInline
           preload="auto"
-          onError={(e) => { e.target.style.display = 'none'; }}
+          onError={(e) => { e.target.style.display = "none"; }}
         />
-        <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, rgba(43,27,18,0.3) 0%, rgba(43,27,18,0.3) 100%)` }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(43,27,18,0.15) 0%, rgba(43,27,18,0.25) 100%)" }} />
         <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full blur-3xl opacity-30 animate-blob pointer-events-none" style={{ backgroundColor: COFFEE.gold }} />
         <div className="absolute bottom-0 -left-16 w-72 h-72 rounded-full blur-3xl opacity-20 animate-blob-2 pointer-events-none" style={{ backgroundColor: COFFEE.cream }} />
 
@@ -132,12 +121,13 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
 
       {/* ---------------------------- إحصائيات ----------------------------- */}
       <section className="py-8 px-4 sm:px-6" style={{ backgroundColor: COFFEE.darkest }} dir="rtl">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
           {[
             { icon: Building2, value: 3, suffix: "+", label: "عقار تم بيعه" },
             { icon: Users, value: 3, suffix: "+", label: "عميل سعيد" },
             { icon: MapPin, value: 1, suffix: "", label: "مدينة نخدمها" },
             { icon: Award, value: 1, suffix: "+", label: "سنوات خبرة" },
+            { icon: Tag, value: 5, suffix: "+", label: "عرض متاح" },
           ].map((s, i) => {
             const Icon = s.icon;
             return (
@@ -158,45 +148,70 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
       {/* --------------------------- أفضل العقارات -------------------------- */}
       <BestPropertiesSection favorites={favorites} onToggleFav={onToggleFav} />
 
+      {/* --------------------------- خدماتنا -------------------------- */}
+      <section className="py-10 sm:py-14 px-4 sm:px-6" style={{ backgroundColor: COFFEE.creamSoft }} dir="rtl">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl font-extrabold mb-2" style={{ color: COFFEE.dark }}>
+                خدماتنا
+              </h2>
+              <p className="text-sm max-w-lg mx-auto" style={{ color: "#888" }}>
+                نوفر لك كل ما تحتاجه في رحلتك العقارية
+              </p>
+            </div>
+          </Reveal>
+          <div className="flex flex-col gap-6">
+            {services.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <Reveal key={item.key} delay={index * 150}>
+                  <div
+                    onClick={() => navigate(`/${item.key}`)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") navigate(`/${item.key}`);
+                    }}
+                    className="group relative cursor-pointer overflow-hidden w-full max-w-[720px] mx-auto rounded-[20px] bg-white px-6 sm:px-8 py-6 shadow-md border text-center hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(0,0,0,.12)] transition-all duration-500 ease-out"
+                  >
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(176,141,87,.07), transparent)" }} />
+                    <div className="relative flex flex-col items-center text-center">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mb-3 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" style={{ backgroundColor: COFFEE.gold }}>
+                        <Icon className="w-6 h-6" style={{ color: COFFEE.darkest }} />
+                      </div>
+                      <h3 className="text-lg sm:text-2xl font-extrabold mb-1.5" style={{ color: COFFEE.dark }}>{item.title}</h3>
+                      <div className="mb-3 h-[3px] w-12 rounded-full" style={{ background: COFFEE.gold }} />
+                      <p className="text-sm sm:text-base leading-6 font-semibold" style={{ color: "#454545" }}>{item.text}</p>
+                      <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-500 ease-out w-full">
+                        <div className="overflow-hidden">
+                          <p className="text-xs sm:text-sm leading-6 mt-3 pt-3 font-semibold border-t" style={{ color: COFFEE.mid, borderColor: "#f0e8da" }}>{item.detail}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* ----------------------------- من نحن ------------------------------ */}
       <section className="py-10 sm:py-14 px-4 sm:px-6" style={{ backgroundColor: COFFEE.creamSoft }} dir="rtl">
-<div
-  className="w-full mt-8 mx-auto"
-  style={{ maxWidth: "1200px" }}
->
-  <Reveal>
-            <div
-              className="rounded-[22px] p-6 sm:p-10 shadow-xl border"
-              style={{ background: "#fff", borderColor: "#efe6d7" }}
-            >
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <div className="rounded-[22px] p-6 sm:p-10 shadow-xl border" style={{ background: "#fff", borderColor: "#efe6d7" }}>
               <div className="flex flex-col items-center text-center">
-
-                <div
-                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4 animate-float"
-                  style={{ backgroundColor: COFFEE.gold }}
-                >
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4 animate-float" style={{ backgroundColor: COFFEE.gold }}>
                   <Building2 className="w-6 h-6 sm:w-8 sm:h-8" style={{ color: COFFEE.darkest }} />
                 </div>
-
-                <span className="text-[11px] sm:text-xs font-bold tracking-[0.3em]" style={{ color: COFFEE.gold }}>
-                  سكني
-                </span>
-
-                <h2
-                  className="text-2xl sm:text-3xl md:text-4xl font-extrabold mt-3 mb-4 leading-tight"
-                  style={{ color: COFFEE.dark }}
-                >
-                  شريكك العقاري في دمياط الجديدة
-                </h2>
-
-                <p
-                  className="text-sm sm:text-base leading-relaxed max-w-2xl font-semibold mb-5"
-                  style={{ color: "#3f3f3f" }}
-                >
+                <span className="text-[11px] sm:text-xs font-bold tracking-[0.3em]" style={{ color: COFFEE.gold }}>سكني</span>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mt-3 mb-4 leading-tight" style={{ color: COFFEE.dark }}>شريكك العقاري في دمياط الجديدة</h2>
+                <p className="text-sm sm:text-base leading-relaxed max-w-2xl font-semibold mb-5" style={{ color: "#3f3f3f" }}>
                   في سكني هدفنا نبسط رحلة البحث عن العقار. بنوفر لك شقق ووحدات للبيع والإيجار في دمياط الجديدة،
                   مع معلومات واضحة، وصور حقيقية، ومتابعة مستمرة لحد إتمام الاتفاق.
                 </p>
-
                 <div className="w-full max-w-2xl mb-6">
                   <h3 className="text-lg sm:text-xl font-bold mb-3" style={{ color: COFFEE.dark }}>لماذا سكني؟</h3>
                   <ul className="text-sm sm:text-base leading-loose text-right space-y-1" style={{ color: "#3f3f3f" }}>
@@ -207,15 +222,10 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
                     <li>✅ متابعة معاك قبل وبعد الاتفاق.</li>
                   </ul>
                 </div>
-
-                <p
-                  className="text-sm sm:text-base leading-relaxed max-w-2xl font-semibold mb-6"
-                  style={{ color: "#3f3f3f" }}
-                >
+                <p className="text-sm sm:text-base leading-relaxed max-w-2xl font-semibold mb-6" style={{ color: "#3f3f3f" }}>
                   رؤيتنا إن سكني تكون الوجهة الأولى لأي شخص بيدور على عقار في دمياط الجديدة،
                   من خلال تقديم خدمة احترافية، سهلة، وموثوقة.
                 </p>
-
                 <a
                   href="https://wa.me/201067725976"
                   target="_blank"
@@ -224,100 +234,13 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
                   style={{ backgroundColor: "#25D366", color: "#fff" }}
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                   </svg>
                   تواصل معنا واتساب
                 </a>
-
               </div>
             </div>
           </Reveal>
-<div className="h-8"></div>
-
-          {/* --------------------------- خدماتنا -------------------------- */}
-<div
-  className="flex flex-col gap-6 mt-8"
-  style={{
-    alignItems: "center",
-    paddingBottom: "40px",
-  }}
->            {services.map((item, index) => {
-              const Icon = item.icon;
-
-              return (
-<Reveal
-  key={item.key}
-  delay={index * 150}
-  style={{
-    width: "100%",
-    display: "flex",
-    justifyContent: "center",
-  }}
->
-                  <div
-                   onClick={() => navigate(`/${item.key}`)}
-                    role="button"
-                    tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      navigate(`/${item.key}`);
-                    }
-                  }}
-                 className="group relative cursor-pointer overflow-hidden
-                      w-full
-                      max-w-[720px]
-                      rounded-[20px]
-                      bg-white
-                      px-6
-                      sm:px-8
-                      py-6
-                      shadow-md
-                      border
-                      text-center
-                      hover:-translate-y-2
-                      hover:shadow-[0_20px_45px_rgba(0,0,0,.12)]
-                      transition-all
-                      duration-500
-                      ease-out" >
-
-                                          {/* خلفية متدرجة عند الهوفر */}
-                    <div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                      style={{ background: "linear-gradient(135deg, rgba(176,141,87,.07), transparent)" }}
-                    />
-
-                    <div className="relative flex flex-col items-center text-center">
-                      <div
-                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mb-3 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300"
-                        style={{ backgroundColor: COFFEE.gold }}
-                      >
-                        <Icon className="w-6 h-6" style={{ color: COFFEE.darkest }} />
-                      </div>
-
-                      <h3 className="text-lg sm:text-2xl font-extrabold mb-1.5" style={{ color: COFFEE.dark }}>
-                        {item.title}
-                      </h3>
-
-                      <div className="mb-3 h-[3px] w-12 rounded-full" style={{ background: COFFEE.gold }} />
-
-                      <p className="text-sm sm:text-base leading-6 font-semibold" style={{ color: "#454545" }}>
-                        {item.text}
-                      </p>
-
-                      <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-500 ease-out w-full">
-                        <div className="overflow-hidden">
-                          <p className="text-xs sm:text-sm leading-6 mt-3 pt-3 font-semibold border-t" style={{ color: COFFEE.mid, borderColor: "#f0e8da" }}>
-                            {item.detail}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
-
         </div>
       </section>
     </div>

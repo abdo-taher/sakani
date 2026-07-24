@@ -35,6 +35,7 @@ import {
 } from "../../utils/toast";
 import { uploadToCloudinary } from "../../services/cloudinaryService";
 import { numbersOnly } from "../../utils/numbersOnly";
+import { extractVideoThumbnail, blobToFile } from "../../utils/videoThumbnail";
 import MapPicker from "../common/MapPicker";
 
 const COFFEE = {
@@ -85,6 +86,7 @@ function PropertyFormWithMap({
     removeVideo: false,
     existingVideoUrl: null,
     existingVideoPublicId: null,
+    videoThumbnails: [],
   });
 
   useEffect(() => {
@@ -167,9 +169,25 @@ function PropertyFormWithMap({
     setPropertyData((prev) => ({ ...prev, images: [...prev.images, ...newFiles] }));
   };
 
-  const handleVideo = (e) => {
+  const handleVideo = async (e) => {
     const newFiles = Array.from(e.target.files);
     setPropertyData((prev) => ({ ...prev, videos: [...prev.videos, ...newFiles] }));
+
+    for (const file of newFiles) {
+      try {
+        const thumbBlob = await extractVideoThumbnail(file);
+        const thumbUrl = URL.createObjectURL(thumbBlob);
+        setPropertyData((prev) => ({
+          ...prev,
+          videoThumbnails: [...prev.videoThumbnails, { file, thumbUrl, thumbBlob }],
+        }));
+      } catch {
+        setPropertyData((prev) => ({
+          ...prev,
+          videoThumbnails: [...prev.videoThumbnails, { file, thumbUrl: null, thumbBlob: null }],
+        }));
+      }
+    }
   };
 
   const removeNewImage = (index) => {
@@ -180,10 +198,15 @@ function PropertyFormWithMap({
   };
 
   const removeNewVideo = (index) => {
-    setPropertyData((prev) => ({
-      ...prev,
-      videos: prev.videos.filter((_, i) => i !== index),
-    }));
+    setPropertyData((prev) => {
+      const thumb = prev.videoThumbnails[index];
+      if (thumb?.thumbUrl) URL.revokeObjectURL(thumb.thumbUrl);
+      return {
+        ...prev,
+        videos: prev.videos.filter((_, i) => i !== index),
+        videoThumbnails: prev.videoThumbnails.filter((_, i) => i !== index),
+      };
+    });
   };
 
   const removeExistingImage = (id) => {
@@ -346,6 +369,24 @@ function PropertyFormWithMap({
             false,
             "video"
           );
+
+          const thumbEntry = propertyData.videoThumbnails.find(
+            (t) => t.file === video
+          );
+          if (thumbEntry?.thumbBlob) {
+            const thumbFile = blobToFile(thumbEntry.thumbBlob, `${video.name.replace(/\.[^.]+$/, "")}_thumb.jpg`);
+            const uploadedThumb = await uploadToCloudinary(thumbFile, "sakani/properties/thumbnails");
+            await uploadPropertyImage(
+              newPropertyId,
+              uploadedThumb.secure_url,
+              uploadedThumb.public_id,
+              false,
+              "image",
+              "property",
+              uploadResult.public_id
+            );
+          }
+
           uploadedCount++;
           setSavingMessage(`جاري الرفع (${uploadedCount}/${totalMedia})...`);
         } catch (videoError) {
@@ -781,22 +822,32 @@ function PropertyFormWithMap({
               />
               {propertyData.videos.length > 0 && (
                 <div className="flex flex-wrap gap-3 mt-3">
-                  {propertyData.videos.map((file, idx) => (
-                    <div key={idx} className="relative group">
-                      <video
-                        src={URL.createObjectURL(file)}
-                        className="w-32 h-20 rounded-xl object-cover border-2 border-amber-600"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeNewVideo(idx)}
-                        className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold"
-                      >
-                        ✕
-                      </button>
-                      <div className="text-[10px] mt-1 text-gray-400 truncate max-w-[128px]">{file.name}</div>
-                    </div>
-                  ))}
+                  {propertyData.videos.map((file, idx) => {
+                    const thumb = propertyData.videoThumbnails[idx];
+                    return (
+                      <div key={idx} className="relative group">
+                        {thumb?.thumbUrl ? (
+                          <img
+                            src={thumb.thumbUrl}
+                            alt=""
+                            className="w-32 h-20 rounded-xl object-cover border-2 border-amber-600"
+                          />
+                        ) : (
+                          <div className="w-32 h-20 rounded-xl border-2 border-amber-600 flex items-center justify-center bg-stone-100">
+                            <Video className="w-6 h-6 text-stone-400" />
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeNewVideo(idx)}
+                          className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold"
+                        >
+                          ✕
+                        </button>
+                        <div className="text-[10px] mt-1 text-gray-400 truncate max-w-[128px]">{file.name}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

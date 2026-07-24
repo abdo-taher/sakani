@@ -39,6 +39,7 @@ import {
 import { uploadToCloudinary } from "../../services/cloudinaryService";
 import { numbersOnly } from "../../utils/numbersOnly";
 import { fmtPrice } from "../../utils/helpers";
+import { extractVideoThumbnail, blobToFile } from "../../utils/videoThumbnail";
 
 const COFFEE = {
   dark: "#3B2618",
@@ -90,6 +91,7 @@ function PropertyForm({
     removeVideo: false,
     existingVideoUrl: null,
     existingVideoPublicId: null,
+    videoThumbnails: [],
     has_detailed_rooms: false,
     roomsData: [],
   });
@@ -194,16 +196,37 @@ function PropertyForm({
     setPropertyData((prev) => ({ ...prev, images: [...prev.images, ...newFiles] }));
   };
 
-  const handleVideo = (e) => {
+  const handleVideo = async (e) => {
     const newFiles = Array.from(e.target.files);
     setPropertyData((prev) => ({ ...prev, videos: [...prev.videos, ...newFiles] }));
+
+    for (const file of newFiles) {
+      try {
+        const thumbBlob = await extractVideoThumbnail(file);
+        const thumbUrl = URL.createObjectURL(thumbBlob);
+        setPropertyData((prev) => ({
+          ...prev,
+          videoThumbnails: [...prev.videoThumbnails, { file, thumbUrl, thumbBlob }],
+        }));
+      } catch {
+        setPropertyData((prev) => ({
+          ...prev,
+          videoThumbnails: [...prev.videoThumbnails, { file, thumbUrl: null, thumbBlob: null }],
+        }));
+      }
+    }
   };
 
   const removeNewVideo = (index) => {
-    setPropertyData((prev) => ({
-      ...prev,
-      videos: prev.videos.filter((_, i) => i !== index),
-    }));
+    setPropertyData((prev) => {
+      const thumb = prev.videoThumbnails[index];
+      if (thumb?.thumbUrl) URL.revokeObjectURL(thumb.thumbUrl);
+      return {
+        ...prev,
+        videos: prev.videos.filter((_, i) => i !== index),
+        videoThumbnails: prev.videoThumbnails.filter((_, i) => i !== index),
+      };
+    });
   };
 
   const removeNewImage = (index) => {
@@ -387,6 +410,24 @@ function PropertyForm({
             false,
             "video"
           );
+
+          const thumbEntry = propertyData.videoThumbnails.find(
+            (t) => t.file === video
+          );
+          if (thumbEntry?.thumbBlob) {
+            const thumbFile = blobToFile(thumbEntry.thumbBlob, `${video.name.replace(/\.[^.]+$/, "")}_thumb.jpg`);
+            const uploadedThumb = await uploadToCloudinary(thumbFile, "sakani/properties/thumbnails");
+            await uploadPropertyImage(
+              property.id,
+              uploadedThumb.secure_url,
+              uploadedThumb.public_id,
+              false,
+              "image",
+              "property",
+              uploaded.public_id
+            );
+          }
+
           uploadedCount++;
         }
 
@@ -437,6 +478,24 @@ function PropertyForm({
                   false,
                   "video"
                 );
+
+                const thumbEntry = propertyData.videoThumbnails.find(
+                  (t) => t.file === video
+                );
+                if (thumbEntry?.thumbBlob) {
+                  const thumbFile = blobToFile(thumbEntry.thumbBlob, `${video.name.replace(/\.[^.]+$/, "")}_thumb.jpg`);
+                  const uploadedThumb = await uploadToCloudinary(thumbFile, "sakani/properties/thumbnails");
+                  await uploadPropertyImage(
+                    propertyId,
+                    uploadedThumb.secure_url,
+                    uploadedThumb.public_id,
+                    false,
+                    "image",
+                    "property",
+                    uploaded.public_id
+                  );
+                }
+
                 uploadedCount++;
               }
 
@@ -1098,23 +1157,33 @@ function PropertyForm({
                   />
                   {propertyData.videos.length > 0 && (
                     <div className="flex flex-wrap gap-3 mt-4">
-                      {propertyData.videos.map((file, idx) => (
-                        <div key={idx} className="relative group">
-                          <video
-                            src={URL.createObjectURL(file)}
-                            className="w-32 h-20 rounded-xl object-cover border-2"
-                            style={{ borderColor: COFFEE.gold }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeNewVideo(idx)}
-                            className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold hover:bg-red-600"
-                          >
-                            ✕
-                          </button>
-                          <div className="text-[10px] mt-1 text-stone-400 truncate max-w-[128px]">{file.name}</div>
-                        </div>
-                      ))}
+                      {propertyData.videos.map((file, idx) => {
+                        const thumb = propertyData.videoThumbnails[idx];
+                        return (
+                          <div key={idx} className="relative group">
+                            {thumb?.thumbUrl ? (
+                              <img
+                                src={thumb.thumbUrl}
+                                alt=""
+                                className="w-32 h-20 rounded-xl object-cover border-2"
+                                style={{ borderColor: COFFEE.gold }}
+                              />
+                            ) : (
+                              <div className="w-32 h-20 rounded-xl border-2 flex items-center justify-center bg-stone-100" style={{ borderColor: COFFEE.gold }}>
+                                <Video className="w-6 h-6 text-stone-400" />
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removeNewVideo(idx)}
+                              className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold hover:bg-red-600"
+                            >
+                              ✕
+                            </button>
+                            <div className="text-[10px] mt-1 text-stone-400 truncate max-w-[128px]">{file.name}</div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

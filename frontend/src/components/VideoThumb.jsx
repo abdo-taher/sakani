@@ -1,12 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import { Video } from "lucide-react";
 
-function VideoThumb({ src, className = "", alt = "" }) {
-  const [thumb, setThumb] = useState(null);
+function VideoThumb({ src, posterUrl, className = "", alt = "" }) {
+  const [thumb, setThumb] = useState(posterUrl || null);
   const [failed, setFailed] = useState(false);
   const abortRef = useRef(false);
 
   useEffect(() => {
+    if (posterUrl) {
+      setThumb(posterUrl);
+      setFailed(false);
+      return;
+    }
     if (!src) { setFailed(true); return; }
     abortRef.current = false;
     setThumb(null);
@@ -37,7 +42,7 @@ function VideoThumb({ src, className = "", alt = "" }) {
       v.load();
       v.remove();
     };
-  }, [src]);
+  }, [src, posterUrl]);
 
   if (thumb) {
     return <img src={thumb} alt={alt} className={className} loading="lazy" />;

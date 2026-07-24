@@ -24,7 +24,11 @@ function RelatedPropertiesSection({ propertyId, favorites, onToggleFav }) {
     load();
   }, [propertyId]);
 
+  const MAX_RELATED = 5;
+
   if (loading || properties.length === 0) return null;
+
+  const displayProperties = properties.slice(0, MAX_RELATED);
 
   return (
     <section className="py-8 px-4 sm:px-6 max-w-6xl mx-auto" dir="rtl">
@@ -45,7 +49,7 @@ function RelatedPropertiesSection({ propertyId, favorites, onToggleFav }) {
       </Reveal>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {properties.map((p, i) => (
+        {displayProperties.map((p, i) => (
           <Reveal key={p.id} delay={i * 80}>
             <PropertyShowcaseCard
               p={p}

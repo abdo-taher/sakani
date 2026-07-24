@@ -30,6 +30,12 @@ function PropertyCard({ p, isFav, onToggleFav }) {
     ? (firstVideo ? firstVideo.image_url : p.video_url)
     : null;
 
+  const videoThumbnail = firstVideo?.image_public_id
+    ? p.images?.find(
+        (img) => img.media_type === "image" && img.caption === firstVideo.image_public_id
+      )?.image_url
+    : null;
+
   const status = STATUS_LABELS[p.status] || STATUS_LABELS.available;
 
   return (
@@ -62,6 +68,7 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         {mainVideo ? (
           <VideoThumb
             src={mainVideo}
+            posterUrl={videoThumbnail}
             alt={p.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
@@ -129,15 +136,19 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         </div>
 
         <div className="flex items-center justify-between text-xs text-stone-500 mb-3 border-t border-b py-2" style={{ borderColor: "#f2f2f2" }}>
-          <div className="flex items-center gap-1">
-            <Bed className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
-            {p.rooms}
-          </div>
-          <div className="flex items-center gap-1">
-            <Bath className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
-            {p.bathrooms}
-          </div>
-          {p.category?.slug !== "rent" && p.area && (
+          {p.rooms && p.rooms > 0 && (
+            <div className="flex items-center gap-1">
+              <Bed className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
+              {p.rooms}
+            </div>
+          )}
+          {p.bathrooms && p.bathrooms > 0 && (
+            <div className="flex items-center gap-1">
+              <Bath className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
+              {p.bathrooms}
+            </div>
+          )}
+          {p.category?.slug !== "rent" && p.area && p.area > 0 && (
             <div className="flex items-center gap-1">
               <Maximize className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
               {p.area} م²

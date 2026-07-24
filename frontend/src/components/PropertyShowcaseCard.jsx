@@ -47,6 +47,12 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
   const mainImage = !imgError && firstImage ? firstImage.image_url || firstImage.path : null;
   const mainVideo = hasVideo ? (firstVideo ? firstVideo.image_url : p.video_url) : null;
 
+  const videoThumbnail = firstVideo?.image_public_id
+    ? p.images?.find(
+        (img) => img.media_type === "image" && img.caption === firstVideo.image_public_id
+      )?.image_url
+    : null;
+
   const status = STATUS_LABELS[p.status] || STATUS_LABELS.available;
   const category = CATEGORY_CONFIG[p.category?.slug] || CATEGORY_CONFIG.sell;
   const isFeatured = p.featured;
@@ -86,6 +92,7 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
         {mainVideo ? (
           <VideoThumb
             src={mainVideo}
+            posterUrl={videoThumbnail}
             alt={p.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
@@ -159,19 +166,19 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
 
         {/* Stats row */}
         <div className="flex items-center justify-between text-xs mb-3 border-t border-b py-2" style={{ borderColor: "#f2f2f2", color: "#777" }}>
-          {p.rooms > 0 && (
+          {p.rooms && p.rooms > 0 && (
             <div className="flex items-center gap-1">
               <Bed className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
               {p.rooms}
             </div>
           )}
-          {p.bathrooms > 0 && (
+          {p.bathrooms && p.bathrooms > 0 && (
             <div className="flex items-center gap-1">
               <Bath className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
               {p.bathrooms}
             </div>
           )}
-          {!isRent && p.area && (
+          {!isRent && p.area && p.area > 0 && (
             <div className="flex items-center gap-1">
               <Maximize className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
               {p.area} م²
