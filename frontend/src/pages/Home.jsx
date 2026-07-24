@@ -260,6 +260,53 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
         </div>
       </section>
 
+      {/* ---------------------------- فيديو تعريفي ----------------------------- */}
+      <section className="py-10 sm:py-16 px-4 sm:px-6 bg-gray-100" dir="rtl">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl font-extrabold mb-4" style={{ color: COFFEE.dark }}>
+                شاهد قصة نجاحنا
+              </h2>
+              <p className="text-sm sm:text-base max-w-2xl mx-auto text-gray-600 leading-relaxed">
+                تعرف على سكني من خلال فيديو تعريفي يوضح رحلتنا وإنجازاتنا في السوق العقاري
+              </p>
+            </div>
+          </Reveal>
+
+          <Reveal delay={200}>
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black group cursor-pointer">
+              {/* Video */}
+              <video
+                className="w-full h-64 sm:h-80 md:h-96 object-cover transition-transform duration-500 group-hover:scale-105"
+                src="/intro-video.mp4"
+                poster="/video-thumbnail.jpg"
+                controls
+                preload="metadata"
+                onError={(e) => { 
+                  e.target.style.display = "none";
+                  e.target.nextSibling.style.display = "flex";
+                }}
+              />
+              
+              {/* Fallback when video fails to load */}
+              <div 
+                className="hidden w-full h-64 sm:h-80 md:h-96 bg-gradient-to-br from-gray-800 to-gray-900 flex-col items-center justify-center text-white"
+              >
+                <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mb-4 backdrop-blur-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                </div>
+                <p className="text-lg font-bold">فيديو تعريفي بسكني</p>
+                <p className="text-sm text-white/70 mt-2">قريباً...</p>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* --------------------------- خدماتنا -------------------------- */}
       <section className="py-10 sm:py-14 px-4 sm:px-6" style={{ backgroundColor: COFFEE.creamSoft }} dir="rtl">
         <div className="max-w-6xl mx-auto">
