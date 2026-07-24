@@ -83,9 +83,8 @@ function Home({ properties = [], favorites, onToggleFav, onOpen }) {
       >
         <video
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out"
-          style={{ transform: `scale(1.08) translate(${heroTilt.x * 0.6}px, ${heroTilt.y * 0.6}px)` }}
+          style={{ transform: `scale(1.08) translate(${heroTilt.x * 0.6}px, ${heroTilt.y * 0.6}px)`, backgroundColor: "#2B1B12" }}
           src="/hero.mp4"
-          poster="https://picsum.photos/seed/herohouse/1600/900"
           autoPlay
           muted
           loop
