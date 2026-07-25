@@ -187,11 +187,11 @@ function PublicPropertyDetail() {
     <div className="min-h-screen" dir="rtl">
       <div className="p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-8 max-w-6xl mx-auto">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-xs sm:text-sm" style={{ color: COFFEE.stone }}>
-          <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:underline hover:opacity-80 transition">
+        <nav className="flex items-center gap-1.5 text-xs sm:text-sm overflow-x-auto pb-1 whitespace-nowrap" style={{ color: COFFEE.stone }}>
+          <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:underline hover:opacity-80 transition shrink-0">
             <Home className="w-3.5 h-3.5" /> الرئيسية
           </button>
-          <ChevronLeft className="w-2.5 h-2.5" />
+          <ChevronLeft className="w-2.5 h-2.5 shrink-0" />
           {property.category?.slug === "rent" ? (
             <>
               <button onClick={() => navigate("/rent")} className="hover:underline hover:opacity-80 transition">الإيجار</button>
@@ -209,7 +209,7 @@ function PublicPropertyDetail() {
               <ChevronLeft className="w-2.5 h-2.5" />
             </>
           ) : null}
-          <span className="font-bold" style={{ color: COFFEE.dark }}>{property.title}</span>
+          <span className="font-bold shrink-0" style={{ color: COFFEE.dark }}>{property.title}</span>
         </nav>
 
         {/* Title + Status */}
@@ -236,7 +236,7 @@ function PublicPropertyDetail() {
           {/* Slider - 3 cols */}
           <div className="lg:col-span-3 space-y-4 sm:space-y-6">
             {/* Main media */}
-            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100" style={{ aspectRatio: window.innerWidth < 640 ? "4/3" : "16/10" }}>
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 aspect-[4/3] sm:aspect-[16/10]">
               {currentMedia.type === "video" ? (
                 <video key={currentMedia.url} src={currentMedia.url} controls preload="none" className="w-full h-full object-cover" />
               ) : (
@@ -466,7 +466,7 @@ function PublicPropertyDetail() {
             )}
 
             {/* Info Cards */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               {[
                 { icon: Layers, label: "القسم", value: property.category?.name },
                 { icon: Building2, label: "نوع العقار", value: property.propertyType?.name },
