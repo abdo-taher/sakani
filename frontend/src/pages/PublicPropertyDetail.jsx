@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -18,6 +18,8 @@ import {
   ImageIcon,
   Tag,
   Home,
+  X,
+  ZoomIn,
 } from "lucide-react";
 import usePageTitle from "../hooks/usePageTitle";
 import { getPropertyById, recordView } from "../services/propertyService";
@@ -49,6 +51,129 @@ const FURNISHING_MAP = {
   unfurnished: "غير مفروش",
 };
 
+function MediaLightbox({ media, initialIndex, onClose }) {
+  const [index, setIndex] = useState(initialIndex);
+  const touchStart = useRef(null);
+  const touchDelta = useRef(0);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") setIndex((i) => (i + 1) % media.length);
+      if (e.key === "ArrowRight") setIndex((i) => (i - 1 + media.length) % media.length);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [media.length, onClose]);
+
+  const onTouchStart = useCallback((e) => {
+    touchStart.current = e.touches[0].clientX;
+    touchDelta.current = 0;
+  }, []);
+
+  const onTouchMove = useCallback((e) => {
+    if (touchStart.current != null) {
+      touchDelta.current = e.touches[0].clientX - touchStart.current;
+    }
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (Math.abs(touchDelta.current) > 50) {
+      if (touchDelta.current > 0) {
+        setIndex((i) => (i - 1 + media.length) % media.length);
+      } else {
+        setIndex((i) => (i + 1) % media.length);
+      }
+    }
+    touchStart.current = null;
+    touchDelta.current = 0;
+  }, [media.length]);
+
+  const current = media[index];
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] bg-black/95 flex flex-col"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      <div className="flex items-center justify-between px-3 py-3 sm:px-6 sm:py-4 shrink-0">
+        <button onClick={onClose} className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition">
+          <X size={22} />
+        </button>
+        <span className="text-white/70 text-xs sm:text-sm font-bold">
+          {index + 1} / {media.length}
+        </span>
+        <div className="w-10 h-10 sm:w-11 sm:h-11" />
+      </div>
+
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-12 pb-4 sm:pb-8 min-h-0">
+        {current.type === "video" ? (
+          <video
+            key={current.url}
+            src={current.url}
+            controls
+            autoPlay
+            className="max-w-full max-h-full object-contain rounded-lg"
+          />
+        ) : (
+          <img
+            src={current.url}
+            alt=""
+            className="max-w-full max-h-full object-contain rounded-lg select-none"
+            draggable={false}
+          />
+        )}
+      </div>
+
+      {media.length > 1 && (
+        <>
+          <button
+            onClick={() => setIndex((i) => (i + 1) % media.length)}
+            className="absolute left-2 sm:left-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/15 flex items-center justify-center text-white hover:bg-white/30 transition"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            onClick={() => setIndex((i) => (i - 1 + media.length) % media.length)}
+            className="absolute right-2 sm:right-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/15 flex items-center justify-center text-white hover:bg-white/30 transition"
+          >
+            <ChevronRight size={24} />
+          </button>
+        </>
+      )}
+
+      {media.length > 1 && (
+        <div className="flex items-center justify-center gap-2 pb-4 sm:pb-6 overflow-x-auto px-4 shrink-0">
+          {media.map((m, idx) => (
+            <button
+              key={idx}
+              onClick={() => setIndex(idx)}
+              className={`shrink-0 w-12 h-10 sm:w-14 sm:h-12 rounded-lg overflow-hidden border-2 transition ${
+                idx === index ? "border-white" : "border-white/30 opacity-60"
+              }`}
+            >
+              {m.type === "video" ? (
+                <div className="relative w-full h-full bg-black flex items-center justify-center">
+                  <Video size={12} color="white" />
+                </div>
+              ) : (
+                <img src={m.url} alt="" className="w-full h-full object-cover" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PublicPropertyDetail() {
   usePageTitle("تفاصيل العقار — سكني");
   const { id } = useParams();
@@ -66,6 +191,7 @@ function PublicPropertyDetail() {
   const [reserveSuccess, setReserveSuccess] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [reservationType, setReservationType] = useState("property");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     loadProperty();
@@ -185,9 +311,9 @@ function PublicPropertyDetail() {
 
   return (
     <div className="min-h-screen" dir="rtl">
-      <div className="p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-8 max-w-6xl mx-auto">
+      <div className="p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 lg:space-y-8 max-w-6xl mx-auto">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-xs sm:text-sm overflow-x-auto pb-1 whitespace-nowrap" style={{ color: COFFEE.stone }}>
+        <nav className="flex items-center gap-1.5 text-[11px] sm:text-sm overflow-x-auto pb-1 whitespace-nowrap" style={{ color: COFFEE.stone }}>
           <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:underline hover:opacity-80 transition shrink-0">
             <Home className="w-3.5 h-3.5" /> الرئيسية
           </button>
@@ -213,18 +339,18 @@ function PublicPropertyDetail() {
         </nav>
 
         {/* Title + Status */}
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold leading-tight" style={{ color: COFFEE.dark }}>
+            <h1 className="text-lg sm:text-2xl lg:text-3xl font-extrabold leading-tight break-words" style={{ color: COFFEE.dark }}>
               {property.title}
             </h1>
-            <p className="flex items-center gap-1.5 mt-1.5 text-xs sm:text-sm" style={{ color: COFFEE.mid }}>
+            <p className="flex items-center gap-1.5 mt-1 sm:mt-1.5 text-[11px] sm:text-sm" style={{ color: COFFEE.mid }}>
               <MapPin size={14} className="shrink-0" />
               <span className="truncate">{property.location?.name}</span>
             </p>
           </div>
           <div
-            className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold text-xs sm:text-sm shrink-0"
+            className="px-2.5 py-1 sm:px-4 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm shrink-0"
             style={{ background: statusInfo.bg, color: statusInfo.color }}
           >
             {statusInfo.label}
@@ -232,30 +358,39 @@ function PublicPropertyDetail() {
         </div>
 
         {/* Slider + Details */}
-        <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
+        <div className="grid lg:grid-cols-5 gap-5 sm:gap-6 lg:gap-8">
           {/* Slider - 3 cols */}
-          <div className="lg:col-span-3 space-y-4 sm:space-y-6">
+          <div className="lg:col-span-3 space-y-3 sm:space-y-4 lg:space-y-6">
             {/* Main media */}
-            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 aspect-[4/3] sm:aspect-[16/10]">
+            <div
+              className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 aspect-[4/3] sm:aspect-[16/10] cursor-pointer group"
+              onClick={() => setLightboxOpen(true)}
+            >
               {currentMedia.type === "video" ? (
                 <video key={currentMedia.url} src={currentMedia.url} controls preload="none" className="w-full h-full object-cover" />
               ) : (
                 <img src={currentMedia.url} alt={property.title} loading="lazy" className="w-full h-full object-cover" />
               )}
 
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                  <ZoomIn size={20} className="text-white" />
+                </div>
+              </div>
+
               {media.length > 1 && (
                 <>
                   <button
-                    onClick={() => setMediaIndex((i) => (i + 1) % media.length)}
-                    className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60"
+                    onClick={(e) => { e.stopPropagation(); setMediaIndex((i) => (i + 1) % media.length); }}
+                    className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition"
                   >
-                    <ChevronLeft size={18} />
+                    <ChevronLeft size={20} />
                   </button>
                   <button
-                    onClick={() => setMediaIndex((i) => (i - 1 + media.length) % media.length)}
-                    className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60"
+                    onClick={(e) => { e.stopPropagation(); setMediaIndex((i) => (i - 1 + media.length) % media.length); }}
+                    className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition"
                   >
-                    <ChevronRight size={18} />
+                    <ChevronRight size={20} />
                   </button>
                 </>
               )}
@@ -275,7 +410,7 @@ function PublicPropertyDetail() {
 
             {/* Thumbnails */}
             {media.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
                 {media.map((m, idx) => (
                   <button
                     key={idx}
@@ -311,9 +446,9 @@ function PublicPropertyDetail() {
             {property.amenities?.length > 0 && (
               <div>
                 <h3 className="font-bold mb-2 sm:mb-3 text-sm sm:text-base" style={{ color: COFFEE.dark }}>المميزات والمرافق</h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {property.amenities.map((a) => (
-                    <span key={a.id} className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold" style={{ background: COFFEE.cream, color: COFFEE.dark }}>
+                    <span key={a.id} className="px-2.5 py-1 sm:px-4 sm:py-2 rounded-xl text-[11px] sm:text-sm font-bold" style={{ background: COFFEE.cream, color: COFFEE.dark }}>
                       {a.name}
                     </span>
                   ))}
@@ -325,9 +460,9 @@ function PublicPropertyDetail() {
             {property.tags?.length > 0 && (
               <div>
                 <h3 className="font-bold mb-2 sm:mb-3 text-sm sm:text-base" style={{ color: COFFEE.dark }}>الوسوم</h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {property.tags.map((t) => (
-                    <span key={t.id} className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold" style={{ background: COFFEE.gold, color: "white" }}>
+                    <span key={t.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-xl text-[11px] sm:text-sm font-bold" style={{ background: COFFEE.gold, color: "white" }}>
                       <Tag size={13} />
                       {t.name}
                     </span>
@@ -372,26 +507,26 @@ function PublicPropertyDetail() {
                           }
                         }}
                       >
-                        <div className="flex gap-3">
+                        <div className="flex gap-2.5 sm:gap-3">
                           {primaryImg ? (
                             <img
                               src={primaryImg.image_url}
                               alt={room.name}
-                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0"
+                              className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0"
                             />
                           ) : (
                             <div
-                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center shrink-0"
+                              className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center shrink-0"
                               style={{ background: COFFEE.cream }}
                             >
                               <ImageIcon size={22} color={COFFEE.gold} />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
                               <p className="font-bold text-sm sm:text-base" style={{ color: COFFEE.dark }}>{room.name}</p>
                               <span
-                                className="px-2 py-0.5 rounded text-[10px] font-bold"
+                                className="px-1.5 py-0.5 sm:px-2 rounded text-[10px] font-bold"
                                 style={{ background: roomStatus.bg, color: roomStatus.color }}
                               >
                                 {roomStatus.label}
@@ -432,14 +567,14 @@ function PublicPropertyDetail() {
           </div>
 
           {/* Details + Reservation - 2 cols */}
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-5 lg:space-y-6">
             {/* Price */}
             {isRent && property.has_detailed_rooms ? (
-              <div className="rounded-2xl p-4 sm:p-6 text-center" style={{ background: "#FBF3DF" }}>
-                <p className="text-xs sm:text-sm font-bold mb-1" style={{ color: COFFEE.mid }}>
+              <div className="rounded-2xl p-4 sm:p-5 lg:p-6 text-center" style={{ background: "#FBF3DF" }}>
+                <p className="text-[11px] sm:text-sm font-bold mb-1" style={{ color: COFFEE.mid }}>
                   {selectedRoomId ? "سعر الغرفة المختارة" : "يبدأ من"}
                 </p>
-                <p className="text-2xl sm:text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
                   {selectedRoomId ? (() => {
                     const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
                     const selectedRoom = rooms.find(r => r.id === selectedRoomId);
@@ -450,23 +585,23 @@ function PublicPropertyDetail() {
                     return prices.length > 0 ? `${fmtPrice(Math.min(...prices))}` : property.price && property.price > 0 ? `${fmtPrice(property.price)}` : "اتصل للسعر";
                   })()}
                 </p>
-                {selectedRoomId && (
+                {selectedRoomId != null && (
                   <p className="text-[10px] sm:text-xs mt-1" style={{ color: COFFEE.mid }}>الإيجار الشهري</p>
                 )}
               </div>
             ) : (
-              <div className="rounded-2xl p-4 sm:p-6 text-center" style={{ background: "#FBF3DF" }}>
-                <p className="text-xs sm:text-sm font-bold mb-1" style={{ color: COFFEE.mid }}>
+              <div className="rounded-2xl p-4 sm:p-5 lg:p-6 text-center" style={{ background: "#FBF3DF" }}>
+                <p className="text-[11px] sm:text-sm font-bold mb-1" style={{ color: COFFEE.mid }}>
                   {isRent ? "الإيجار الشهري" : "السعر"}
                 </p>
-                <p className="text-2xl sm:text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
-                  {fmtPrice(property.price)}
+                <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
+                  {property.price && property.price > 0 ? fmtPrice(property.price) : "اتصل للسعر"}
                 </p>
               </div>
             )}
 
             {/* Info Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-1.5 sm:gap-2 lg:gap-3">
               {[
                 { icon: Layers, label: "القسم", value: property.category?.name },
                 { icon: Building2, label: "نوع العقار", value: property.propertyType?.name },
@@ -477,134 +612,134 @@ function PublicPropertyDetail() {
                 { icon: Layers, label: "الدور", value: property.floor },
                 { icon: Paintbrush, label: "التشطيب", value: FINISHING_MAP[property.finishing] || property.finishing },
                 { icon: Sofa, label: "التأثيث", value: FURNISHING_MAP[property.furnishing] || property.furnishing },
-              ].map((item, idx) => (
-                <div key={idx} className="rounded-xl sm:rounded-2xl p-2.5 sm:p-3 border flex items-start gap-2" style={{ borderColor: "#f0ebe4", background: "white" }}>
-                  <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: COFFEE.cream }}>
-                    <item.icon size={13} color={COFFEE.gold} />
+              ].filter(item => item.value != null && item.value !== "" && item.value !== 0).map((item, idx) => (
+                <div key={idx} className="rounded-xl sm:rounded-2xl p-2 sm:p-2.5 lg:p-3 border flex items-start gap-1.5 sm:gap-2" style={{ borderColor: "#f0ebe4", background: "white" }}>
+                  <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: COFFEE.cream }}>
+                    <item.icon size={12} color={COFFEE.gold} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[9px] sm:text-[10px] font-bold" style={{ color: COFFEE.mid }}>{item.label}</p>
-                    <p className="text-xs sm:text-sm font-bold truncate" style={{ color: COFFEE.dark }}>{item.value || "—"}</p>
+                    <p className="text-[8px] sm:text-[10px] font-bold" style={{ color: COFFEE.mid }}>{item.label}</p>
+                    <p className="text-[10px] sm:text-xs lg:text-sm font-bold truncate" style={{ color: COFFEE.dark }}>{item.value}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Reservation Form */}
-              <div className="rounded-2xl border p-4 sm:p-5" style={{ borderColor: "#f0ebe4", background: "white" }}>
-                {reserveSuccess ? (
-                  <div className="text-center py-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: "#DCFCE7" }}>
-                      <CheckCircle2 className="w-7 h-7 sm:w-8 sm:h-8" style={{ color: "#16A34A" }} />
-                    </div>
-                    <h3 className="font-extrabold text-base sm:text-lg mb-2" style={{ color: COFFEE.dark }}>تم إرسال طلب الحجز</h3>
-                    <p className="text-xs sm:text-sm" style={{ color: COFFEE.mid }}>سنتواصل معك في أقرب وقت</p>
+            <div className="rounded-2xl border p-3 sm:p-4 lg:p-5" style={{ borderColor: "#f0ebe4", background: "white" }}>
+              {reserveSuccess ? (
+                <div className="text-center py-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: "#DCFCE7" }}>
+                    <CheckCircle2 className="w-7 h-7 sm:w-8 sm:h-8" style={{ color: "#16A34A" }} />
                   </div>
-                ) : (
-                  <>
-                    <h3 className="font-extrabold mb-3 sm:mb-4 text-sm sm:text-base" style={{ color: COFFEE.dark }}>احجز الآن</h3>
+                  <h3 className="font-extrabold text-base sm:text-lg mb-2" style={{ color: COFFEE.dark }}>تم إرسال طلب الحجز</h3>
+                  <p className="text-xs sm:text-sm" style={{ color: COFFEE.mid }}>سنتواصل معك في أقرب وقت</p>
+                </div>
+              ) : (
+                <>
+                  <h3 className="font-extrabold mb-3 sm:mb-4 text-sm sm:text-base" style={{ color: COFFEE.dark }}>احجز الآن</h3>
 
-                    {/* Reservation Type Toggle - only if property has detailed rooms */}
-                    {isRent && property.has_detailed_rooms && (() => {
-                      const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
-                      const availableRooms = rooms.filter((r) => r.status === "available");
-                      return availableRooms.length > 0 ? (
-                        <div className="flex gap-2 mb-4">
-                          <button
-                            onClick={() => { setReservationType("property"); setSelectedRoomId(null); setReserveSuccess(false); setAlreadyReserved(false); }}
-                            className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold border-2 transition"
-                            style={{
-                              borderColor: reservationType === "property" ? COFFEE.gold : "#f0ebe4",
-                              background: reservationType === "property" ? COFFEE.gold : "white",
-                              color: reservationType === "property" ? COFFEE.darkest : COFFEE.mid,
-                            }}
-                          >
-                            حجز بالشقة
-                          </button>
-                          <button
-                            onClick={() => { setReservationType("room"); setReserveSuccess(false); setAlreadyReserved(false); }}
-                            className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold border-2 transition"
-                            style={{
-                              borderColor: reservationType === "room" ? COFFEE.gold : "#f0ebe4",
-                              background: reservationType === "room" ? COFFEE.gold : "white",
-                              color: reservationType === "room" ? COFFEE.darkest : COFFEE.mid,
-                            }}
-                          >
-                            حجز بالغرفة
-                          </button>
-                        </div>
-                      ) : null;
-                    })()}
-
-                    {/* Show form for property reservation */}
-                    {(!isRent || !property.has_detailed_rooms || reservationType === "property" || selectedRoomId) && (
-                      <div className="space-y-2.5 sm:space-y-3">
-                        <input
-                          type="text"
-                          placeholder="الاسم الكامل"
-                          value={form.name}
-                          onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          className="w-full border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm outline-none focus:ring-2"
-                          style={{ borderColor: "#f0ebe4" }}
-                        />
-
-                        <div>
-                          <input
-                            type="tel"
-                            placeholder="01xxxxxxxxx"
-                            value={form.phone}
-                            dir="ltr"
-                            onChange={(e) => {
-                              const val = formatPhone(e.target.value);
-                              setForm({ ...form, phone: val });
-                              if (phoneError) setPhoneError(getPhoneError(val) || "");
-                              if (alreadyReserved) setAlreadyReserved(false);
-                            }}
-                            onBlur={() => checkIfReserved(form.phone)}
-                            className={`w-full border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm outline-none focus:ring-2 ${phoneError ? "border-red-400" : alreadyReserved ? "border-amber-400" : ""}`}
-                            style={!phoneError && !alreadyReserved ? { borderColor: "#f0ebe4" } : {}}
-                          />
-                          {phoneError && <p className="text-red-500 text-[10px] sm:text-xs mt-1 font-semibold">{phoneError}</p>}
-                          {alreadyReserved && !phoneError && (
-                            <p className="text-amber-600 text-[10px] sm:text-xs mt-1 font-semibold">لقد قمت بحجز هذا العقار بالفعل</p>
-                          )}
-                          {checking && !phoneError && (
-                            <p className="text-stone-400 text-[10px] sm:text-xs mt-1">جاري التحقق...</p>
-                          )}
-                        </div>
-
-                        <textarea
-                          placeholder="ملاحظات (اختياري)"
-                          value={form.message}
-                          onChange={(e) => setForm({ ...form, message: e.target.value })}
-                          rows={2}
-                          className="w-full border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm outline-none focus:ring-2 resize-none"
-                          style={{ borderColor: "#f0ebe4" }}
-                        />
-
+                  {/* Reservation Type Toggle */}
+                  {isRent && property.has_detailed_rooms && (() => {
+                    const rooms = Array.isArray(property.rooms) ? property.rooms : Array.isArray(property.detailed_rooms) ? property.detailed_rooms : [];
+                    const availableRooms = rooms.filter((r) => r.status === "available");
+                    return availableRooms.length > 0 ? (
+                      <div className="flex gap-2 mb-3 sm:mb-4">
                         <button
-                          onClick={handleReserve}
-                          disabled={submitting || alreadyReserved}
-                          className="w-full py-3 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm transition hover:scale-[1.01] disabled:opacity-60 disabled:hover:scale-100"
+                          onClick={() => { setReservationType("property"); setSelectedRoomId(null); setReserveSuccess(false); setAlreadyReserved(false); }}
+                          className="flex-1 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border-2 transition"
                           style={{
-                            backgroundColor: alreadyReserved ? "#16A34A" : COFFEE.gold,
-                            color: alreadyReserved ? "#fff" : COFFEE.darkest,
+                            borderColor: reservationType === "property" ? COFFEE.gold : "#f0ebe4",
+                            background: reservationType === "property" ? COFFEE.gold : "white",
+                            color: reservationType === "property" ? COFFEE.darkest : COFFEE.mid,
                           }}
                         >
-                          {alreadyReserved ? "تم الحجز بالفعل" : submitting ? "جاري الإرسال..." : "إرسال طلب الحجز"}
+                          حجز بالشقة
+                        </button>
+                        <button
+                          onClick={() => { setReservationType("room"); setReserveSuccess(false); setAlreadyReserved(false); }}
+                          className="flex-1 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border-2 transition"
+                          style={{
+                            borderColor: reservationType === "room" ? COFFEE.gold : "#f0ebe4",
+                            background: reservationType === "room" ? COFFEE.gold : "white",
+                            color: reservationType === "room" ? COFFEE.darkest : COFFEE.mid,
+                          }}
+                        >
+                          حجز بالغرفة
                         </button>
                       </div>
-                    )}
+                    ) : null;
+                  })()}
 
-                    {/* Room selection prompt for حجز بالغرفة */}
-                    {isRent && property.has_detailed_rooms && reservationType === "room" && !selectedRoomId && (
-                      <p className="text-center text-xs sm:text-sm mt-3" style={{ color: COFFEE.stone }}>
-                        اختر غرفة من القائمة أعلاه ثم أكمل بيانات الحجز
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
+                  {/* Show form for property reservation */}
+                  {(!isRent || !property.has_detailed_rooms || reservationType === "property" || selectedRoomId) && (
+                    <div className="space-y-2.5 sm:space-y-3">
+                      <input
+                        type="text"
+                        placeholder="الاسم الكامل"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        className="w-full border rounded-xl px-3 py-3 sm:px-4 sm:py-3 text-sm outline-none focus:ring-2"
+                        style={{ borderColor: "#f0ebe4" }}
+                      />
+
+                      <div>
+                        <input
+                          type="tel"
+                          placeholder="01xxxxxxxxx"
+                          value={form.phone}
+                          dir="ltr"
+                          onChange={(e) => {
+                            const val = formatPhone(e.target.value);
+                            setForm({ ...form, phone: val });
+                            if (phoneError) setPhoneError(getPhoneError(val) || "");
+                            if (alreadyReserved) setAlreadyReserved(false);
+                          }}
+                          onBlur={() => checkIfReserved(form.phone)}
+                          className={`w-full border rounded-xl px-3 py-3 sm:px-4 sm:py-3 text-sm outline-none focus:ring-2 ${phoneError ? "border-red-400" : alreadyReserved ? "border-amber-400" : ""}`}
+                          style={!phoneError && !alreadyReserved ? { borderColor: "#f0ebe4" } : {}}
+                        />
+                        {phoneError && <p className="text-red-500 text-[10px] sm:text-xs mt-1 font-semibold">{phoneError}</p>}
+                        {alreadyReserved && !phoneError && (
+                          <p className="text-amber-600 text-[10px] sm:text-xs mt-1 font-semibold">لقد قمت بحجز هذا العقار بالفعل</p>
+                        )}
+                        {checking && !phoneError && (
+                          <p className="text-stone-400 text-[10px] sm:text-xs mt-1">جاري التحقق...</p>
+                        )}
+                      </div>
+
+                      <textarea
+                        placeholder="ملاحظات (اختياري)"
+                        value={form.message}
+                        onChange={(e) => setForm({ ...form, message: e.target.value })}
+                        rows={2}
+                        className="w-full border rounded-xl px-3 py-3 sm:px-4 sm:py-3 text-sm outline-none focus:ring-2 resize-none"
+                        style={{ borderColor: "#f0ebe4" }}
+                      />
+
+                      <button
+                        onClick={handleReserve}
+                        disabled={submitting || alreadyReserved}
+                        className="w-full py-3 sm:py-3.5 rounded-xl font-bold text-sm transition hover:scale-[1.01] disabled:opacity-60 disabled:hover:scale-100"
+                        style={{
+                          backgroundColor: alreadyReserved ? "#16A34A" : COFFEE.gold,
+                          color: alreadyReserved ? "#fff" : COFFEE.darkest,
+                        }}
+                      >
+                        {alreadyReserved ? "تم الحجز بالفعل" : submitting ? "جاري الإرسال..." : "إرسال طلب الحجز"}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Room selection prompt */}
+                  {isRent && property.has_detailed_rooms && reservationType === "room" && !selectedRoomId && (
+                    <p className="text-center text-xs sm:text-sm mt-3" style={{ color: COFFEE.stone }}>
+                      اختر غرفة من القائمة أعلاه ثم أكمل بيانات الحجز
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -615,6 +750,15 @@ function PublicPropertyDetail() {
         favorites={null}
         onToggleFav={null}
       />
+
+      {/* Media Lightbox */}
+      {lightboxOpen && (
+        <MediaLightbox
+          media={media}
+          initialIndex={mediaIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }

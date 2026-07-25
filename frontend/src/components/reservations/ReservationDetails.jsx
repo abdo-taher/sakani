@@ -27,7 +27,7 @@ function InfoRow({ icon: Icon, label, value }) {
       </div>
 
       <span className="font-bold text-stone-800 text-sm">
-        {value ?? "—"}
+        {value != null && value !== "" && value !== 0 ? value : "—"}
       </span>
     </div>
   );

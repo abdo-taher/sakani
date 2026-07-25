@@ -78,7 +78,7 @@ function InfoCard({ icon: Icon, label, value }) {
           {label}
         </p>
         <p className="font-bold truncate" style={{ color: COFFEE.dark }}>
-          {value || "—"}
+          {value != null && value !== "" && value !== 0 ? value : "—"}
         </p>
       </div>
     </div>

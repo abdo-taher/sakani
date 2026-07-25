@@ -62,7 +62,7 @@ function PropertyModal({
     { icon: Bath, label: "الحمامات", value: property.bathrooms },
     { icon: Layers, label: "الدور", value: property.floor },
     { icon: Sun, label: "البلكونات", value: property.balconies },
-  ];
+  ].filter((s) => s.value != null && s.value !== "" && s.value !== 0);
 
   return (
     <div
@@ -195,7 +195,7 @@ function PropertyModal({
               >
                 <Icon className="w-6 h-6" style={{ color: COFFEE.gold }} />
                 <p className="font-extrabold text-2xl leading-none" style={{ color: COFFEE.dark }}>
-                  {value ?? "—"}
+                  {value != null && value !== "" && value !== 0 ? value : "—"}
                 </p>
                 <p className="text-sm text-stone-400 font-medium">{label}</p>
               </div>
