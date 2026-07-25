@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import usePageTitle from "../hooks/usePageTitle";
+import { useNavigate } from "react-router-dom";
 
 import {
   Phone,
   MapPin,
   Image as ImageIcon,
+  Home,
+  ChevronLeft,
 } from "lucide-react";
 
 import Reveal from "../components/Reveal";
@@ -19,6 +22,7 @@ import { formatPhone, getPhoneError } from "../utils/phoneValidator";
 /* -------------------------------------------------------------------- */
 function Contact() {
   usePageTitle("تواصل معنا — سكني");
+  const navigate = useNavigate();
   const [sent, setSent] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -32,6 +36,15 @@ function Contact() {
       dir="rtl"
     >
       <div className="w-full max-w-3xl mx-auto">
+        {/* Breadcrumb */}
+        <nav className="flex items-center justify-center gap-1.5 text-xs sm:text-sm mb-6" style={{ color: COFFEE.stone }}>
+          <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:underline hover:opacity-80 transition" style={{ color: COFFEE.dark }}>
+            <Home className="w-3.5 h-3.5" /> الرئيسية
+          </button>
+          <ChevronLeft className="w-2.5 h-2.5" />
+          <span className="font-bold" style={{ color: COFFEE.gold }}>تواصل معنا</span>
+        </nav>
+
         <h1
           className="animate-heroFade text-2xl sm:text-4xl font-extrabold mb-3 text-center"
           style={{ color: COFFEE.dark }}

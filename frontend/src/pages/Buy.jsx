@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ShoppingBag } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ShoppingBag, Home, ChevronLeft } from "lucide-react";
 import { COFFEE } from "../constants/constants";
 import usePageTitle from "../hooks/usePageTitle";
 import { getPropertiesByCategory } from "../services/propertyService";
@@ -7,6 +8,7 @@ import PropertySectionByLocation from "../components/PropertySectionByLocation";
 
 function Buy({ favorites, onToggleFav, onOpen }) {
   usePageTitle("شراء عقارات — سكني");
+  const navigate = useNavigate();
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,6 +29,15 @@ function Buy({ favorites, onToggleFav, onOpen }) {
   return (
     <div className="min-h-[70vh] pt-28 pb-14 px-4 sm:px-6 bg-white" dir="rtl">
       <div className="max-w-7xl mx-auto">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-xs sm:text-sm mb-4" style={{ color: COFFEE.stone }}>
+          <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:underline hover:opacity-80 transition" style={{ color: COFFEE.dark }}>
+            <Home className="w-3.5 h-3.5" /> الرئيسية
+          </button>
+          <ChevronLeft className="w-2.5 h-2.5" />
+          <span className="font-bold" style={{ color: COFFEE.gold }}>البيع</span>
+        </nav>
+
         <div className="flex items-center gap-3 mb-2 animate-heroFade">
           <div
             className="w-11 h-11 rounded-full flex items-center justify-center animate-float"

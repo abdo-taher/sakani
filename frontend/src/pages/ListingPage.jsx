@@ -15,10 +15,12 @@ function ListingPage({
   favorites,
   onToggleFav,
   onOpen,
+  breadcrumb,
 }) {
   return (
     <div className="min-h-[70vh] pt-28 pb-14 px-4 sm:px-6 bg-white" dir="rtl">
       <div className="max-w-7xl mx-auto">
+        {breadcrumb && <div className="mb-4">{breadcrumb}</div>}
 
         {/* عنوان الصفحة */}
         <div className="flex items-center gap-3 mb-2 animate-heroFade">

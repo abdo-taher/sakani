@@ -464,7 +464,7 @@ function PropertyDetail() {
                               <p className="text-sm font-bold" style={{ color: COFFEE.gold }}>
                                 {fmtPrice(room.price)}/شهر
                               </p>
-                              {room.area && (
+                              {room.area > 0 && (
                                 <p className="text-xs" style={{ color: COFFEE.stone }}>
                                   {room.area} م²
                                 </p>

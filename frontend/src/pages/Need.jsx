@@ -5,6 +5,7 @@ import {
   ShoppingBag,
   KeyRound,
   ChevronLeft,
+  Home,
 } from "lucide-react";
 
 import Reveal from "../components/Reveal";
@@ -47,6 +48,14 @@ function Need() {
       />
 
       <div className="relative max-w-4xl mx-auto text-center w-full">
+        {/* Breadcrumb */}
+        <nav className="flex items-center justify-center gap-1.5 text-xs sm:text-sm mb-6" style={{ color: COFFEE.stone }}>
+          <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:underline hover:opacity-80 transition" style={{ color: COFFEE.dark }}>
+            <Home className="w-3.5 h-3.5" /> الرئيسية
+          </button>
+          <ChevronLeft className="w-2.5 h-2.5" />
+          <span className="font-bold" style={{ color: COFFEE.gold }}>محتاج مساعدة</span>
+        </nav>
         <span
           className="animate-heroFade-1 inline-block text-xs font-bold tracking-wider px-4 py-1.5 rounded-full mb-5"
           style={{ backgroundColor: `${COFFEE.gold}22`, color: COFFEE.dark }}

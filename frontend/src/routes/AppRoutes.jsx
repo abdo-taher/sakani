@@ -6,6 +6,7 @@ import Need from "../pages/Need";
 import Sell from "../pages/Sell";
 import Buy from "../pages/Buy";
 import Rent from "../pages/Rent";
+import RentLocation from "../pages/RentLocation";
 import BuyRequestForm from "../components/BuyRequestForm";
 import RentRequestForm from "../components/RentRequestForm";
 import Contact from "../pages/Contact";
@@ -101,6 +102,16 @@ function AppRoutes({
             favorites={favorites}
             onToggleFav={onToggleFav}
             onOpen={onOpen}
+          />
+        }
+      />
+
+      <Route
+        path="/rent/:locationId"
+        element={
+          <RentLocation
+            favorites={favorites}
+            onToggleFav={onToggleFav}
           />
         }
       />

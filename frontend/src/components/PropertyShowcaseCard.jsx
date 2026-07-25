@@ -80,7 +80,7 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
       )}
 
       {/* Image / Video */}
-      <div className="relative w-full h-52 overflow-hidden bg-stone-100">
+      <div className="relative w-full h-44 sm:h-52 overflow-hidden bg-stone-100">
         {mainVideo ? (
           <VideoThumb
             src={mainVideo}
@@ -146,7 +146,7 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <h3 className="font-extrabold text-base mb-1 truncate group-hover:text-amber-800 transition-colors" style={{ color: COFFEE.dark }}>
           {p.title}
         </h3>
@@ -158,26 +158,26 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
 
         {/* Stats row */}
         <div className="flex items-center justify-between text-xs mb-3 border-t border-b py-2" style={{ borderColor: "#f2f2f2", color: "#777" }}>
-          {p.rooms && p.rooms > 0 && (
+          {p.rooms > 0 && (
             <div className="flex items-center gap-1">
               <Bed className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
               {p.rooms}
             </div>
           )}
-          {p.bathrooms && p.bathrooms > 0 && (
+          {p.bathrooms > 0 && (
             <div className="flex items-center gap-1">
               <Bath className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
               {p.bathrooms}
             </div>
           )}
-          {!isRent && p.area && p.area > 0 && (
+          {!isRent && p.area > 0 && (
             <div className="flex items-center gap-1">
               <Maximize className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
               {p.area} م²
             </div>
           )}
           {/* Add spacer if no stats to show proper spacing */}
-          {(!p.rooms || p.rooms <= 0) && (!p.bathrooms || p.bathrooms <= 0) && (!p.area || p.area <= 0 || isRent) && (
+          {(p.rooms <= 0) && (p.bathrooms <= 0) && (p.area <= 0 || isRent) && (
             <span>&nbsp;</span>
           )}
         </div>
@@ -209,7 +209,7 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
               اتصل للسعر
             </span>
           ))}
-          {p.rent_duration && <span className="text-xs" style={{ color: "#aaa" }}>/{p.rent_duration}</span>}
+          {p.rent_duration != null && <span className="text-xs" style={{ color: "#aaa" }}>/{p.rent_duration}</span>}
         </div>
 
         {/* {isRent && p.has_detailed_rooms && (() => {

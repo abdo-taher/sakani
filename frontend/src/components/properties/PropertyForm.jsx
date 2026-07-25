@@ -1242,7 +1242,7 @@ function PropertyForm({
                           <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: COFFEE.gold, color: "white" }}>{idx + 1}</span>
                           <span className="font-bold text-sm" style={{ color: COFFEE.dark }}>{room.name}</span>
                           <span className="text-xs" style={{ color: COFFEE.stone }}>{room.price ? `${fmtPrice(room.price)}/شهر` : ""}</span>
-                          {room.area && <span className="text-xs" style={{ color: COFFEE.stone }}>{room.area} م²</span>}
+                          {room.area > 0 && <span className="text-xs" style={{ color: COFFEE.stone }}>{room.area} م²</span>}
                         </div>
                       ))}
                     </div>

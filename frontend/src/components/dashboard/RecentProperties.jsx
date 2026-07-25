@@ -27,7 +27,7 @@ function RecentProperties({ properties = [], loading = false }) {
                 {property.title || property.name || `عقار #${property.id}`}
               </span>
 
-              {property.price && (
+              {property.price > 0 && (
                 <span className="text-stone-500 text-sm">
                   {property.price} جنيه
                 </span>

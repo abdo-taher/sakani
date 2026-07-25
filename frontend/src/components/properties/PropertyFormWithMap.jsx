@@ -499,7 +499,7 @@ function PropertyFormWithMap({
             </div>
 
             {/* Map Display */}
-            {propertyData.coordinates.latitude && propertyData.coordinates.longitude && (
+            {propertyData.coordinates.latitude != null && propertyData.coordinates.longitude != null && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   موقع العقار على الخريطة

@@ -7,6 +7,9 @@ const COFFEE = {
   gold: "#B08D57",
   cream: "#F7F1E8",
   creamSoft: "#FBF7F0",
+  stone: "#78716C",
+  line: "#E8E0D5",
+  amber: "#B08D57",
 };
 
 const RENT_DURATIONS = ["شهري", "3 شهور", "6 شهور", "سنوي"];

@@ -136,19 +136,19 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         </div>
 
         <div className="flex items-center justify-between text-xs text-stone-500 mb-3 border-t border-b py-2" style={{ borderColor: "#f2f2f2" }}>
-          {p.rooms && p.rooms > 0 && (
+          {p.rooms > 0 && (
             <div className="flex items-center gap-1">
               <Bed className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
               {p.rooms}
             </div>
           )}
-          {p.bathrooms && p.bathrooms > 0 && (
+          {p.bathrooms > 0 && (
             <div className="flex items-center gap-1">
               <Bath className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
               {p.bathrooms}
             </div>
           )}
-          {p.category?.slug !== "rent" && p.area && p.area > 0 && (
+          {p.category?.slug !== "rent" && p.area > 0 && (
             <div className="flex items-center gap-1">
               <Maximize className="w-3.5 h-3.5" style={{ color: COFFEE.gold }} />
               {p.area} م²
@@ -182,7 +182,7 @@ function PropertyCard({ p, isFav, onToggleFav }) {
               اتصل للسعر
             </span>
           ))}
-          {p.rent_duration && <span className="text-xs text-stone-400">/{p.rent_duration}</span>}
+          {p.rent_duration != null && <span className="text-xs text-stone-400">/{p.rent_duration}</span>}
         </div>
         {p.category?.slug === "rent" && p.has_detailed_rooms && (() => {
           const rooms = Array.isArray(p.rooms) ? p.rooms : Array.isArray(p.detailed_rooms) ? p.detailed_rooms : [];
