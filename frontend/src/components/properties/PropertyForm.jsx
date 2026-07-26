@@ -562,7 +562,7 @@ function PropertyForm({
     <>
       {/* Header */}
       <div
-        className="shrink-0 px-8 py-6 flex items-center justify-between"
+        className="shrink-0 px-4 md:px-8 py-4 md:py-6 flex items-center justify-between"
         style={{ background: COFFEE.dark }}
       >
         <div>
@@ -589,7 +589,7 @@ function PropertyForm({
       </div>
 
       {/* Stepper */}
-      <div className="shrink-0 px-8 py-5 bg-white/60 border-b" style={{ borderColor: COFFEE.line }}>
+      <div className="shrink-0 px-4 md:px-8 py-3 md:py-5 bg-white/60 border-b" style={{ borderColor: COFFEE.line }}>
         <div className="flex items-center">
           {STEPS.map((s, idx) => {
             const done = step > s.id;
@@ -634,7 +634,7 @@ function PropertyForm({
       </div>
 
       {/* Body */}
-      <div ref={bodyRef} className="flex-1 overflow-y-auto p-8 min-h-0" style={{ scrollBehavior: "auto" }}>
+      <div ref={bodyRef} className="flex-1 overflow-y-auto p-4 md:p-8 min-h-0" style={{ scrollBehavior: "auto" }}>
           <div key={step} className={direction === "next" ? "step-anim-next" : "step-anim-prev"}>
             {step === 1 && (
               <div>
@@ -643,7 +643,7 @@ function PropertyForm({
                 <div className={labelClass} style={{ color: COFFEE.dark }}>
                   <Home size={16} /> نوع العملية
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                   {categories.map((item) => {
                     const selected = propertyData.category === item.id;
 
@@ -927,7 +927,7 @@ function PropertyForm({
                             <div className="text-xs font-bold mb-3" style={{ color: COFFEE.gold }}>
                               غرفة {idx + 1}
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <input
                                 type="text"
                                 placeholder="اسم الغرفة *"

@@ -36,7 +36,7 @@ function PropertyEdit() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[60vh]">
+      <div className="p-4 md:p-8 flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="font-bold text-stone-500">جاري تحميل بيانات العقار...</p>

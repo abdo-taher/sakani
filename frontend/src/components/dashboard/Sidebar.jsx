@@ -16,6 +16,7 @@ import {
   Bell,
   Tag,
   Sparkles,
+  X,
 } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
 
@@ -83,33 +84,45 @@ const menuItems = [
   },
 ];
 
-function Sidebar() {
+function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
 
   return (
     <aside
       dir="rtl"
-      className="w-72 min-h-screen shrink-0 flex flex-col border-l shadow-lg"
+      className={`
+        fixed top-0 right-0 z-50 h-full w-72 flex flex-col border-l shadow-lg
+        transition-transform duration-300 ease-in-out
+        lg:translate-x-0 lg:static lg:z-auto
+        ${isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
+      `}
       style={{
         backgroundColor: COFFEE.dark,
         borderColor: "#3D3024",
       }}
     >
-      {/* Logo */}
+      {/* Logo + Close button (mobile) */}
       <div
-        className="border-b border-white/10"
-        style={{ paddingRight: "28px", paddingLeft: "28px", paddingTop: "32px", paddingBottom: "32px" }}
+        className="border-b border-white/10 flex items-center justify-between"
+        style={{ paddingRight: "28px", paddingLeft: "16px", paddingTop: "32px", paddingBottom: "32px" }}
       >
-        <h1
-          className="text-2xl font-extrabold leading-relaxed"
-          style={{ color: COFFEE.gold }}
+        <div>
+          <h1
+            className="text-2xl font-extrabold leading-relaxed"
+            style={{ color: COFFEE.gold }}
+          >
+            سكني
+          </h1>
+          <p className="text-sm text-white/50 mt-1.5">
+            لوحة تحكم الأدمن
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:bg-white/10 transition lg:hidden"
         >
-          سكني
-        </h1>
-
-        <p className="text-sm text-white/50 mt-1.5">
-          لوحة تحكم الأدمن
-        </p>
+          <X size={20} />
+        </button>
       </div>
 
       {/* Menu */}
@@ -125,6 +138,7 @@ function Sidebar() {
               key={item.path}
               to={item.path}
               end={item.path === "/dashboard"}
+              onClick={() => onClose()}
               className={({ isActive }) =>
                 `flex items-center gap-4 rounded-xl text-base font-semibold transition-all duration-200 ${
                   isActive

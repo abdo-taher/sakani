@@ -96,23 +96,23 @@ function ContactMessages() {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="min-w-0">
           <h1
-            className="text-3xl font-extrabold"
+            className="text-2xl md:text-3xl font-extrabold"
             style={{ color: COFFEE.dark }}
           >
             رسائل التواصل
           </h1>
 
-          <p className="text-stone-500 mt-2">
+          <p className="text-stone-500 mt-2 text-sm md:text-base">
             جميع الرسائل المرسلة من العملاء.
           </p>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow overflow-hidden">
+      {/* Table - Desktop */}
+      <div className="bg-white rounded-2xl shadow overflow-hidden hidden md:block">
         <table className="w-full">
           <thead
             style={{
@@ -121,12 +121,12 @@ function ContactMessages() {
             }}
           >
             <tr>
-              <th className="py-4">الاسم</th>
-              <th>البريد الإلكتروني</th>
-              <th>رقم الهاتف</th>
-              <th>الحالة</th>
-              <th>التاريخ</th>
-              <th>الإجراءات</th>
+              <th className="py-4 px-4 text-right font-bold whitespace-nowrap">الاسم</th>
+              <th className="px-4 text-right font-bold whitespace-nowrap">البريد الإلكتروني</th>
+              <th className="px-4 text-right font-bold whitespace-nowrap">رقم الهاتف</th>
+              <th className="px-4 text-right font-bold whitespace-nowrap">الحالة</th>
+              <th className="px-4 text-right font-bold whitespace-nowrap">التاريخ</th>
+              <th className="px-4 text-center font-bold whitespace-nowrap">الإجراءات</th>
             </tr>
           </thead>
           <tbody>
@@ -145,10 +145,10 @@ function ContactMessages() {
             ) : (
               messages.map((item) => (
                 <tr key={item.id} className="text-center border-b">
-                  <td className="py-5">{item.name}</td>
-                  <td>{item.email || "-"}</td>
-                  <td>{item.phone}</td>
-                  <td>
+                  <td className="py-5 px-4">{item.name}</td>
+                  <td className="px-4">{item.email || "-"}</td>
+                  <td className="px-4">{item.phone}</td>
+                  <td className="px-4">
                     <span
                       className="px-3 py-1 rounded-full text-sm"
                       style={{
@@ -173,10 +173,10 @@ function ContactMessages() {
                         : "تم الرد"}
                     </span>
                   </td>
-                  <td>
+                  <td className="px-4">
                     {new Date(item.created_at).toLocaleDateString("ar-EG")}
                   </td>
-                  <td>
+                  <td className="px-4">
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => openMessage(item)}
@@ -204,6 +204,86 @@ function ContactMessages() {
         </table>
       </div>
 
+      {/* Cards - Mobile */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="text-center py-10 text-stone-400">جاري التحميل...</div>
+        ) : messages.length === 0 ? (
+          <div className="text-center py-10 text-stone-400">لا توجد رسائل</div>
+        ) : (
+          messages.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white rounded-2xl shadow p-4 border border-stone-100"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: COFFEE.cream }}
+                  >
+                    <User size={18} color={COFFEE.gold} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold truncate" style={{ color: COFFEE.dark }}>
+                      {item.name}
+                    </p>
+                    <p className="text-xs text-stone-400 truncate">{item.phone}</p>
+                  </div>
+                </div>
+                <span
+                  className="px-2.5 py-1 rounded-full text-xs font-bold shrink-0"
+                  style={{
+                    background:
+                      item.status === "new"
+                        ? "#FEF3C7"
+                        : item.status === "read"
+                        ? "#DBEAFE"
+                        : "#DCFCE7",
+                    color:
+                      item.status === "new"
+                        ? "#92400E"
+                        : item.status === "read"
+                        ? "#1D4ED8"
+                        : "#166534",
+                  }}
+                >
+                  {item.status === "new"
+                    ? "جديدة"
+                    : item.status === "read"
+                    ? "تمت القراءة"
+                    : "تم الرد"}
+                </span>
+              </div>
+
+              {item.email && (
+                <p className="text-xs text-stone-400 mb-2 truncate" dir="ltr">{item.email}</p>
+              )}
+
+              <p className="text-xs text-stone-400 mb-3">
+                {new Date(item.created_at).toLocaleDateString("ar-EG")}
+              </p>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => openMessage(item)}
+                  className="flex-1 px-4 py-2 rounded-xl text-sm font-bold text-white transition hover:opacity-90"
+                  style={{ background: COFFEE.gold }}
+                >
+                  عرض
+                </button>
+                <button
+                  onClick={() => setMessageToDelete(item)}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition shrink-0"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       {/* Modal - تفاصيل الرسالة */}
       {selectedMessage && (
         <div
@@ -224,7 +304,7 @@ function ContactMessages() {
           >
             {/* Header */}
             <div
-              className="flex items-center justify-between px-8 py-6"
+              className="flex items-center justify-between px-4 py-4 md:px-8 md:py-6"
               style={{ background: COFFEE.dark }}
             >
               <div className="flex items-center gap-3">
@@ -255,7 +335,7 @@ function ContactMessages() {
             </div>
 
             {/* Body */}
-            <div className="p-8 space-y-5">
+            <div className="p-4 md:p-8 space-y-5">
 
               <div className="grid md:grid-cols-2 gap-4">
 
@@ -308,7 +388,7 @@ function ContactMessages() {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between gap-3 px-8 py-5 border-t border-stone-100">
+            <div className="flex items-center justify-between gap-3 px-4 py-4 md:px-8 md:py-5 border-t border-stone-100">
 
               {selectedMessage.status !== "replied" ? (
                 <button

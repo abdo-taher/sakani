@@ -22,7 +22,7 @@ locations = [],
 
   return (
     <div
-      className="bg-white rounded-3xl shadow-sm border border-stone-200 p-6 md:p-8 mb-10"
+      className="bg-white rounded-3xl shadow-sm border border-stone-200 p-4 md:p-6 lg:p-8 mb-6 md:mb-10"
       dir="rtl"
     >
       <div className="flex items-center gap-2 mb-8">

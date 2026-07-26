@@ -169,7 +169,7 @@ const handleSaveRequestStatus = (newStatus) => {
 };
 
   return (
-    <div className="p-8">
+    <div className="space-y-6">
 
       <ReservationHeader />
         <ReservationTabs

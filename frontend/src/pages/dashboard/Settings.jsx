@@ -5,7 +5,7 @@ import usePageTitle from "../../hooks/usePageTitle";
 function Settings() {
   usePageTitle("الإعدادات — سكني");
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       <AdminSettings />
     </div>
   );

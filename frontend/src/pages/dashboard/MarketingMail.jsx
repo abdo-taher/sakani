@@ -114,16 +114,16 @@ function MarketingMail() {
   return (
     <div className="space-y-6" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl md:text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
             البريد التسويقي
           </h1>
-          <p className="text-stone-500 mt-2">
+          <p className="text-stone-500 mt-2 text-sm md:text-base">
             إرسال رسائل تسويقية مخصصة للعملاء
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 flex-wrap">
           <button
             onClick={() => setShowPreview(!showPreview)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition hover:scale-105"

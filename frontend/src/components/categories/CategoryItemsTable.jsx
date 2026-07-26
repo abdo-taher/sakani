@@ -11,6 +11,7 @@ function CategoryItemsTable({
       className="bg-white rounded-3xl shadow-sm border border-stone-200 overflow-hidden"
       dir="rtl"
     >
+      <div className="overflow-x-auto">
       <table className="w-full text-base">
         <thead className="bg-stone-100">
           <tr>
@@ -46,6 +47,7 @@ function CategoryItemsTable({
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

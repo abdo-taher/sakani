@@ -93,18 +93,18 @@ function Notifications() {
   return (
     <div className="space-y-6" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl md:text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
             الإشعارات
           </h1>
-          <p className="text-stone-500 mt-2">
+          <p className="text-stone-500 mt-2 text-sm md:text-base">
             {unreadCount > 0
               ? `لديك ${unreadCount} إشعار غير مقروء`
               : "لا توجد إشعارات جديدة"}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={fetchNotifications}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition hover:scale-105"

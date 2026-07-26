@@ -12,6 +12,7 @@ function DashboardLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
   const prevCountRef = useRef(0);
   const audioRef = useRef(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -48,12 +49,20 @@ if (!token) {
       dir="rtl"
       style={{ backgroundColor: "#F8F6F2" }}
     >
-      <Sidebar />
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar unreadCount={unreadCount} />
+        <Topbar unreadCount={unreadCount} onToggleSidebar={() => setSidebarOpen(true)} />
 
-     <main className="flex-1 overflow-y-auto px-8 py-8">
+     <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
     <Outlet />
 </main>
       </div>

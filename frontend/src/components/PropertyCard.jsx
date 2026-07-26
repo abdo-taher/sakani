@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, Bed, Bath, Maximize, MapPin, PlayCircle, Loader2, CloudUpload } from "lucide-react";
+import { Heart, Bed, Bath, Maximize, MapPin, PlayCircle, Loader2, CloudUpload, ChevronLeft, ChevronRight } from "lucide-react";
 import { COFFEE } from "../constants/constants";
 import { fmtPrice, SAMPLE_IMG } from "../utils/helpers";
 import VideoThumb from "./VideoThumb";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 const STATUS_LABELS = {
   available: { text: "متاح", color: "#2E7D32" },
@@ -13,28 +18,29 @@ const STATUS_LABELS = {
 };
 
 function PropertyCard({ p, isFav, onToggleFav }) {
-  const [imgError, setImgError] = useState(false);
+  const [imgErrors, setImgErrors] = useState({});
   const navigate = useNavigate();
 
   const isUploading = Boolean(p.is_uploading);
-  const hasVideo = (p.images && p.images.some(img => img.media_type === 'video')) || p.video_url;
 
-  const firstVideo = p.images && p.images.find(img => img.media_type === 'video');
-  const firstImage = p.images && p.images.find(img => (img.media_type || 'image') === 'image' && !img.caption);
+  const media = React.useMemo(() => {
+    if (!p.images || p.images.length === 0) return [];
+    const images = p.images
+      .filter(img => (img.media_type || 'image') === 'image' && !img.caption)
+      .map(img => ({ type: 'image', url: img.image_url || img.path }));
+    const videos = p.images
+      .filter(img => img.media_type === 'video')
+      .map(img => {
+        const thumb = img.image_public_id
+          ? p.images?.find(im => im.media_type === 'image' && im.caption === img.image_public_id)?.image_url
+          : null;
+        return { type: 'video', url: img.image_url, poster: thumb };
+      });
+    return [...images, ...videos];
+  }, [p.images]);
 
-  const mainImage = !imgError && firstImage
-    ? firstImage.image_url || firstImage.path
-    : null;
-
-  const mainVideo = hasVideo
-    ? (firstVideo ? firstVideo.image_url : p.video_url)
-    : null;
-
-  const videoThumbnail = firstVideo?.image_public_id
-    ? p.images?.find(
-        (img) => img.media_type === "image" && img.caption === firstVideo.image_public_id
-      )?.image_url
-    : null;
+  const hasMedia = media.length > 0;
+  const hasVideo = media.some(m => m.type === 'video');
 
   const status = STATUS_LABELS[p.status] || STATUS_LABELS.available;
 
@@ -65,26 +71,51 @@ function PropertyCard({ p, isFav, onToggleFav }) {
       )}
 
       <div className={`relative w-full overflow-hidden bg-stone-100 ${isUploading ? 'h-44' : 'h-48'}`}>
-        {mainVideo ? (
-          <VideoThumb
-            src={mainVideo}
-            posterUrl={videoThumbnail}
-            alt={p.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : mainImage ? (
-          <img
-            src={mainImage}
-            alt={p.title}
-            onError={() => setImgError(true)}
-            loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : isUploading ? (
+        {isUploading && !hasMedia ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2">
             <Loader2 size={28} className="animate-spin text-amber-400" />
             <span className="text-amber-500 text-xs font-semibold">جاري رفع الصور...</span>
           </div>
+        ) : hasMedia ? (
+          <Swiper
+            modules={[Navigation, Pagination]}
+            navigation
+            pagination={{ clickable: true }}
+            spaceBetween={0}
+            slidesPerView={1}
+            className="w-full h-full property-card-swiper"
+            dir="ltr"
+          >
+            {media.map((item, idx) => (
+              <SwiperSlide key={idx}>
+                <div className="w-full h-48 relative">
+                  {item.type === 'video' ? (
+                    <>
+                      <VideoThumb
+                        src={item.url}
+                        posterUrl={item.poster}
+                        alt={p.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
+                          <PlayCircle className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <img
+                      src={item.url}
+                      alt={p.title}
+                      onError={() => setImgErrors(prev => ({ ...prev, [idx]: true }))}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
         ) : (
           <img
             src={SAMPLE_IMG(p.id)}
@@ -94,25 +125,12 @@ function PropertyCard({ p, isFav, onToggleFav }) {
           />
         )}
 
-        {hasVideo && !isUploading && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
-              <PlayCircle className="w-7 h-7 text-white" />
-            </div>
-          </div>
-        )}
-
         {!isUploading && (
           <div
-            className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-xs font-bold text-white"
+            className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-xs font-bold text-white z-10"
             style={{ backgroundColor: status.color }}
           >
             {status.text}
-          </div>
-        )}
-
-        {isUploading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-amber-500/10" style={{ marginTop: '16px' }}>
           </div>
         )}
 
@@ -121,10 +139,16 @@ function PropertyCard({ p, isFav, onToggleFav }) {
             e.stopPropagation();
             onToggleFav && onToggleFav(p.id);
           }}
-          className="absolute top-2 left-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+          className="absolute top-2 left-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10"
         >
           <Heart className="w-4 h-4" fill={isFav ? COFFEE.gold : "none"} style={{ color: COFFEE.gold }} />
         </button>
+
+        {media.length > 1 && !isUploading && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/50 text-white text-[10px] font-bold backdrop-blur-sm z-10">
+            1 / {media.length}
+          </div>
+        )}
       </div>
 
       <div className="p-4">

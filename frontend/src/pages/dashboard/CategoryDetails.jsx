@@ -95,7 +95,7 @@ useEffect(() => {
 };
 
   return (
-    <div className="p-8">
+    <div className="space-y-6">
 
       <CategoryDetailsHeader
        categoryName={categoryName || "جارٍ التحميل..."}

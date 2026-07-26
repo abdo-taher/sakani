@@ -103,7 +103,7 @@ function FeatureManager() {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-stone-200 p-8">
+      <div className="bg-white rounded-3xl shadow-sm border border-stone-200 p-4 md:p-8">
         <div className="flex gap-3 mb-8">
           <input
             type="text"

@@ -67,19 +67,19 @@ function AdminDashboard() {
   });
 
   return (
-    <div style={{ padding: "32px" }}>
+    <div className="space-y-6">
 
       {/* عنوان الصفحة */}
-      <div className="mb-8" style={{ paddingRight: "4px" }}>
+      <div className="mb-4 md:mb-8" style={{ paddingRight: "4px" }}>
 
         <h1
-          className="text-4xl font-extrabold leading-relaxed"
+          className="text-2xl md:text-3xl lg:text-4xl font-extrabold leading-relaxed"
           style={{ color: COFFEE.dark }}
         >
           مرحباً بك في لوحة التحكم 👋
         </h1>
 
-        <p className="text-stone-500 mt-2">
+        <p className="text-stone-500 mt-2 text-sm md:text-base">
           إليك ملخص سريع لحالة الموقع.
         </p>
 

@@ -8,25 +8,25 @@ function PropertyHeader({
 }) {
   const navigate = useNavigate();
   return (
-    <div className="flex flex-wrap items-center justify-between gap-5 mb-10">
+    <div className="flex flex-wrap items-center justify-between gap-4 md:gap-5 mb-6 md:mb-10">
       <div className="min-w-0">
         <h1
-          className="text-3xl md:text-4xl xl:text-5xl font-extrabold"
+          className="text-2xl md:text-3xl xl:text-5xl font-extrabold"
           style={{ color: COFFEE.dark }}
         >
           إدارة العقارات
         </h1>
 
-        <p className="text-stone-500 mt-3 text-base md:text-lg">
+        <p className="text-stone-500 mt-2 md:mt-3 text-sm md:text-base lg:text-lg">
           أضف، عدل، احذف، أو غيّر حالة أي عقار بسهولة.
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2 md:gap-3">
 
   <button
     onClick={() => navigate("/dashboard/features")}
-    className="flex items-center justify-center gap-2 px-7 py-4 rounded-2xl font-bold transition-all duration-300 hover:scale-105 shadow-md border"
+    className="flex items-center justify-center gap-2 px-4 md:px-7 py-3 md:py-4 rounded-2xl font-bold transition-all duration-300 hover:scale-105 shadow-md border text-sm md:text-base"
     style={{
       borderColor: COFFEE.gold,
       color: COFFEE.dark,
@@ -38,13 +38,13 @@ function PropertyHeader({
 
   <button
     onClick={onAdd}
-    className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl font-bold transition-all duration-300 hover:scale-105 shadow-md"
+    className="flex items-center justify-center gap-2 px-5 md:px-8 py-3 md:py-4 rounded-2xl font-bold transition-all duration-300 hover:scale-105 shadow-md text-sm md:text-base"
     style={{
       backgroundColor: COFFEE.gold,
       color: COFFEE.dark,
     }}
   >
-    <Plus size={22} />
+    <Plus size={20} />
     إضافة عقار جديد
   </button>
 

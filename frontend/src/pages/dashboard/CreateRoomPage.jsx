@@ -109,7 +109,7 @@ function CreateRoomPage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[60vh]">
+      <div className="p-4 md:p-8 flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="font-bold" style={{ color: COFFEE.stone }}>جاري التحميل...</p>
@@ -119,7 +119,7 @@ function CreateRoomPage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl mx-auto" dir="rtl">
+    <div className="p-4 md:p-8 max-w-3xl mx-auto" dir="rtl">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
@@ -163,7 +163,7 @@ function CreateRoomPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold mb-2" style={{ color: COFFEE.dark }}>
                   السعر الشهري (جنيه) *
@@ -269,7 +269,7 @@ function CreateRoomPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-end">
+        <div className="flex gap-3 justify-end flex-wrap">
           <button
             onClick={() => navigate(`/dashboard/properties/${id}`)}
             className="px-6 py-3 rounded-xl font-bold border-2 transition hover:bg-stone-50"

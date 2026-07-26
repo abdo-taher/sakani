@@ -4,6 +4,11 @@ import { Heart, Bed, Bath, Maximize, MapPin, PlayCircle, Eye, Star } from "lucid
 import { COFFEE } from "../constants/constants";
 import { fmtPrice, SAMPLE_IMG } from "../utils/helpers";
 import VideoThumb from "./VideoThumb";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 const CATEGORY_CONFIG = {
   rent: {
@@ -37,21 +42,27 @@ const STATUS_LABELS = {
 };
 
 function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
-  const [imgError, setImgError] = useState(false);
+  const [imgErrors, setImgErrors] = useState({});
   const navigate = useNavigate();
 
-  const hasVideo = (p.images && p.images.some(img => img.media_type === "video")) || p.video_url;
-  const firstVideo = p.images && p.images.find(img => img.media_type === "video");
-  const firstImage = p.images && p.images.find(img => (img.media_type || "image") === "image" && !img.caption);
+  const media = React.useMemo(() => {
+    if (!p.images || p.images.length === 0) return [];
+    const images = p.images
+      .filter(img => (img.media_type || 'image') === 'image' && !img.caption)
+      .map(img => ({ type: 'image', url: img.image_url || img.path }));
+    const videos = p.images
+      .filter(img => img.media_type === 'video')
+      .map(img => {
+        const thumb = img.image_public_id
+          ? p.images?.find(im => im.media_type === 'image' && im.caption === img.image_public_id)?.image_url
+          : null;
+        return { type: 'video', url: img.image_url, poster: thumb };
+      });
+    return [...images, ...videos];
+  }, [p.images]);
 
-  const mainImage = !imgError && firstImage ? firstImage.image_url || firstImage.path : null;
-  const mainVideo = hasVideo ? (firstVideo ? firstVideo.image_url : p.video_url) : null;
-
-  const videoThumbnail = firstVideo?.image_public_id
-    ? p.images?.find(
-        (img) => img.media_type === "image" && img.caption === firstVideo.image_public_id
-      )?.image_url
-    : null;
+  const hasMedia = media.length > 0;
+  const hasVideo = media.some(m => m.type === 'video');
 
   const status = STATUS_LABELS[p.status] || STATUS_LABELS.available;
   const category = CATEGORY_CONFIG[p.category?.slug] || CATEGORY_CONFIG.sell;
@@ -79,23 +90,48 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
         </div>
       )}
 
-      {/* Image / Video */}
+      {/* Image / Video Swiper */}
       <div className="relative w-full h-44 sm:h-52 overflow-hidden bg-stone-100">
-        {mainVideo ? (
-          <VideoThumb
-            src={mainVideo}
-            posterUrl={videoThumbnail}
-            alt={p.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : mainImage ? (
-          <img
-            src={mainImage}
-            alt={p.title}
-            onError={() => setImgError(true)}
-            loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
+        {hasMedia ? (
+          <Swiper
+            modules={[Navigation, Pagination]}
+            navigation
+            pagination={{ clickable: true }}
+            spaceBetween={0}
+            slidesPerView={1}
+            className="w-full h-full showcase-card-swiper"
+            dir="ltr"
+          >
+            {media.map((item, idx) => (
+              <SwiperSlide key={idx}>
+                <div className="w-full h-44 sm:h-52 relative">
+                  {item.type === 'video' ? (
+                    <>
+                      <VideoThumb
+                        src={item.url}
+                        posterUrl={item.poster}
+                        alt={p.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
+                          <PlayCircle className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <img
+                      src={item.url}
+                      alt={p.title}
+                      onError={() => setImgErrors(prev => ({ ...prev, [idx]: true }))}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
         ) : (
           <img
             src={SAMPLE_IMG(p.id)}
@@ -105,18 +141,9 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
           />
         )}
 
-        {/* Video play overlay */}
-        {hasVideo && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
-              <PlayCircle className="w-7 h-7 text-white" />
-            </div>
-          </div>
-        )}
-
         {/* Status badge */}
         <div
-          className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white shadow"
+          className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white shadow z-10"
           style={{ backgroundColor: status.color }}
         >
           {status.text}
@@ -124,7 +151,7 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
 
         {/* Views */}
         {p.cached_views > 0 && (
-          <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 text-white text-[11px] font-bold backdrop-blur-sm">
+          <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 text-white text-[11px] font-bold backdrop-blur-sm z-10">
             <Eye className="w-3 h-3" />
             {p.cached_views}
           </div>
@@ -142,7 +169,13 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
         </button>
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none z-[5]" />
+
+        {media.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/50 text-white text-[10px] font-bold backdrop-blur-sm z-10">
+            1 / {media.length}
+          </div>
+        )}
       </div>
 
       {/* Content */}

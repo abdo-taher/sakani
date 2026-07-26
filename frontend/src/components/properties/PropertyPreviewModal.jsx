@@ -85,7 +85,7 @@ function PropertyPreviewModal({ property, onClose }) {
       >
         {/* Header */}
         <div
-          className="shrink-0 flex justify-between items-center px-8 py-6"
+          className="shrink-0 flex justify-between items-center px-4 md:px-8 py-4 md:py-6"
           style={{ background: COFFEE.dark }}
         >
           <div>
@@ -194,7 +194,7 @@ function PropertyPreviewModal({ property, onClose }) {
         )}
 
         {/* Body (scrollable) */}
-        <div className="overflow-y-auto p-8">
+        <div className="overflow-y-auto p-4 md:p-8">
           {/* البيانات الأساسية */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
             <InfoCard icon={Layers} label="النوع" value={property.category?.name} />

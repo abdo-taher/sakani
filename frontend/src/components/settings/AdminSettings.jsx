@@ -51,7 +51,7 @@ function AdminSettings() {
 };
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-stone-200 p-8 mb-8">
+    <div className="bg-white rounded-3xl shadow-sm border border-stone-200 p-4 md:p-8 mb-8">
 
       <h2
         className="text-2xl font-bold mb-8"

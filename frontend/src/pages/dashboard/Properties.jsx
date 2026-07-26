@@ -106,7 +106,7 @@ useEffect(() => {
   });
 
   return (
-    <div className="p-8"> 
+    <div className="space-y-6"> 
      <PropertyHeader
   onAdd={() => navigate("/dashboard/properties/create")}
 />

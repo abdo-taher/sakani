@@ -67,7 +67,7 @@ if (!confirmed) return;
 
 };
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       <LocationHeader
         onAdd={() => {
           setSelectedLocation(null);

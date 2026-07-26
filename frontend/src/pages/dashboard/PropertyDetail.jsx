@@ -169,7 +169,7 @@ function PropertyDetail() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[60vh]">
+      <div className="p-4 md:p-8 flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="font-bold" style={{ color: COFFEE.stone }}>
@@ -207,9 +207,9 @@ function PropertyDetail() {
   const statusInfo = STATUS_MAP[property.status] || STATUS_MAP.available;
 
   return (
-    <div className="p-8 space-y-8" dir="rtl">
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/dashboard/properties")}
@@ -507,13 +507,13 @@ function PropertyDetail() {
             <p className="text-sm font-bold mb-1" style={{ color: COFFEE.stone }}>
               السعر
             </p>
-            <p className="text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
+            <p className="text-2xl md:text-3xl font-extrabold" style={{ color: COFFEE.dark }}>
               {fmtPrice(property.price)}
             </p>
           </div>
 
           {/* Property Info Cards */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
             <InfoCard icon={Layers} label="القسم" value={property.category?.name} />
             <InfoCard icon={Building2} label="نوع العقار" value={property.propertyType?.name} />
             <InfoCard icon={MapPin} label="المكان" value={property.location?.name} />
@@ -548,7 +548,7 @@ function PropertyDetail() {
 
         {!property.reservations?.length ? (
           <div
-            className="rounded-2xl p-8 text-center border"
+            className="rounded-2xl p-6 md:p-8 text-center border"
             style={{ borderColor: COFFEE.line, background: "white" }}
           >
             <Calendar size={40} color={COFFEE.gold} className="mx-auto mb-3" />
