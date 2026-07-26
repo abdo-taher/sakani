@@ -482,7 +482,7 @@ function PublicPropertyDetail() {
   function renderThumbnails() {
     if (!hasMultipleMedia) return null;
     return (
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+      <div className="flex flex-wrap gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
         {media.map((m, idx) => {
           const isActive = idx === mediaIndex;
           const borderClass = isActive ? "border-amber-600" : "border-transparent";

@@ -5,6 +5,7 @@ import "./styles/animations.css";
 
 import { COFFEE } from "./constants/constants";
 
+import Loader from "./components/Loader";
 import Footer from "./components/Footer";
 import { loadFavorites, saveFavorites } from "./utils/storage";
 import { getPropertiesCached as fetchPropertiesAPI } from "./services/propertyService";
@@ -22,6 +23,7 @@ import { useLocation } from "react-router-dom";
 export default function App() {
   const [properties, setProperties] = useState([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadingDone, setLoadingDone] = useState(false);
   const [favorites, setFavorites] = useState(new Set());
   const [activeProperty, setActiveProperty] = useState(null);
   const [reservationOpen, setReservationOpen] = useState(false);
@@ -103,6 +105,7 @@ export default function App() {
 
   return (
     <div style={{ backgroundColor: COFFEE.creamSoft, minHeight: "100vh" }}>
+      {!loadingDone && <Loader onComplete={() => setLoadingDone(true)} />}
       <div
         className="fixed top-0 right-0 left-0 h-[3px] z-[200] transition-all duration-300 origin-right"
         style={{

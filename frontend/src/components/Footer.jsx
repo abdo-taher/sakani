@@ -36,7 +36,7 @@ const navigate = useNavigate();
 
   return (
     <footer
-      className="pt-2"
+      className="pt-2 mt-auto"
       style={{ backgroundColor: COFFEE.darkest, marginTop: "24px" }}
       dir="rtl"
     >
