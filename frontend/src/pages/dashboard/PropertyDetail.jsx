@@ -273,6 +273,7 @@ function PropertyDetail() {
                 alt={property.title}
                 loading="lazy"
                 className="w-full h-full object-cover"
+                onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG(property.id); }}
               />
             )}
 
@@ -325,7 +326,7 @@ function PropertyDetail() {
                       </div>
                     </div>
                   ) : (
-                    <img src={m.url} alt="" loading="lazy" className="w-full h-full object-cover" />
+                    <img src={m.url} alt="" loading="lazy" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG(property.id); }} />
                   )}
                 </button>
               ))}

@@ -38,7 +38,7 @@ import {
 } from "../../utils/toast";
 import { uploadToCloudinary } from "../../services/cloudinaryService";
 import { numbersOnly } from "../../utils/numbersOnly";
-import { fmtPrice } from "../../utils/helpers";
+import { fmtPrice, SAMPLE_IMG } from "../../utils/helpers";
 import { extractVideoThumbnail, blobToFile } from "../../utils/videoThumbnail";
 
 const COFFEE = {
@@ -1063,6 +1063,7 @@ function PropertyForm({
                             alt=""
                             className="w-24 h-24 rounded-xl object-cover border-2"
                             style={{ borderColor: img.is_primary ? COFFEE.gold : COFFEE.line }}
+                            onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG(img.id || 'property'); }}
                           />
                           {img.is_primary && (
                             <span className="absolute -top-2 -right-2 text-[10px] font-bold px-2 py-0.5 rounded-full text-white pop-in" style={{ background: COFFEE.gold }}>

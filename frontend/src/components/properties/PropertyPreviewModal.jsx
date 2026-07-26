@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, MapPin, Layers, Ruler, BedDouble, Bath, ArrowUpDown, Paintbrush, Sofa, Building2, ImageIcon, Video, Sparkles, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { COFFEE } from "../../constants/constants";
-import { fmtPrice } from "../../utils/helpers";
+import { fmtPrice, SAMPLE_IMG } from "../../utils/helpers";
 import VideoThumb from "../VideoThumb";
 
 const STATUS_MAP = {
@@ -70,6 +70,10 @@ function PropertyPreviewModal({ property, onClose }) {
     ...videos.map(img => ({ type: 'video', url: img.image_url, id: img.id })),
   ];
 
+  if (media.length === 0) {
+    media.push({ type: 'image', url: SAMPLE_IMG(property.id), id: 'fallback' });
+  }
+
   const totalMedia = media.length;
   const currentMedia = totalMedia > 0 ? media[mediaIndex] : null;
 
@@ -132,6 +136,7 @@ function PropertyPreviewModal({ property, onClose }) {
                 src={currentMedia.url}
                 alt=""
                 className="w-full h-full object-cover"
+                onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG(property.id); }}
               />
             )}
 
@@ -186,7 +191,7 @@ function PropertyPreviewModal({ property, onClose }) {
                     </div>
                   </div>
                 ) : (
-                  <img src={m.url} alt="" className="w-16 h-12 object-cover" />
+                  <img src={m.url} alt="" className="w-16 h-12 object-cover" onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG(property.id); }} />
                 )}
               </button>
             ))}

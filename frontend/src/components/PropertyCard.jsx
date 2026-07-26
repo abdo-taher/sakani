@@ -107,7 +107,7 @@ function PropertyCard({ p, isFav, onToggleFav }) {
                     <img
                       src={item.url}
                       alt={p.title}
-                      onError={() => setImgErrors(prev => ({ ...prev, [idx]: true }))}
+                      onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG(p.id); }}
                       loading="lazy"
                       className="w-full h-full object-cover"
                     />

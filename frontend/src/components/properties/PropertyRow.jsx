@@ -54,6 +54,7 @@ function PropertyRow({
             src={property.images?.[0]?.image_url || SAMPLE_IMG(property.id)}
             alt={property.title || "عقار"}
             className="w-20 h-14 rounded-lg object-cover bg-stone-100"
+            onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG(property.id); }}
           />
         )}
       </td>
