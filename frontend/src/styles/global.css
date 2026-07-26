@@ -233,50 +233,142 @@ button:active { transform: scale(0.96); }
 }
 
 /* 3D Bullet Loader */
+.loader-brand {
+  animation: loaderBrandIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes loaderBrandIn {
+  from { opacity: 0; transform: translateY(-12px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.loader-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+}
+.loader-orb-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, #B08D57, transparent 70%);
+  top: 20%;
+  right: 15%;
+  animation: orbFloat1 6s ease-in-out infinite;
+}
+.loader-orb-2 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, #6F4E37, transparent 70%);
+  bottom: 25%;
+  left: 20%;
+  animation: orbFloat2 8s ease-in-out infinite;
+}
+
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30px, 20px); }
+}
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(20px, -25px); }
+}
+
+.loader-track {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .loader-3d-bullets {
   display: flex;
-  gap: 12px;
-  align-items: center;
-  perspective: 200px;
+  gap: 14px;
+  align-items: flex-end;
+  perspective: 300px;
 }
 
 .loader-3d-bullets .bullet {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #d4b97a, #B08D57 40%, #6F4E37 100%);
+  background: radial-gradient(circle at 30% 30%, #e8d5a8, #B08D57 35%, #8a6a3a 70%, #5a3a1a 100%);
   box-shadow:
-    0 4px 6px rgba(75, 46, 31, 0.4),
-    0 1px 3px rgba(0, 0, 0, 0.2),
-    inset 0 -2px 4px rgba(43, 27, 18, 0.3),
-    inset 0 2px 4px rgba(255, 255, 255, 0.2);
-  animation: bullet3d 1.4s ease-in-out infinite;
+    0 6px 10px rgba(75, 46, 31, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 -3px 6px rgba(43, 27, 18, 0.35),
+    inset 0 3px 6px rgba(255, 255, 255, 0.25);
+  animation: bullet3d 1.5s cubic-bezier(0.33, 1, 0.68, 1) infinite;
   transform-style: preserve-3d;
 }
 
 .loader-3d-bullets .bullet:nth-child(1) { animation-delay: 0s; }
-.loader-3d-bullets .bullet:nth-child(2) { animation-delay: 0.15s; }
-.loader-3d-bullets .bullet:nth-child(3) { animation-delay: 0.3s; }
-.loader-3d-bullets .bullet:nth-child(4) { animation-delay: 0.45s; }
-.loader-3d-bullets .bullet:nth-child(5) { animation-delay: 0.6s; }
+.loader-3d-bullets .bullet:nth-child(2) { animation-delay: 0.12s; }
+.loader-3d-bullets .bullet:nth-child(3) { animation-delay: 0.24s; }
+.loader-3d-bullets .bullet:nth-child(4) { animation-delay: 0.36s; }
+.loader-3d-bullets .bullet:nth-child(5) { animation-delay: 0.48s; }
+
+.loader-shadow {
+  width: 120px;
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(75, 46, 31, 0.25), transparent 70%);
+  animation: bulletShadow 1.5s cubic-bezier(0.33, 1, 0.68, 1) infinite;
+}
 
 @keyframes bullet3d {
-  0%, 100% {
-    transform: translateY(0) rotateX(0deg) scale(1);
+  0% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg) scale(1);
     box-shadow:
-      0 4px 6px rgba(75, 46, 31, 0.4),
-      0 1px 3px rgba(0, 0, 0, 0.2),
-      inset 0 -2px 4px rgba(43, 27, 18, 0.3),
-      inset 0 2px 4px rgba(255, 255, 255, 0.2);
+      0 6px 10px rgba(75, 46, 31, 0.45),
+      0 2px 4px rgba(0, 0, 0, 0.2),
+      inset 0 -3px 6px rgba(43, 27, 18, 0.35),
+      inset 0 3px 6px rgba(255, 255, 255, 0.25);
   }
-  50% {
-    transform: translateY(-22px) rotateX(45deg) scale(1.15);
+  40% {
+    transform: translateY(-28px) rotateX(50deg) rotateY(15deg) scale(1.18);
     box-shadow:
-      0 14px 20px rgba(75, 46, 31, 0.3),
-      0 4px 8px rgba(0, 0, 0, 0.15),
-      inset 0 -1px 2px rgba(43, 27, 18, 0.2),
-      inset 0 3px 6px rgba(255, 255, 255, 0.35);
+      0 18px 28px rgba(75, 46, 31, 0.3),
+      0 6px 10px rgba(0, 0, 0, 0.12),
+      inset 0 -2px 4px rgba(43, 27, 18, 0.2),
+      inset 0 4px 8px rgba(255, 255, 255, 0.4);
   }
+  100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg) scale(1);
+    box-shadow:
+      0 6px 10px rgba(75, 46, 31, 0.45),
+      0 2px 4px rgba(0, 0, 0, 0.2),
+      inset 0 -3px 6px rgba(43, 27, 18, 0.35),
+      inset 0 3px 6px rgba(255, 255, 255, 0.25);
+  }
+}
+
+@keyframes bulletShadow {
+  0%, 100% { transform: scaleX(1); opacity: 0.6; }
+  40% { transform: scaleX(0.5); opacity: 0.2; }
+}
+
+.loader-text {
+  animation: loaderTextIn 0.6s ease 0.3s both;
+}
+
+@keyframes loaderTextIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.loader-dots span {
+  animation: loaderDot 1.4s ease-in-out infinite;
+  display: inline-block;
+}
+.loader-dots span:nth-child(1) { animation-delay: 0s; }
+.loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loaderDot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
 }
 
 /* Property Card Swiper Styles */

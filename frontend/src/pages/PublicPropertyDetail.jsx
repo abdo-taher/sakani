@@ -479,6 +479,11 @@ function PublicPropertyDetail() {
     );
   }
 
+  function handleThumbnailClick(idx, e) {
+    setMediaIndex(idx);
+    e.currentTarget.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }
+
   function renderThumbnails() {
     if (!hasMultipleMedia) return null;
     return (
@@ -488,7 +493,7 @@ function PublicPropertyDetail() {
           const borderClass = isActive ? "border-amber-600" : "border-transparent";
           if (m.type === "video") {
             return (
-              <button key={idx} onClick={() => setMediaIndex(idx)} className={`shrink-0 w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden border-2 transition min-h-[44px] ${borderClass}`}>
+              <button key={idx} onClick={(e) => handleThumbnailClick(idx, e)} className={`shrink-0 w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden border-2 transition min-h-[44px] ${borderClass}`}>
                 <div className="relative w-full h-full overflow-hidden bg-black">
                   <VideoThumb src={m.url} className="w-full h-full object-cover opacity-80" />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -499,7 +504,7 @@ function PublicPropertyDetail() {
             );
           }
           return (
-            <button key={idx} onClick={() => setMediaIndex(idx)} className={`shrink-0 w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden border-2 transition min-h-[44px] ${borderClass}`}>
+            <button key={idx} onClick={(e) => handleThumbnailClick(idx, e)} className={`shrink-0 w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden border-2 transition min-h-[44px] ${borderClass}`}>
               <img src={m.url} alt="" loading="lazy" className="w-full h-full object-cover" />
             </button>
           );

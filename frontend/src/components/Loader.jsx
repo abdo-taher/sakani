@@ -6,35 +6,55 @@ export default function Loader({ onComplete }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setVisible(false);
-      setTimeout(() => onComplete?.(), 500);
-    }, 1800);
+      setTimeout(() => onComplete?.(), 600);
+    }, 2200);
     return () => clearTimeout(timer);
   }, [onComplete]);
-
-  if (!visible) return null;
 
   return (
     <div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
       style={{
-        backgroundColor: "#FBF7F0",
-        transition: "opacity 0.5s ease",
+        background: "linear-gradient(160deg, #FBF7F0 0%, #F3E8D5 40%, #FBF7F0 100%)",
+        transition: "opacity 0.6s ease, visibility 0.6s ease",
         opacity: visible ? 1 : 0,
+        visibility: visible ? "visible" : "hidden",
       }}
     >
-      <div className="loader-3d-bullets">
-        <span className="bullet" />
-        <span className="bullet" />
-        <span className="bullet" />
-        <span className="bullet" />
-        <span className="bullet" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="loader-orb loader-orb-1" />
+        <div className="loader-orb loader-orb-2" />
       </div>
-      <p
-        className="mt-8 text-lg tracking-wide"
-        style={{ color: "#B08D57", fontFamily: "'Cairo', sans-serif" }}
-      >
-        جاري التحميل...
-      </p>
+
+      <div className="relative z-10 flex flex-col items-center">
+        <h1
+          className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-10 loader-brand"
+          style={{ color: "#4A2E1F", fontFamily: "'Cairo', sans-serif" }}
+        >
+          سكنى
+        </h1>
+
+        <div className="loader-track">
+          <div className="loader-3d-bullets">
+            <span className="bullet" />
+            <span className="bullet" />
+            <span className="bullet" />
+            <span className="bullet" />
+            <span className="bullet" />
+          </div>
+          <div className="loader-shadow" />
+        </div>
+
+        <p
+          className="mt-8 text-sm font-bold tracking-widest loader-text"
+          style={{ color: "#B08D57", fontFamily: "'Cairo', sans-serif" }}
+        >
+          جاري التحميل
+          <span className="loader-dots">
+            <span>.</span><span>.</span><span>.</span>
+          </span>
+        </p>
+      </div>
     </div>
   );
 }
