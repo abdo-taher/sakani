@@ -34,22 +34,12 @@ export default function Loader({ onComplete }) {
           سكنى
         </h1>
 
-        <div className="loader__balls">
-          <div className="loader__balls__group">
-            <div className="ball item1" />
-            <div className="ball item2" />
-            <div className="ball item3" />
-          </div>
-          <div className="loader__balls__group">
-            <div className="ball item1" />
-            <div className="ball item2" />
-            <div className="ball item3" />
-          </div>
-          <div className="loader__balls__group">
-            <div className="ball item1" />
-            <div className="ball item2" />
-            <div className="ball item3" />
-          </div>
+        <div className="loader-3d-bullets">
+          <span className="bullet" />
+          <span className="bullet" />
+          <span className="bullet" />
+          <span className="bullet" />
+          <span className="bullet" />
         </div>
 
         <p
