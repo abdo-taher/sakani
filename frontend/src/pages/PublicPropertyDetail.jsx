@@ -103,7 +103,7 @@ function MediaLightbox({ media, initialIndex, onClose }) {
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
-      <div className="flex items-center justify-between px-3 py-3 sm:px-6 sm:py-4 shrink-0">
+      <div className="flex items-center justify-between px-3 py-3 sm:px-6 sm:py-4 shrink-0" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
         <button onClick={onClose} className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition">
           <X size={22} />
         </button>
@@ -136,13 +136,13 @@ function MediaLightbox({ media, initialIndex, onClose }) {
         <>
           <button
             onClick={() => setIndex((i) => (i + 1) % media.length)}
-            className="absolute left-2 sm:left-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/15 flex items-center justify-center text-white hover:bg-white/30 transition"
+            className="absolute left-2 sm:left-5 top-[40%] sm:top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/15 flex items-center justify-center text-white hover:bg-white/30 transition"
           >
             <ChevronLeft size={24} />
           </button>
           <button
             onClick={() => setIndex((i) => (i - 1 + media.length) % media.length)}
-            className="absolute right-2 sm:right-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/15 flex items-center justify-center text-white hover:bg-white/30 transition"
+            className="absolute right-2 sm:right-5 top-[40%] sm:top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/15 flex items-center justify-center text-white hover:bg-white/30 transition"
           >
             <ChevronRight size={24} />
           </button>
@@ -150,7 +150,7 @@ function MediaLightbox({ media, initialIndex, onClose }) {
       )}
 
       {media.length > 1 && (
-        <div className="flex items-center justify-center gap-2 pb-4 sm:pb-6 overflow-x-auto px-4 shrink-0">
+        <div className="flex items-center justify-center gap-2 pb-4 sm:pb-6 px-4 shrink-0" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
           {media.map((m, idx) => (
             <button
               key={idx}
@@ -310,7 +310,7 @@ function PublicPropertyDetail() {
   const isRent = property.category?.slug === "rent";
 
   return (
-    <div className="min-h-screen" dir="rtl">
+    <div className="min-h-screen overflow-x-hidden" dir="rtl">
       <div className="p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 lg:space-y-8 max-w-6xl mx-auto">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-[11px] sm:text-sm overflow-x-auto pb-1 whitespace-nowrap" style={{ color: COFFEE.stone }}>
@@ -364,6 +364,7 @@ function PublicPropertyDetail() {
             {/* Main media */}
             <div
               className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 aspect-[4/3] sm:aspect-[16/10] cursor-pointer group"
+              style={{ touchAction: "manipulation" }}
               onClick={() => setLightboxOpen(true)}
             >
               {currentMedia.type === "video" ? (
@@ -372,9 +373,9 @@ function PublicPropertyDetail() {
                 <img src={currentMedia.url} alt={property.title} loading="lazy" className="w-full h-full object-cover" />
               )}
 
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
-                  <ZoomIn size={20} className="text-white" />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/30 flex items-center justify-center backdrop-blur-sm opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  <ZoomIn size={18} className="text-white" />
                 </div>
               </div>
 
@@ -382,13 +383,13 @@ function PublicPropertyDetail() {
                 <>
                   <button
                     onClick={(e) => { e.stopPropagation(); setMediaIndex((i) => (i + 1) % media.length); }}
-                    className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition"
+                    className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-11 sm:h-11 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition"
                   >
                     <ChevronLeft size={20} />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); setMediaIndex((i) => (i - 1 + media.length) % media.length); }}
-                    className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition"
+                    className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-11 sm:h-11 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition"
                   >
                     <ChevronRight size={20} />
                   </button>
@@ -415,7 +416,7 @@ function PublicPropertyDetail() {
                   <button
                     key={idx}
                     onClick={() => setMediaIndex(idx)}
-                    className={`shrink-0 w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden border-2 transition ${
+                    className={`shrink-0 w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden border-2 transition min-h-[44px] ${
                       idx === mediaIndex ? "border-amber-600" : "border-transparent"
                     }`}
                   >
@@ -547,7 +548,7 @@ function PublicPropertyDetail() {
                         {room.status === "available" && (
                           <div className="mt-3 text-center">
                             <span
-                              className="text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 rounded-full transition"
+                              className="inline-block text-[11px] sm:text-xs font-bold px-3 sm:px-4 py-2 sm:py-1.5 rounded-full transition min-h-[36px] leading-[20px]"
                               style={{
                                 background: isSelected ? COFFEE.gold : "rgba(204,154,58,0.1)",
                                 color: isSelected ? COFFEE.dark : COFFEE.gold,
@@ -618,7 +619,7 @@ function PublicPropertyDetail() {
                     <item.icon size={12} color={COFFEE.gold} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[8px] sm:text-[10px] font-bold" style={{ color: COFFEE.mid }}>{item.label}</p>
+                    <p className="text-[9px] sm:text-[10px] font-bold" style={{ color: COFFEE.mid }}>{item.label}</p>
                     <p className="text-[10px] sm:text-xs lg:text-sm font-bold truncate" style={{ color: COFFEE.dark }}>{item.value}</p>
                   </div>
                 </div>
