@@ -7,7 +7,7 @@ export default function Loader({ onComplete }) {
     const timer = setTimeout(() => {
       setVisible(false);
       setTimeout(() => onComplete?.(), 600);
-    }, 2200);
+    }, 2400);
     return () => clearTimeout(timer);
   }, [onComplete]);
 
@@ -34,15 +34,22 @@ export default function Loader({ onComplete }) {
           سكنى
         </h1>
 
-        <div className="loader-track">
-          <div className="loader-3d-bullets">
-            <span className="bullet" />
-            <span className="bullet" />
-            <span className="bullet" />
-            <span className="bullet" />
-            <span className="bullet" />
+        <div className="loader__balls">
+          <div className="loader__balls__group">
+            <div className="ball item1" />
+            <div className="ball item2" />
+            <div className="ball item3" />
           </div>
-          <div className="loader-shadow" />
+          <div className="loader__balls__group">
+            <div className="ball item1" />
+            <div className="ball item2" />
+            <div className="ball item3" />
+          </div>
+          <div className="loader__balls__group">
+            <div className="ball item1" />
+            <div className="ball item2" />
+            <div className="ball item3" />
+          </div>
         </div>
 
         <p
