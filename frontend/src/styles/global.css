@@ -291,8 +291,8 @@ button:active { transform: scale(0.96); }
 .loader-3d-bullets .bullet {
   width: 18px;
   height: 18px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #e8d5a8, #B08D57 35%, #8a6a3a 70%, #5a3a1a 100%);
+  border-radius: 4px;
+  background: linear-gradient(135deg, #e8d5a8 0%, #B08D57 40%, #8a6a3a 75%, #5a3a1a 100%);
   box-shadow:
     0 6px 10px rgba(75, 46, 31, 0.45),
     0 2px 4px rgba(0, 0, 0, 0.2),
