@@ -91,7 +91,7 @@ function PropertyShowcaseCard({ p, isFav, onToggleFav, showBadge = true }) {
       )}
 
       {/* Image / Video Swiper */}
-      <div className="relative w-full h-44 sm:h-52 overflow-hidden bg-stone-100">
+      <div className="relative w-full h-44 sm:h-52 bg-stone-100">
         {hasMedia ? (
           <Swiper
             modules={[Navigation, Pagination]}

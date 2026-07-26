@@ -70,7 +70,7 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         </div>
       )}
 
-      <div className={`relative w-full overflow-hidden bg-stone-100 ${isUploading ? 'h-44' : 'h-48'}`}>
+      <div className={`relative w-full bg-stone-100 ${isUploading ? 'h-44' : 'h-48'}`}>
         {isUploading && !hasMedia ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2">
             <Loader2 size={28} className="animate-spin text-amber-400" />
@@ -143,12 +143,6 @@ function PropertyCard({ p, isFav, onToggleFav }) {
         >
           <Heart className="w-4 h-4" fill={isFav ? COFFEE.gold : "none"} style={{ color: COFFEE.gold }} />
         </button>
-
-        {media.length > 1 && !isUploading && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/50 text-white text-[10px] font-bold backdrop-blur-sm z-10">
-            1 / {media.length}
-          </div>
-        )}
       </div>
 
       <div className="p-4">
