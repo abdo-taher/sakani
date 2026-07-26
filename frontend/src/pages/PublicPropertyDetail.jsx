@@ -152,11 +152,7 @@ function MediaLightbox({ media, initialIndex, onClose }) {
           const borderClass = isActive ? "border-white" : "border-white/30 opacity-60";
           if (m.type === "video") {
             return (
-              <button
-                key={idx}
-                onClick={() => setIndex(idx)}
-                className={`shrink-0 w-12 h-10 sm:w-14 sm:h-12 rounded-lg overflow-hidden border-2 transition ${borderClass}`}
-              >
+              <button key={idx} onClick={() => setIndex(idx)} className={`shrink-0 w-12 h-10 sm:w-14 sm:h-12 rounded-lg overflow-hidden border-2 transition ${borderClass}`}>
                 <div className="relative w-full h-full bg-black flex items-center justify-center">
                   <Video size={12} color="white" />
                 </div>
@@ -164,11 +160,7 @@ function MediaLightbox({ media, initialIndex, onClose }) {
             );
           }
           return (
-            <button
-              key={idx}
-              onClick={() => setIndex(idx)}
-              className={`shrink-0 w-12 h-10 sm:w-14 sm:h-12 rounded-lg overflow-hidden border-2 transition ${borderClass}`}
-            >
+            <button key={idx} onClick={() => setIndex(idx)} className={`shrink-0 w-12 h-10 sm:w-14 sm:h-12 rounded-lg overflow-hidden border-2 transition ${borderClass}`}>
               <img src={m.url} alt="" className="w-full h-full object-cover" />
             </button>
           );
@@ -294,8 +286,6 @@ function PublicPropertyDetail() {
     return [];
   };
 
-  const hasMultipleMedia = () => media.length > 1;
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -351,6 +341,7 @@ function PublicPropertyDetail() {
   const currentMedia = media[mediaIndex] || media[0];
   const statusInfo = STATUS_MAP[property.status] || STATUS_MAP.available;
   const isRent = property.category?.slug === "rent";
+  const hasMultipleMedia = media.length > 1;
 
   function renderBreadcrumb() {
     const crumbs = [];
@@ -414,58 +405,82 @@ function PublicPropertyDetail() {
   }
 
   function renderMainMedia() {
+    function renderMediaType() {
+      if (currentMedia.type === "video") {
+        return (
+          <video key={currentMedia.url} src={currentMedia.url} controls preload="none" className="w-full h-full object-cover" />
+        );
+      }
+      return (
+        <img src={currentMedia.url} alt={property.title} loading="lazy" className="w-full h-full object-cover" />
+      );
+    }
+
+    function renderZoomOverlay() {
+      return (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/30 flex items-center justify-center backdrop-blur-sm opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+            <ZoomIn size={18} className="text-white" />
+          </div>
+        </div>
+      );
+    }
+
+    function renderCarouselArrows() {
+      if (!hasMultipleMedia) return null;
+      return (
+        <>
+          <button
+            onClick={(e) => { e.stopPropagation(); setMediaIndex((i) => (i + 1) % media.length); }}
+            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setMediaIndex((i) => (i - 1 + media.length) % media.length); }}
+            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </>
+      );
+    }
+
+    function renderCounter() {
+      if (!hasMultipleMedia) return null;
+      return (
+        <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 bg-black/50 text-white text-[10px] sm:text-xs px-2.5 sm:px-3 py-1 rounded-full font-bold">
+          {mediaIndex + 1} / {media.length}
+        </div>
+      );
+    }
+
+    function renderVideoBadge() {
+      if (currentMedia.type !== "video") return null;
+      return (
+        <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-red-600 text-white text-[10px] sm:text-xs px-2.5 sm:px-3 py-1 rounded-full font-bold flex items-center gap-1">
+          <Video size={12} /> فيديو
+        </div>
+      );
+    }
+
     return (
       <div
         className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 aspect-[4/3] sm:aspect-[16/10] cursor-pointer group"
         style={{ touchAction: "manipulation" }}
         onClick={() => setLightboxOpen(true)}
       >
-        {currentMedia.type === "video" ? (
-          <video key={currentMedia.url} src={currentMedia.url} controls preload="none" className="w-full h-full object-cover" />
-        ) : (
-          <img src={currentMedia.url} alt={property.title} loading="lazy" className="w-full h-full object-cover" />
-        )}
-
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/30 flex items-center justify-center backdrop-blur-sm opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-            <ZoomIn size={18} className="text-white" />
-          </div>
-        </div>
-
-        {hasMultipleMedia() && (
-          <>
-            <button
-              onClick={(e) => { e.stopPropagation(); setMediaIndex((i) => (i + 1) % media.length); }}
-              className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-11 sm:h-11 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setMediaIndex((i) => (i - 1 + media.length) % media.length); }}
-              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-11 sm:h-11 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </>
-        )}
-
-        {hasMultipleMedia() && (
-          <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 bg-black/50 text-white text-[10px] sm:text-xs px-2.5 sm:px-3 py-1 rounded-full font-bold">
-            {mediaIndex + 1} / {media.length}
-          </div>
-        )}
-
-        {currentMedia.type === "video" && (
-          <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-red-600 text-white text-[10px] sm:text-xs px-2.5 sm:px-3 py-1 rounded-full font-bold flex items-center gap-1">
-            <Video size={12} /> فيديو
-          </div>
-        )}
+        {renderMediaType()}
+        {renderZoomOverlay()}
+        {renderCarouselArrows()}
+        {renderCounter()}
+        {renderVideoBadge()}
       </div>
     );
   }
 
   function renderThumbnails() {
-    if (!hasMultipleMedia()) return null;
+    if (!hasMultipleMedia) return null;
     return (
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
         {media.map((m, idx) => {
@@ -553,29 +568,32 @@ function PublicPropertyDetail() {
     function renderRoomImage() {
       if (primaryImg) {
         return (
-          <img
-            src={primaryImg.image_url}
-            alt={room.name}
-            className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0"
-          />
+          <img src={primaryImg.image_url} alt={room.name} className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0" />
         );
       }
       return (
-        <div
-          className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: COFFEE.cream }}
-        >
+        <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center shrink-0" style={{ background: COFFEE.cream }}>
           <ImageIcon size={22} color={COFFEE.gold} />
         </div>
       );
     }
 
-    function renderRoomSelectButton() {
+    function renderRoomArea() {
+      if (room.area <= 0) return null;
+      return <p className="text-[10px] sm:text-xs mt-1" style={{ color: COFFEE.mid }}>{room.area} م²</p>;
+    }
+
+    function renderRoomDescription() {
+      if (!room.description) return null;
+      return <p className="text-[10px] sm:text-xs mt-1 line-clamp-2" style={{ color: COFFEE.mid }}>{room.description}</p>;
+    }
+
+    function renderSelectButton() {
       if (!isAvailable) return null;
       return (
         <div className="mt-3 text-center">
           <span
-            className="text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 rounded-full transition"
+            className="inline-block text-[11px] sm:text-xs font-bold px-3 sm:px-4 py-2 sm:py-1.5 rounded-full transition min-h-[36px] leading-[20px]"
             style={{
               background: isSelected ? COFFEE.gold : "rgba(204,154,58,0.1)",
               color: isSelected ? COFFEE.dark : COFFEE.gold,
@@ -604,10 +622,7 @@ function PublicPropertyDetail() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
               <p className="font-bold text-sm sm:text-base" style={{ color: COFFEE.dark }}>{room.name}</p>
-              <span
-                className="px-1.5 py-0.5 sm:px-2 rounded text-[10px] font-bold"
-                style={{ background: roomStatus.bg, color: roomStatus.color }}
-              >
+              <span className="px-1.5 py-0.5 sm:px-2 rounded text-[10px] font-bold" style={{ background: roomStatus.bg, color: roomStatus.color }}>
                 {roomStatus.label}
               </span>
             </div>
@@ -615,21 +630,18 @@ function PublicPropertyDetail() {
               {fmtPrice(room.price)}
               <span className="text-[10px] sm:text-xs font-normal" style={{ color: COFFEE.mid }}> / شهر</span>
             </p>
-            {room.area > 0 && (
-              <p className="text-[10px] sm:text-xs mt-1" style={{ color: COFFEE.mid }}>{room.area} م²</p>
-            )}
-            {room.description && (
-              <p className="text-[10px] sm:text-xs mt-1 line-clamp-2" style={{ color: COFFEE.mid }}>{room.description}</p>
-            )}
+            {renderRoomArea()}
+            {renderRoomDescription()}
           </div>
         </div>
-        {renderRoomSelectButton()}
+        {renderSelectButton()}
       </div>
     );
   }
 
   function renderRoomsSection() {
-    if (!isRent || !property.has_detailed_rooms) return null;
+    if (!isRent) return null;
+    if (!property.has_detailed_rooms) return null;
     const rooms = getRoomsArray();
     if (rooms.length <= 0) return null;
     return (
@@ -704,7 +716,7 @@ function PublicPropertyDetail() {
     const visible = items.filter((item) => item.value != null && item.value !== "" && item.value !== 0);
 
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-2 gap-1.5 sm:gap-2 lg:gap-3">
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:gap-3">
         {visible.map((item, idx) => (
           <div key={idx} className="rounded-xl sm:rounded-2xl p-2 sm:p-2.5 lg:p-3 border flex items-start gap-1.5 sm:gap-2" style={{ borderColor: "#f0ebe4", background: "white" }}>
             <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: COFFEE.cream }}>
@@ -721,7 +733,8 @@ function PublicPropertyDetail() {
   }
 
   function renderReservationTypeToggle() {
-    if (!isRent || !property.has_detailed_rooms) return null;
+    if (!isRent) return null;
+    if (!property.has_detailed_rooms) return null;
     const rooms = getRoomsArray();
     const availableRooms = rooms.filter((r) => r.status === "available");
     if (availableRooms.length <= 0) return null;
@@ -755,10 +768,8 @@ function PublicPropertyDetail() {
   }
 
   function renderReservationForm() {
-    const shouldShowForm = !isRent || !property.has_detailed_rooms || reservationType === "property" || selectedRoomId;
-    const showRoomPrompt = isRent && property.has_detailed_rooms && reservationType === "room" && !selectedRoomId;
-
-    if (reserveSuccess) {
+    function renderSuccessMessage() {
+      if (!reserveSuccess) return null;
       return (
         <div className="text-center py-4">
           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: "#DCFCE7" }}>
@@ -770,81 +781,111 @@ function PublicPropertyDetail() {
       );
     }
 
-    const phoneInputClass = `w-full border rounded-xl px-3 py-3 sm:px-4 sm:py-3 text-sm outline-none focus:ring-2 ${phoneError ? "border-red-400" : alreadyReserved ? "border-amber-400" : ""}`;
-    const phoneInputStyle = (!phoneError && !alreadyReserved) ? { borderColor: "#f0ebe4" } : {};
+    function renderPhoneMessages() {
+      if (phoneError) {
+        return <p className="text-red-500 text-[10px] sm:text-xs mt-1 font-semibold">{phoneError}</p>;
+      }
+      if (alreadyReserved) {
+        return <p className="text-amber-600 text-[10px] sm:text-xs mt-1 font-semibold">لقد قمت بحجز هذا العقار بالفعل</p>;
+      }
+      if (checking) {
+        return <p className="text-stone-400 text-[10px] sm:text-xs mt-1">جاري التحقق...</p>;
+      }
+      return null;
+    }
 
-    const submitLabel = alreadyReserved ? "تم الحجز بالفعل" : submitting ? "جاري الإرسال..." : "إرسال طلب الحجز";
-    const submitBg = alreadyReserved ? "#16A34A" : COFFEE.gold;
-    const submitColor = alreadyReserved ? "#fff" : COFFEE.darkest;
+    function renderRoomPrompt() {
+      if (!isRent) return null;
+      if (!property.has_detailed_rooms) return null;
+      if (reservationType !== "room") return null;
+      if (selectedRoomId) return null;
+      return (
+        <p className="text-center text-xs sm:text-sm mt-3" style={{ color: COFFEE.stone }}>
+          اختر غرفة من القائمة أعلاه ثم أكمل بيانات الحجز
+        </p>
+      );
+    }
+
+    function renderFormFields() {
+      if (reserveSuccess) return null;
+
+      const shouldShowForm = !isRent || !property.has_detailed_rooms || reservationType === "property" || !!selectedRoomId;
+      if (!shouldShowForm) return null;
+
+      const phoneInputClass = `w-full border rounded-xl px-3 py-3 sm:px-4 sm:py-3 text-sm outline-none focus:ring-2 ${phoneError ? "border-red-400" : alreadyReserved ? "border-amber-400" : ""}`;
+      const phoneInputStyle = (!phoneError && !alreadyReserved) ? { borderColor: "#f0ebe4" } : {};
+
+      const submitLabel = alreadyReserved ? "تم الحجز بالفعل" : submitting ? "جاري الإرسال..." : "إرسال طلب الحجز";
+      const submitBg = alreadyReserved ? "#16A34A" : COFFEE.gold;
+      const submitColor = alreadyReserved ? "#fff" : COFFEE.darkest;
+
+      return (
+        <div className="space-y-2.5 sm:space-y-3">
+          <input
+            type="text"
+            placeholder="الاسم الكامل"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full border rounded-xl px-3 py-3 sm:px-4 sm:py-3 text-sm outline-none focus:ring-2"
+            style={{ borderColor: "#f0ebe4" }}
+          />
+
+          <div>
+            <input
+              type="tel"
+              placeholder="01xxxxxxxxx"
+              value={form.phone}
+              dir="ltr"
+              onChange={(e) => {
+                const val = formatPhone(e.target.value);
+                setForm({ ...form, phone: val });
+                if (phoneError) setPhoneError(getPhoneError(val) || "");
+                if (alreadyReserved) setAlreadyReserved(false);
+              }}
+              onBlur={() => checkIfReserved(form.phone)}
+              className={phoneInputClass}
+              style={phoneInputStyle}
+            />
+            {renderPhoneMessages()}
+          </div>
+
+          <textarea
+            placeholder="ملاحظات (اختياري)"
+            value={form.message}
+            onChange={(e) => setForm({ ...form, message: e.target.value })}
+            rows={2}
+            className="w-full border rounded-xl px-3 py-3 sm:px-4 sm:py-3 text-sm outline-none focus:ring-2 resize-none"
+            style={{ borderColor: "#f0ebe4" }}
+          />
+
+          <button
+            onClick={handleReserve}
+            disabled={submitting || alreadyReserved}
+            className="w-full py-3 sm:py-3.5 rounded-xl font-bold text-sm transition hover:scale-[1.01] disabled:opacity-60 disabled:hover:scale-100"
+            style={{ backgroundColor: submitBg, color: submitColor }}
+          >
+            {submitLabel}
+          </button>
+        </div>
+      );
+    }
 
     return (
       <>
-        <h3 className="font-extrabold mb-3 sm:mb-4 text-sm sm:text-base" style={{ color: COFFEE.dark }}>احجز الآن</h3>
-
-        {renderReservationTypeToggle()}
-
-        {shouldShowForm && (
-          <div className="space-y-2.5 sm:space-y-3">
-            <input
-              type="text"
-              placeholder="الاسم الكامل"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full border rounded-xl px-3 py-3 sm:px-4 sm:py-3 text-sm outline-none focus:ring-2"
-              style={{ borderColor: "#f0ebe4" }}
-            />
-
-            <div>
-              <input
-                type="tel"
-                placeholder="01xxxxxxxxx"
-                value={form.phone}
-                dir="ltr"
-                onChange={(e) => {
-                  const val = formatPhone(e.target.value);
-                  setForm({ ...form, phone: val });
-                  if (phoneError) setPhoneError(getPhoneError(val) || "");
-                  if (alreadyReserved) setAlreadyReserved(false);
-                }}
-                onBlur={() => checkIfReserved(form.phone)}
-                className={phoneInputClass}
-                style={phoneInputStyle}
-              />
-              {phoneError && <p className="text-red-500 text-[10px] sm:text-xs mt-1 font-semibold">{phoneError}</p>}
-              {alreadyReserved && !phoneError && (
-                <p className="text-amber-600 text-[10px] sm:text-xs mt-1 font-semibold">لقد قمت بحجز هذا العقار بالفعل</p>
-              )}
-              {checking && !phoneError && (
-                <p className="text-stone-400 text-[10px] sm:text-xs mt-1">جاري التحقق...</p>
-              )}
-            </div>
-
-            <textarea
-              placeholder="ملاحظات (اختياري)"
-              value={form.message}
-              onChange={(e) => setForm({ ...form, message: e.target.value })}
-              rows={2}
-              className="w-full border rounded-xl px-3 py-3 sm:px-4 sm:py-3 text-sm outline-none focus:ring-2 resize-none"
-              style={{ borderColor: "#f0ebe4" }}
-            />
-
-            <button
-              onClick={handleReserve}
-              disabled={submitting || alreadyReserved}
-              className="w-full py-3 sm:py-3.5 rounded-xl font-bold text-sm transition hover:scale-[1.01] disabled:opacity-60 disabled:hover:scale-100"
-              style={{ backgroundColor: submitBg, color: submitColor }}
-            >
-              {submitLabel}
-            </button>
-          </div>
-        )}
-
-        {showRoomPrompt && (
-          <p className="text-center text-xs sm:text-sm mt-3" style={{ color: COFFEE.stone }}>
-            اختر غرفة من القائمة أعلاه ثم أكمل بيانات الحجز
-          </p>
-        )}
+        {renderSuccessMessage()}
+        {renderFormFields()}
+        {renderRoomPrompt()}
       </>
+    );
+  }
+
+  function renderReservationBox() {
+    return (
+      <div className="rounded-2xl border p-3 sm:p-4 lg:p-5" style={{ borderColor: "#f0ebe4", background: "white" }}>
+        <h3 className="font-extrabold mb-3 sm:mb-4 text-sm sm:text-base" style={{ color: COFFEE.dark }}>احجز الآن</h3>
+        {renderReservationTypeToggle()}
+        {renderReservationForm()}
+      </div>
     );
   }
 
@@ -855,7 +896,6 @@ function PublicPropertyDetail() {
         {renderTitleAndStatus()}
 
         <div className="grid lg:grid-cols-5 gap-5 sm:gap-6 lg:gap-8">
-          {/* Left column: media + description + rooms */}
           <div className="lg:col-span-3 space-y-3 sm:space-y-4 lg:space-y-6">
             {renderMainMedia()}
             {renderThumbnails()}
@@ -865,14 +905,10 @@ function PublicPropertyDetail() {
             {renderRoomsSection()}
           </div>
 
-          {/* Right column: price + info + reservation */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-5 lg:space-y-6">
             {renderPriceBox()}
             {renderInfoCards()}
-
-            <div className="rounded-2xl border p-3 sm:p-4 lg:p-5" style={{ borderColor: "#f0ebe4", background: "white" }}>
-              {renderReservationForm()}
-            </div>
+            {renderReservationBox()}
           </div>
         </div>
       </div>

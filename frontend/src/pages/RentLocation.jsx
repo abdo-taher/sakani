@@ -77,6 +77,20 @@ const FURNISHING_MAP = {
   unfurnished: "غير مفروش",
 };
 
+const FilterPill = ({ active, onClick, children }) => (
+  <button
+    onClick={onClick}
+    className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border"
+    style={{
+      backgroundColor: active ? COFFEE.gold : "white",
+      color: active ? COFFEE.darkest : COFFEE.mid,
+      borderColor: active ? COFFEE.gold : COFFEE.line,
+    }}
+  >
+    {children}
+  </button>
+);
+
 function RentLocation({ favorites, onToggleFav }) {
   const { locationId } = useParams();
   const navigate = useNavigate();
@@ -234,26 +248,220 @@ function RentLocation({ favorites, onToggleFav }) {
 
   const availableCount = locationProperties.filter((p) => p.status === "available").length;
 
-  const FilterPill = ({ active, onClick, children }) => (
-    <button
-      onClick={onClick}
-      className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border"
-      style={{
-        backgroundColor: active ? COFFEE.gold : "white",
-        color: active ? COFFEE.darkest : COFFEE.mid,
-        borderColor: active ? COFFEE.gold : COFFEE.line,
-      }}
-    >
-      {children}
-    </button>
-  );
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: COFFEE.gold, borderTopColor: "transparent" }} />
         <p className="font-bold text-sm" style={{ color: COFFEE.stone }}>جاري تحميل العقارات...</p>
       </div>
+    );
+  }
+
+  function renderHeroStatAvailable() {
+    if (availableCount <= 0) return null;
+    return (
+      <span className="flex items-center gap-1">
+        <CheckCircle2 className="w-3.5 h-3.5" />
+        {availableCount} متاح
+      </span>
+    );
+  }
+
+  function renderHeroStatPrice() {
+    if (stats.minPrice <= 0) return null;
+    return (
+      <span className="font-bold">يبدأ من {fmtPrice(stats.minPrice)}</span>
+    );
+  }
+
+  function renderClearSearch() {
+    if (!search) return null;
+    return (
+      <button onClick={() => setSearch("")} className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold" style={{ color: COFFEE.gold }}>مسح</button>
+    );
+  }
+
+  function renderFilterBadge() {
+    if (activeFilterCount <= 0) return null;
+    return (
+      <span className="w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-extrabold" style={{ backgroundColor: showFilters || activeFilterCount > 0 ? COFFEE.darkest : COFFEE.gold, color: "white" }}>
+        {activeFilterCount}
+      </span>
+    );
+  }
+
+  function renderResetButton() {
+    if (activeFilterCount <= 0) return null;
+    return (
+      <button
+        onClick={resetFilters}
+        className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg transition"
+        style={{ color: "#DC2626" }}
+      >
+        <X className="w-3 h-3" />
+        مسح جميع الفلاتر
+      </button>
+    );
+  }
+
+  function renderLoadingMore() {
+    if (!loadingMore) return null;
+    return (
+      <div className="flex items-center gap-2">
+        <Loader2 className="w-4 h-4 animate-spin" style={{ color: COFFEE.gold }} />
+        <span className="text-sm font-bold" style={{ color: COFFEE.stone }}>تحميل المزيد...</span>
+      </div>
+    );
+  }
+
+  function renderEndOfList() {
+    if (hasMore || filteredProperties.length <= PROPERTIES_PER_PAGE) return null;
+    return (
+      <Reveal>
+        <div className="text-center py-8">
+          <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold" style={{ backgroundColor: COFFEE.cream, color: COFFEE.dark }}>
+            تم عرض جميع العقارات — {filteredProperties.length} عقار
+          </span>
+        </div>
+      </Reveal>
+    );
+  }
+
+  function renderFilterPanel() {
+    if (!showFilters) return null;
+    return (
+      <Reveal delay={80}>
+        <div className="rounded-2xl border p-4 mb-5 space-y-4" style={{ borderColor: COFFEE.line, backgroundColor: COFFEE.creamSoft }}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label className="text-[10px] sm:text-xs font-bold mb-1.5 block" style={{ color: COFFEE.mid }}>نوع العقار</label>
+              <div className="flex flex-wrap gap-1.5">
+                <FilterPill active={typeFilter === "all"} onClick={() => setTypeFilter("all")}>الكل</FilterPill>
+                {propertyTypes.map((t) => (
+                  <FilterPill key={t.name} active={typeFilter === t.name} onClick={() => setTypeFilter(t.name)}>
+                    {t.name}
+                  </FilterPill>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] sm:text-xs font-bold mb-1.5 block" style={{ color: COFFEE.mid }}>عدد الغرف</label>
+              <div className="flex flex-wrap gap-1.5">
+                {ROOMS_OPTIONS.map((opt) => (
+                  <FilterPill key={opt.value} active={roomsFilter === opt.value} onClick={() => setRoomsFilter(opt.value)}>
+                    {opt.value === "4" ? "4+" : opt.label}
+                  </FilterPill>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] sm:text-xs font-bold mb-1.5 flex items-center gap-1" style={{ color: COFFEE.mid }}>
+                <Paintbrush className="w-3 h-3" /> التشطيب
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {FINISHING_OPTIONS.map((opt) => (
+                  <FilterPill key={opt.value} active={finishingFilter === opt.value} onClick={() => setFinishingFilter(opt.value)}>
+                    {opt.label}
+                  </FilterPill>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] sm:text-xs font-bold mb-1.5 flex items-center gap-1" style={{ color: COFFEE.mid }}>
+                <Sofa className="w-3 h-3" /> التأثيث
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {FURNISHING_OPTIONS.map((opt) => (
+                  <FilterPill key={opt.value} active={furnishingFilter === opt.value} onClick={() => setFurnishingFilter(opt.value)}>
+                    {opt.label}
+                  </FilterPill>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] sm:text-xs font-bold mb-1.5 block" style={{ color: COFFEE.mid }}>نطاق السعر (ج.م)</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                placeholder="من"
+                value={priceRange.min}
+                onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                className="w-28 px-3 py-1.5 rounded-lg border text-xs outline-none focus:ring-1"
+                style={{ borderColor: COFFEE.line, color: COFFEE.dark }}
+              />
+              <span className="text-xs" style={{ color: COFFEE.stone }}>—</span>
+              <input
+                type="number"
+                placeholder="إلى"
+                value={priceRange.max}
+                onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                className="w-28 px-3 py-1.5 rounded-lg border text-xs outline-none focus:ring-1"
+                style={{ borderColor: COFFEE.line, color: COFFEE.dark }}
+              />
+            </div>
+          </div>
+
+          {renderResetButton()}
+        </div>
+      </Reveal>
+    );
+  }
+
+  function renderEmptyState() {
+    if (locationProperties.length !== 0) return null;
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <Reveal>
+          <div className="text-center">
+            <Building2 className="w-14 h-14 mx-auto mb-3 text-stone-300" />
+            <h2 className="text-lg font-bold mb-2" style={{ color: COFFEE.mid }}>لا توجد عقارات في هذه المنطقة</h2>
+            <button onClick={() => navigate("/rent")} className="mt-3 px-5 py-2 rounded-lg text-white text-sm font-bold" style={{ background: COFFEE.gold }}>العودة للمناطق</button>
+          </div>
+        </Reveal>
+      </div>
+    );
+  }
+
+  function renderNoResults() {
+    if (filteredProperties.length !== 0) return null;
+    return (
+      <div className="flex items-center justify-center min-h-[30vh]">
+        <Reveal>
+          <div className="text-center">
+            <Search className="w-10 h-10 mx-auto mb-3" style={{ color: COFFEE.line }} />
+            <p className="font-bold" style={{ color: COFFEE.stone }}>لا توجد نتائج مطابقة</p>
+            <button onClick={resetFilters} className="mt-2 text-xs font-bold" style={{ color: COFFEE.gold }}>مسح الفلتر</button>
+          </div>
+        </Reveal>
+      </div>
+    );
+  }
+
+  function renderPropertyGrid() {
+    if (filteredProperties.length === 0) return null;
+    return (
+      <>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {visibleProperties.map((p, idx) => (
+            <Reveal key={p.id} delay={idx < 6 ? idx * 50 : 0}>
+              <RentPropertyCard p={p} isFav={favorites?.has?.(p.id) || false} onToggleFav={onToggleFav} />
+            </Reveal>
+          ))}
+        </div>
+
+        {hasMore && (
+          <div ref={sentinelRef} className="flex justify-center py-10">
+            {renderLoadingMore()}
+          </div>
+        )}
+
+        {renderEndOfList()}
+      </>
     );
   }
 
@@ -283,8 +491,8 @@ function RentLocation({ favorites, onToggleFav }) {
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-white/80">
               <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />{locationProperties.length} عقار</span>
-              {availableCount > 0 && <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" />{availableCount} متاح</span>}
-              {stats.minPrice > 0 && <span className="font-bold">يبدأ من {fmtPrice(stats.minPrice)}</span>}
+              {renderHeroStatAvailable()}
+              {renderHeroStatPrice()}
             </div>
           </div>
         </div>
@@ -292,17 +500,9 @@ function RentLocation({ favorites, onToggleFav }) {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
-        {locationProperties.length === 0 ? (
-          <div className="flex items-center justify-center min-h-[40vh]">
-            <Reveal>
-              <div className="text-center">
-                <Building2 className="w-14 h-14 mx-auto mb-3 text-stone-300" />
-                <h2 className="text-lg font-bold mb-2" style={{ color: COFFEE.mid }}>لا توجد عقارات في هذه المنطقة</h2>
-                <button onClick={() => navigate("/rent")} className="mt-3 px-5 py-2 rounded-lg text-white text-sm font-bold" style={{ background: COFFEE.gold }}>العودة للمناطق</button>
-              </div>
-            </Reveal>
-          </div>
-        ) : (
+        {renderEmptyState()}
+
+        {locationProperties.length > 0 && (
           <>
             {/* Search + Filter toggle */}
             <Reveal delay={40}>
@@ -317,9 +517,7 @@ function RentLocation({ favorites, onToggleFav }) {
                     className="w-full pr-10 pl-4 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 transition"
                     style={{ borderColor: COFFEE.line, color: COFFEE.dark }}
                   />
-                  {search && (
-                    <button onClick={() => setSearch("")} className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold" style={{ color: COFFEE.gold }}>مسح</button>
-                  )}
+                  {renderClearSearch()}
                 </div>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
@@ -332,11 +530,7 @@ function RentLocation({ favorites, onToggleFav }) {
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   <span className="hidden sm:inline">فلتر</span>
-                  {activeFilterCount > 0 && (
-                    <span className="w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-extrabold" style={{ backgroundColor: showFilters || activeFilterCount > 0 ? COFFEE.darkest : COFFEE.gold, color: "white" }}>
-                      {activeFilterCount}
-                    </span>
-                  )}
+                  {renderFilterBadge()}
                 </button>
               </div>
             </Reveal>
@@ -353,148 +547,15 @@ function RentLocation({ favorites, onToggleFav }) {
             </Reveal>
 
             {/* Expandable filter panel */}
-            {showFilters && (
-              <Reveal delay={80}>
-                <div className="rounded-2xl border p-4 mb-5 space-y-4" style={{ borderColor: COFFEE.line, backgroundColor: COFFEE.creamSoft }}>
-                  {/* Row 1: Type + Rooms */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div>
-                      <label className="text-[10px] sm:text-xs font-bold mb-1.5 block" style={{ color: COFFEE.mid }}>نوع العقار</label>
-                      <div className="flex flex-wrap gap-1.5">
-                        <FilterPill active={typeFilter === "all"} onClick={() => setTypeFilter("all")}>الكل</FilterPill>
-                        {propertyTypes.map((t) => (
-                          <FilterPill key={t.name} active={typeFilter === t.name} onClick={() => setTypeFilter(t.name)}>
-                            {t.name}
-                          </FilterPill>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[10px] sm:text-xs font-bold mb-1.5 block" style={{ color: COFFEE.mid }}>عدد الغرف</label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {ROOMS_OPTIONS.map((opt) => (
-                          <FilterPill key={opt.value} active={roomsFilter === opt.value} onClick={() => setRoomsFilter(opt.value)}>
-                            {opt.value === "4" ? "4+" : opt.label}
-                          </FilterPill>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Row 2: Finishing + Furnishing */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] sm:text-xs font-bold mb-1.5 flex items-center gap-1" style={{ color: COFFEE.mid }}>
-                        <Paintbrush className="w-3 h-3" /> التشطيب
-                      </label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {FINISHING_OPTIONS.map((opt) => (
-                          <FilterPill key={opt.value} active={finishingFilter === opt.value} onClick={() => setFinishingFilter(opt.value)}>
-                            {opt.label}
-                          </FilterPill>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[10px] sm:text-xs font-bold mb-1.5 flex items-center gap-1" style={{ color: COFFEE.mid }}>
-                        <Sofa className="w-3 h-3" /> التأثيث
-                      </label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {FURNISHING_OPTIONS.map((opt) => (
-                          <FilterPill key={opt.value} active={furnishingFilter === opt.value} onClick={() => setFurnishingFilter(opt.value)}>
-                            {opt.label}
-                          </FilterPill>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Row 3: Price range */}
-                  <div>
-                    <label className="text-[10px] sm:text-xs font-bold mb-1.5 block" style={{ color: COFFEE.mid }}>نطاق السعر (ج.م)</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        placeholder="من"
-                        value={priceRange.min}
-                        onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-                        className="w-28 px-3 py-1.5 rounded-lg border text-xs outline-none focus:ring-1"
-                        style={{ borderColor: COFFEE.line, color: COFFEE.dark }}
-                      />
-                      <span className="text-xs" style={{ color: COFFEE.stone }}>—</span>
-                      <input
-                        type="number"
-                        placeholder="إلى"
-                        value={priceRange.max}
-                        onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-                        className="w-28 px-3 py-1.5 rounded-lg border text-xs outline-none focus:ring-1"
-                        style={{ borderColor: COFFEE.line, color: COFFEE.dark }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Reset */}
-                  {activeFilterCount > 0 && (
-                    <button
-                      onClick={resetFilters}
-                      className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg transition"
-                      style={{ color: "#DC2626" }}
-                    >
-                      <X className="w-3 h-3" />
-                      مسح جميع الفلاتر
-                    </button>
-                  )}
-                </div>
-              </Reveal>
-            )}
+            {renderFilterPanel()}
 
             {/* Results count */}
             <p className="text-xs sm:text-sm mb-4" style={{ color: COFFEE.stone }}>
               عرض {Math.min(visibleCount, filteredProperties.length)} من {filteredProperties.length} عقار
             </p>
 
-            {filteredProperties.length === 0 ? (
-              <div className="flex items-center justify-center min-h-[30vh]">
-                <Reveal>
-                  <div className="text-center">
-                    <Search className="w-10 h-10 mx-auto mb-3" style={{ color: COFFEE.line }} />
-                    <p className="font-bold" style={{ color: COFFEE.stone }}>لا توجد نتائج مطابقة</p>
-                    <button onClick={resetFilters} className="mt-2 text-xs font-bold" style={{ color: COFFEE.gold }}>مسح الفلتر</button>
-                  </div>
-                </Reveal>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-                  {visibleProperties.map((p, idx) => (
-                    <Reveal key={p.id} delay={idx < 6 ? idx * 50 : 0}>
-                      <RentPropertyCard p={p} isFav={favorites?.has?.(p.id) || false} onToggleFav={onToggleFav} />
-                    </Reveal>
-                  ))}
-                </div>
-
-                {hasMore && (
-                  <div ref={sentinelRef} className="flex justify-center py-10">
-                    {loadingMore && (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" style={{ color: COFFEE.gold }} />
-                        <span className="text-sm font-bold" style={{ color: COFFEE.stone }}>تحميل المزيد...</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {!hasMore && filteredProperties.length > PROPERTIES_PER_PAGE && (
-                  <Reveal>
-                    <div className="text-center py-8">
-                      <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold" style={{ backgroundColor: COFFEE.cream, color: COFFEE.dark }}>
-                        تم عرض جميع العقارات — {filteredProperties.length} عقار
-                      </span>
-                    </div>
-                  </Reveal>
-                )}
-              </>
-            )}
+            {renderNoResults()}
+            {renderPropertyGrid()}
           </>
         )}
       </div>
@@ -535,6 +596,101 @@ function RentPropertyCard({ p, isFav, onToggleFav }) {
 
   const price = getPriceDisplay();
 
+  function renderMedia() {
+    if (mainVideo) {
+      return <VideoThumb src={mainVideo} posterUrl={videoThumbnail} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />;
+    }
+    if (mainImage) {
+      return <img src={mainImage} alt={p.title} onError={() => setImgError(true)} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />;
+    }
+    return <img src={SAMPLE_IMG(p.id)} alt={p.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />;
+  }
+
+  function renderVideoOverlay() {
+    if (!hasVideo) return null;
+    return (
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
+          <PlayCircle className="w-6 h-6 text-white" />
+        </div>
+      </div>
+    );
+  }
+
+  function renderViewsBadge() {
+    if (p.cached_views <= 0) return null;
+    return (
+      <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 text-white text-[11px] font-bold backdrop-blur-sm">
+        <Eye className="w-3 h-3" />{p.cached_views}
+      </div>
+    );
+  }
+
+  function handleFavoriteClick(e) {
+    e.stopPropagation();
+    if (onToggleFav) onToggleFav(p.id);
+  }
+
+  function renderPropertyFeatures() {
+    const hasRooms = p.rooms > 0;
+    const hasBathrooms = p.bathrooms > 0;
+    const hasFloor = p.floor != null;
+    if (!hasRooms && !hasBathrooms && !hasFloor) return null;
+    return (
+      <div className="flex items-center justify-between text-xs mb-2.5 pb-2 border-b" style={{ borderColor: "#f0ebe4", color: COFFEE.stone }}>
+        {hasRooms && <div className="flex items-center gap-1"><BedDouble className="w-3 h-3" style={{ color: COFFEE.gold }} /><span>{p.rooms}</span></div>}
+        {hasBathrooms && <div className="flex items-center gap-1"><Bath className="w-3 h-3" style={{ color: COFFEE.gold }} /><span>{p.bathrooms}</span></div>}
+        {hasFloor && <div className="flex items-center gap-1"><Layers className="w-3 h-3" style={{ color: COFFEE.gold }} /><span>الدور {p.floor}</span></div>}
+      </div>
+    );
+  }
+
+  function renderTags() {
+    const hasFinishing = !!p.finishing;
+    const hasFurnishing = !!p.furnishing;
+    const hasType = !!p.propertyType?.name;
+    if (!hasFinishing && !hasFurnishing && !hasType) return null;
+    return (
+      <div className="flex flex-wrap gap-1 mb-2.5">
+        {hasFinishing && (
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold" style={{ backgroundColor: COFFEE.cream, color: COFFEE.dark }}>
+            <Paintbrush className="w-2.5 h-2.5" style={{ color: COFFEE.gold }} />{FINISHING_MAP[p.finishing] || p.finishing}
+          </span>
+        )}
+        {hasFurnishing && (
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold" style={{ backgroundColor: COFFEE.cream, color: COFFEE.dark }}>
+            <Sofa className="w-2.5 h-2.5" style={{ color: COFFEE.gold }} />{FURNISHING_MAP[p.furnishing] || p.furnishing}
+          </span>
+        )}
+        {hasType && (
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold" style={{ backgroundColor: COFFEE.cream, color: COFFEE.dark }}>
+            <Building2 className="w-2.5 h-2.5" style={{ color: COFFEE.gold }} />{p.propertyType.name}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  function renderAvailableRooms() {
+    const show = isRent && p.has_detailed_rooms && availableRooms > 0;
+    if (!show) return null;
+    return (
+      <div className="flex items-center gap-1 text-[11px] font-bold mb-2.5 px-2 py-1 rounded-lg" style={{ backgroundColor: "#DCFCE7", color: "#16A34A" }}>
+        <CheckCircle2 className="w-3 h-3" />{availableRooms} غرفة متاحة
+      </div>
+    );
+  }
+
+  function renderPricePrefix() {
+    if (!price.prefix) return null;
+    return <span className="text-[10px] font-bold block" style={{ color: COFFEE.stone }}>{price.prefix}</span>;
+  }
+
+  function renderPriceSuffix() {
+    if (!price.suffix) return null;
+    return <span className="text-[11px]" style={{ color: COFFEE.stone }}>{price.suffix}</span>;
+  }
+
   return (
     <div
       onClick={() => navigate(`/property/${p.id}`)}
@@ -543,34 +699,17 @@ function RentPropertyCard({ p, isFav, onToggleFav }) {
       dir="rtl"
     >
       <div className="relative w-full h-44 sm:h-52 overflow-hidden bg-stone-100">
-        {mainVideo ? (
-          <VideoThumb src={mainVideo} posterUrl={videoThumbnail} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-        ) : mainImage ? (
-          <img src={mainImage} alt={p.title} onError={() => setImgError(true)} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-        ) : (
-          <img src={SAMPLE_IMG(p.id)} alt={p.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-        )}
-
-        {hasVideo && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
-              <PlayCircle className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        )}
+        {renderMedia()}
+        {renderVideoOverlay()}
 
         <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white shadow" style={{ backgroundColor: status.color }}>
           {status.label}
         </div>
 
-        {p.cached_views > 0 && (
-          <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 text-white text-[11px] font-bold backdrop-blur-sm">
-            <Eye className="w-3 h-3" />{p.cached_views}
-          </div>
-        )}
+        {renderViewsBadge()}
 
         <button
-          onClick={(e) => { e.stopPropagation(); onToggleFav && onToggleFav(p.id); }}
+          onClick={handleFavoriteClick}
           className="absolute bottom-3 left-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10"
         >
           <Heart className="w-4 h-4" fill={isFav ? "#e0435c" : "none"} style={{ color: isFav ? "#e0435c" : COFFEE.gold }} />
@@ -589,45 +728,17 @@ function RentPropertyCard({ p, isFav, onToggleFav }) {
           <span className="truncate">{p.location?.name || "غير محدد"}</span>
         </div>
 
-        <div className="flex items-center justify-between text-xs mb-2.5 pb-2 border-b" style={{ borderColor: "#f0ebe4", color: COFFEE.stone }}>
-          {p.rooms > 0 && <div className="flex items-center gap-1"><BedDouble className="w-3 h-3" style={{ color: COFFEE.gold }} /><span>{p.rooms}</span></div>}
-          {p.bathrooms > 0 && <div className="flex items-center gap-1"><Bath className="w-3 h-3" style={{ color: COFFEE.gold }} /><span>{p.bathrooms}</span></div>}
-          {p.floor != null && <div className="flex items-center gap-1"><Layers className="w-3 h-3" style={{ color: COFFEE.gold }} /><span>الدور {p.floor}</span></div>}
-        </div>
-
-        {(p.finishing || p.furnishing || p.propertyType?.name) && (
-          <div className="flex flex-wrap gap-1 mb-2.5">
-            {p.finishing && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold" style={{ backgroundColor: COFFEE.cream, color: COFFEE.dark }}>
-                <Paintbrush className="w-2.5 h-2.5" style={{ color: COFFEE.gold }} />{FINISHING_MAP[p.finishing] || p.finishing}
-              </span>
-            )}
-            {p.furnishing && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold" style={{ backgroundColor: COFFEE.cream, color: COFFEE.dark }}>
-                <Sofa className="w-2.5 h-2.5" style={{ color: COFFEE.gold }} />{FURNISHING_MAP[p.furnishing] || p.furnishing}
-              </span>
-            )}
-            {p.propertyType?.name && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold" style={{ backgroundColor: COFFEE.cream, color: COFFEE.dark }}>
-                <Building2 className="w-2.5 h-2.5" style={{ color: COFFEE.gold }} />{p.propertyType.name}
-              </span>
-            )}
-          </div>
-        )}
-
-        {isRent && p.has_detailed_rooms && availableRooms > 0 && (
-          <div className="flex items-center gap-1 text-[11px] font-bold mb-2.5 px-2 py-1 rounded-lg" style={{ backgroundColor: "#DCFCE7", color: "#16A34A" }}>
-            <CheckCircle2 className="w-3 h-3" />{availableRooms} غرفة متاحة
-          </div>
-        )}
+        {renderPropertyFeatures()}
+        {renderTags()}
+        {renderAvailableRooms()}
 
         <div className="mt-auto pt-2.5 border-t" style={{ borderColor: "#f0ebe4" }}>
           <div className="flex items-center justify-between">
             <div>
-              {price.prefix && <span className="text-[10px] font-bold block" style={{ color: COFFEE.stone }}>{price.prefix}</span>}
+              {renderPricePrefix()}
               <span className="font-extrabold text-base sm:text-lg" style={{ color: COFFEE.mid }}>{price.main}</span>
             </div>
-            {price.suffix && <span className="text-[11px]" style={{ color: COFFEE.stone }}>{price.suffix}</span>}
+            {renderPriceSuffix()}
           </div>
         </div>
       </div>
