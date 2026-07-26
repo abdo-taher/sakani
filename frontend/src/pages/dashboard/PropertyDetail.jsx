@@ -34,7 +34,7 @@ import { updateReservation, deleteReservation } from "../../services/reservation
 import { COFFEE } from "../../constants/constants";
 import { successToast, errorToast } from "../../utils/toast";
 import { confirmDelete } from "../../utils/confirm";
-import { fmtPrice } from "../../utils/helpers";
+import { SAMPLE_IMG, fmtPrice } from "../../utils/helpers";
 import VideoThumb from "../../components/VideoThumb";
 
 const STATUS_MAP = {
@@ -200,7 +200,7 @@ function PropertyDetail() {
   ];
 
   if (media.length === 0) {
-    media.push({ type: "image", url: "" });
+    media.push({ type: "image", url: SAMPLE_IMG(property.id) });
   }
 
   const currentMedia = media[mediaIndex] || media[0];

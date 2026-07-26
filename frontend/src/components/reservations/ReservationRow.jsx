@@ -22,9 +22,12 @@ function ReservationRow({
 };
 
   const status = statusMap[reservation.status] || statusMap.new;
+   const filteredImages = (reservation.property?.images || []).filter(
+    (img) => (img.media_type || "image") === "image" && !img.caption
+  );
    const image =
-  reservation.property?.images?.length > 0
-    ? reservation.property.images[0].image_url
+  filteredImages.length > 0
+    ? filteredImages[0].image_url
     : SAMPLE_IMG(reservation.property?.id);
 
 const propertyName =

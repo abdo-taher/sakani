@@ -16,9 +16,12 @@ function ReservationModal({ open, property, onClose }) {
 
   if (!open || !property) return null;
 
+  const filteredImages = (property.images || []).filter(
+    (img) => (img.media_type || "image") === "image" && !img.caption
+  );
   const image =
-    property.images && property.images.length
-      ? property.images[0].image_url
+    filteredImages.length > 0
+      ? filteredImages[0].image_url
       : SAMPLE_IMG(property.id);
 
   const handleChange = (e) => {

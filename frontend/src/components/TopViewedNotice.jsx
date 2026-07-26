@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getTopViewed } from "../services/propertyService";
 import { COFFEE } from "../constants/constants";
-import { fmtPrice } from "../utils/helpers";
+import { SAMPLE_IMG, fmtPrice } from "../utils/helpers";
 
 const STORAGE_KEY = "sakani_random_notice_shown";
 const MIN_DELAY_MS = 10 * 60 * 1000;
@@ -37,7 +37,10 @@ export default function TopViewedNotice() {
           if (!data || data.length === 0) return;
 
           const p = data[Math.floor(Math.random() * data.length)];
-          const img = p.primary_image?.image_url || p.images?.[0]?.image_url || "";
+          const filteredImages = (p.images || []).filter(
+            (img) => (img.media_type || "image") === "image" && !img.caption
+          );
+          const img = p.primary_image?.image_url || filteredImages[0]?.image_url || SAMPLE_IMG(p.id);
           const location = p.location?.name || "";
           const views = p.cached_views || p.views || 0;
 
