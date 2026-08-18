@@ -64,13 +64,11 @@
 
 .animate-fade-in {
   animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity;
   transform: translateZ(0);
 }
 
 .modal-animate-pop {
   animation: modalPopIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity;
   transform: translateZ(0);
   backface-visibility: hidden;
 }
@@ -104,6 +102,5 @@
 .gpu-accelerated {
   transform: translateZ(0);
   backface-visibility: hidden;
-  will-change: transform;
 }
 

@@ -5,8 +5,7 @@ import { StorageService } from '../services/storageService';
 import { AMENITIES_LIST } from '../data/mockData';
 import { getAmenityDisplay } from '../utils/amenities';
 import { PropertyMultiVideoPlayer } from './PropertyMultiVideoPlayer';
-import { PropertyVideoThumbnail } from './PropertyVideoThumbnail';
-import { FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
 import { 
   X, 
   MapPin, 
@@ -264,7 +263,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
         ) : (
           <div className="relative aspect-[16/10] sm:aspect-[21/9] w-full overflow-hidden bg-slate-900">
             <img
-              src={images[currentImageIndex]}
+              src={resolveImageUrl(images[currentImageIndex])}
               alt={property.title}
               className="w-full h-full object-cover"
               onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
@@ -404,7 +403,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                 }`}
               >
                 <img 
-                  src={img} 
+                  src={resolveImageUrl(img)} 
                   alt="" 
                   className="w-full h-full object-cover" 
                   onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
@@ -752,9 +751,10 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                     className="flex gap-3.5 p-3 rounded-2xl border border-slate-100 bg-slate-50/70 hover:bg-white hover:shadow-md transition cursor-pointer"
                   >
                     <img
-                      src={simProp.images[0]}
+                      src={resolveImageUrl(simProp.images[0])}
                       alt={simProp.title}
                       className="w-24 h-20 rounded-xl object-cover shrink-0"
+                      onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                     />
                     <div className="flex flex-col justify-between min-w-0">
                       <div>

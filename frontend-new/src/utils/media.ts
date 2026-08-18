@@ -7,15 +7,17 @@ export const DEFAULT_SYSTEM_LOGO = '/default-property.svg';
 /**
  * Capture a frame from a video File or URL client-side and return a Blob (JPEG)
  */
-export async function captureVideoFrame(videoSource: File | string, seekTimeSec: number = 1.0): Promise<Blob | null> {
+export async function captureVideoFrame(videoSource: File | Blob | string, seekTimeSec: number = 1.0): Promise<Blob | null> {
   return new Promise((resolve) => {
     const video = document.createElement('video');
-    video.crossOrigin = 'anonymous';
     video.muted = true;
     video.playsInline = true;
 
     let objectUrl = '';
     if (typeof videoSource === 'string') {
+      if (videoSource.startsWith('http://') || videoSource.startsWith('https://')) {
+        video.crossOrigin = 'anonymous';
+      }
       video.src = videoSource;
     } else {
       objectUrl = URL.createObjectURL(videoSource);
@@ -23,11 +25,12 @@ export async function captureVideoFrame(videoSource: File | string, seekTimeSec:
     }
 
     const cleanUp = () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      if (objectUrl) {
+        try { URL.revokeObjectURL(objectUrl); } catch {}
+      }
     };
 
     video.onloadedmetadata = () => {
-      // Seek to either seekTimeSec or half duration if shorter
       const targetTime = Math.min(seekTimeSec, video.duration > 0 ? video.duration / 2 : 0.5);
       video.currentTime = targetTime;
     };
@@ -68,14 +71,28 @@ export async function captureVideoFrame(videoSource: File | string, seekTimeSec:
  * Works instantaneously before or during upload.
  */
 export async function extractFirstFrameDataUrl(videoSource: File | Blob | string, seekTimeSec: number = 0.5): Promise<string | null> {
+  // If remote URL and is Cloudinary or YouTube, return direct CDN thumbnail without loading video element
+  if (typeof videoSource === 'string') {
+    if (isCloudinaryVideoUrl(videoSource)) {
+      const cThumb = getCloudinaryVideoThumbnail(videoSource);
+      if (cThumb) return cThumb;
+    }
+    if (isYouTubeUrl(videoSource)) {
+      const yThumb = getYouTubeThumbnail(videoSource);
+      if (yThumb) return yThumb;
+    }
+  }
+
   return new Promise((resolve) => {
     const video = document.createElement('video');
-    video.crossOrigin = 'anonymous';
     video.muted = true;
     video.playsInline = true;
 
     let objectUrl = '';
     if (typeof videoSource === 'string') {
+      if (videoSource.startsWith('http://') || videoSource.startsWith('https://')) {
+        video.crossOrigin = 'anonymous';
+      }
       video.src = videoSource;
     } else {
       objectUrl = URL.createObjectURL(videoSource);
@@ -83,7 +100,9 @@ export async function extractFirstFrameDataUrl(videoSource: File | Blob | string
     }
 
     const cleanUp = () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      if (objectUrl) {
+        try { URL.revokeObjectURL(objectUrl); } catch {}
+      }
     };
 
     video.onloadedmetadata = () => {

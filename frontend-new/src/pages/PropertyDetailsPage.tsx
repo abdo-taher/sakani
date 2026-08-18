@@ -10,7 +10,7 @@ import { PropertyMultiVideoPlayer } from '../components/PropertyMultiVideoPlayer
 import { PropertyVideoThumbnail } from '../components/PropertyVideoThumbnail';
 import { PropertyDetailSkeleton, ModernStateFeedback } from '../components/Skeletons';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
-import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia } from '../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia, resolveImageUrl } from '../utils/media';
 import { 
   MapPin, 
   BedDouble, 
@@ -520,7 +520,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                   onClick={() => setIsLightboxOpen(true)}
                 >
                   <img
-                    src={images[currentImageIndex]}
+                    src={resolveImageUrl(images[currentImageIndex])}
                     alt={property.title}
                     className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
                     onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
@@ -1375,9 +1375,10 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                       className="flex gap-3 p-2.5 rounded-2xl hover:bg-slate-50 transition border border-slate-100 group"
                     >
                       <img
-                        src={simProp.images[0]}
+                        src={resolveImageUrl(simProp.images[0])}
                         alt={simProp.title}
                         className="w-20 h-16 rounded-xl object-cover shrink-0"
+                        onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                       />
                       <div className="min-w-0 flex flex-col justify-between">
                         <h4 className="text-xs font-bold text-slate-900 line-clamp-1 group-hover:text-[#8D6A28] transition">
@@ -1428,9 +1429,10 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={images[currentImageIndex]}
+              src={resolveImageUrl(images[currentImageIndex])}
               alt={property.title}
               className="max-h-full max-w-full object-contain rounded-xl shadow-2xl"
+              onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
             />
 
             {images.length > 1 && (
@@ -1464,7 +1466,12 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                   idx === currentImageIndex ? 'border-[#D6A94E] scale-105' : 'border-transparent opacity-50 hover:opacity-100'
                 }`}
               >
-                <img src={img} alt="" className="w-full h-full object-cover" />
+                <img 
+                  src={resolveImageUrl(img)} 
+                  alt="" 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
+                />
               </button>
             ))}
           </div>
@@ -1486,9 +1493,10 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
               <X className="w-6 h-6" />
             </button>
             <img 
-              src={previewRoomImage} 
+              src={resolveImageUrl(previewRoomImage)} 
               alt="معاينة الغرفة" 
               className="w-full h-auto max-h-[85vh] object-contain rounded-3xl"
+              onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
             />
           </div>
         </div>

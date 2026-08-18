@@ -11,7 +11,8 @@ import { AdminMediaManagementModal } from '../../components/AdminMediaManagement
 import { PropertyMultiVideoPlayer } from '../../components/PropertyMultiVideoPlayer';
 import { PropertyLocationMap } from '../../components/PropertyLocationMap';
 import { AdminPropertyDetailSkeleton, ModernStateFeedback } from '../../components/Skeletons';
-import { FALLBACK_PROPERTY_IMAGE } from '../../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../../utils/media';
+import { getAmenityDisplay } from '../../utils/amenities';
 import { 
   Building2, 
   MapPin, 
@@ -617,7 +618,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
 
             <div className="relative h-72 sm:h-96 rounded-2xl overflow-hidden bg-slate-900">
               <img
-                src={images[activeImageIndex]}
+                src={resolveImageUrl(images[activeImageIndex])}
                 alt={property.title}
                 className="w-full h-full object-cover"
                 onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
@@ -655,7 +656,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
                     }`}
                   >
                     <img 
-                      src={img} 
+                      src={resolveImageUrl(img)} 
                       alt={`صورة ${idx + 1}`} 
                       className="w-full h-full object-cover" 
                       onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
@@ -864,7 +865,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
                 {property.detailed_rooms?.map((room) => (
                   <div key={room.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-3">
                     <img
-                      src={room.imageUrl || FALLBACK_PROPERTY_IMAGE}
+                      src={resolveImageUrl(room.imageUrl)}
                       alt={room.name}
                       className="w-14 h-14 rounded-lg object-cover"
                       onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
