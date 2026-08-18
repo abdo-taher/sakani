@@ -4,7 +4,7 @@ import { ApiService } from '../../services/apiService';
 import { StorageService } from '../../services/storageService';
 import { Property } from '../../types';
 import { DashboardTableSkeleton, ModernStateFeedback } from '../../components/Skeletons';
-import { FALLBACK_PROPERTY_IMAGE } from '../../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../../utils/media';
 import { 
   Users, 
   Search, 
@@ -716,7 +716,7 @@ export const AdminCustomersPage: React.FC = () => {
                             />
                             <div className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden shrink-0">
                               <img 
-                                src={p.images?.[0] || FALLBACK_PROPERTY_IMAGE} 
+                                src={resolveImageUrl(p.images?.[0])} 
                                 alt={p.title} 
                                 className="w-full h-full object-cover" 
                                 onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}

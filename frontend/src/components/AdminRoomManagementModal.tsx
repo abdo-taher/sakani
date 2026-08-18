@@ -4,6 +4,7 @@ import { Property, DetailedRoom } from '../types';
 import { StorageService } from '../services/storageService';
 import { ApiService } from '../services/apiService';
 import { uploadToCloudinary } from '../services/cloudinaryService';
+import { resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 import { 
   X, 
   DoorOpen, 
@@ -525,9 +526,10 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
                 {(existingImageUrl || selectedImages.length > 0) && (
                   <div className="mt-2 flex items-center gap-2">
                     <img
-                      src={selectedImages.length > 0 ? URL.createObjectURL(selectedImages[0]) : existingImageUrl}
+                      src={selectedImages.length > 0 ? URL.createObjectURL(selectedImages[0]) : resolveImageUrl(existingImageUrl)}
                       alt="معاينة"
                       className="w-12 h-12 rounded-xl object-cover border border-slate-200"
+                      onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                     />
                     <span className="text-[10px] text-slate-500 font-mono truncate max-w-xs">
                       {selectedImages.length > 0 ? selectedImages[0].name : 'الصورة الأساسية للغرفة'}
@@ -620,9 +622,10 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
                     >
                       <div className="flex items-start gap-3 min-w-0">
                         <img
-                          src={room.imageUrl || property.images[0]}
+                          src={resolveImageUrl(room.imageUrl || property.images[0])}
                           alt={room.name}
                           className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0"
+                          onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                         />
                         <div className="space-y-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">

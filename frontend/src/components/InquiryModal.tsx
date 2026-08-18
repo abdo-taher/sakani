@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Property, DetailedRoom, InquiryReservation } from '../types';
 import { StorageService, normalizePhoneNumber, safeDispatchEvent } from '../services/storageService';
 import { ApiService } from '../services/apiService';
+import { resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 import confetti from 'canvas-confetti';
 import { 
   X, 
@@ -343,9 +344,10 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
               {/* Property & Room Summary Strip */}
               <div className="flex items-center gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
                 <img
-                  src={selectedRoom?.imageUrl || property.images[0]}
+                  src={resolveImageUrl(selectedRoom?.imageUrl || property.images[0])}
                   alt=""
                   className="w-14 h-14 rounded-xl object-cover shrink-0 border border-slate-200"
+                  onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                 />
                 <div className="min-w-0 flex-1">
                   <h4 className="text-xs font-bold text-slate-900 truncate">{property.title}</h4>

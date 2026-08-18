@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiService } from '../services/apiService';
 import { StorageService } from '../services/storageService';
 import { onPushNotification, PushNotificationPayload } from '../services/firebaseService';
+import { resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 import { 
   CalendarCheck, 
   Building2, 
@@ -430,12 +431,11 @@ export const MyReservationsPage: React.FC = () => {
                       {/* Property Image */}
                       <div className="w-full sm:w-36 h-36 sm:h-28 rounded-2xl overflow-hidden border border-slate-200 shrink-0 bg-slate-100 relative group">
                         <img
-                          src={
+                          src={resolveImageUrl(
                             res.is_room_reservation && res.room?.image
                               ? res.room.image
-                              : res.property?.image ||
-                                FALLBACK_PROPERTY_IMAGE
-                          }
+                              : res.property?.image
+                          )}
                           alt={res.property?.title || 'عقار'}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}

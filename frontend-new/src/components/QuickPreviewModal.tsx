@@ -6,7 +6,7 @@ import { StorageService } from '../services/storageService';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
 import { PropertyMultiVideoPlayer } from './PropertyMultiVideoPlayer';
 import { PropertyVideoThumbnail } from './PropertyVideoThumbnail';
-import { FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
 import { 
   X, 
   MapPin, 
@@ -212,7 +212,7 @@ export const QuickPreviewModal: React.FC<QuickPreviewModalProps> = ({
         ) : (
           <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full bg-slate-900 overflow-hidden">
             <img
-              src={images[currentImgIndex]}
+              src={resolveImageUrl(images[currentImgIndex])}
               alt={property.title}
               className="w-full h-full object-cover transition-all duration-300"
               onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}

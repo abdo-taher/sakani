@@ -17,6 +17,7 @@ import {
 import { StorageService } from '../services/storageService';
 import { ApiService } from '../services/apiService';
 import { AMENITIES_LIST } from '../data/mockData';
+import { resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 import { 
   LayoutDashboard, 
   Building2, 
@@ -636,9 +637,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <div key={prop.id} className="p-4 hover:bg-slate-50/80 transition flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <img 
-                        src={prop.images[0]} 
+                        src={resolveImageUrl(prop.images[0])} 
                         alt={prop.title}
                         className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0" 
+                        onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                       />
                       <div className="min-w-0">
                         <span className="font-extrabold text-xs sm:text-sm text-slate-900 block truncate">{prop.title}</span>
@@ -1013,9 +1015,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <img 
-                          src={prop.images[0]} 
+                          src={resolveImageUrl(prop.images[0])} 
                           alt={prop.title}
                           className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0" 
+                          onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                         />
                         <div className="min-w-0">
                           <span className="font-extrabold text-slate-900 block truncate max-w-xs">{prop.title}</span>
@@ -1090,7 +1093,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             {filteredProperties.map((prop) => (
               <div key={prop.id} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
                 <div className="flex items-center gap-3">
-                  <img src={prop.images[0]} alt={prop.title} className="w-16 h-16 rounded-xl object-cover border border-slate-100 shrink-0" />
+                  <img 
+                    src={resolveImageUrl(prop.images[0])} 
+                    alt={prop.title} 
+                    className="w-16 h-16 rounded-xl object-cover border border-slate-100 shrink-0" 
+                    onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1">
                       <span className="font-mono text-xs font-bold text-[#8D6A28]">{prop.ref_id}</span>
@@ -1477,9 +1485,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div key={d.id} className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-xs group">
                   <div className="h-36 relative overflow-hidden">
                     <img 
-                      src={d.image_url} 
+                      src={resolveImageUrl(d.image_url)} 
                       alt={d.name} 
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                      onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                     <div className="absolute bottom-3 right-3 left-3 flex items-center justify-between text-white">

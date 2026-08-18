@@ -3,7 +3,7 @@ import { LocationDistrict } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { ApiService } from '../../services/apiService';
 import { AdminModal } from '../../components/AdminModal';
-import { FALLBACK_PROPERTY_IMAGE } from '../../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../../utils/media';
 import { 
   MapPin, 
   Plus, 
@@ -218,7 +218,7 @@ export const AdminLocationsPage: React.FC = () => {
               {/* Image Preview Banner */}
               <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
                 <img 
-                  src={dist.image_url} 
+                  src={resolveImageUrl(dist.image_url)} 
                   alt={dist.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
@@ -327,7 +327,7 @@ export const AdminLocationsPage: React.FC = () => {
             {districtImage ? (
               <div className="relative aspect-[16/9] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 group">
                 <img 
-                  src={districtImage} 
+                  src={resolveImageUrl(districtImage)} 
                   alt="Preview" 
                   className="w-full h-full object-cover"
                 />

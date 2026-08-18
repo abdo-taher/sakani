@@ -18,6 +18,7 @@ import {
   Tag
 } from 'lucide-react';
 import { ModernStateFeedback, LocationSectionSkeleton } from '../components/Skeletons';
+import { resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 
 interface PlacesPageProps {
   districts: LocationDistrict[];
@@ -287,10 +288,11 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts, properties })
                     {/* Image Header with Badges */}
                     <div className="relative h-52 sm:h-56 overflow-hidden bg-slate-100">
                       <img
-                        src={district.image_url}
+                        src={resolveImageUrl(district.image_url)}
                         alt={district.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
+                        onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
                       

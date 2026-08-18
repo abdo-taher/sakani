@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Property, OperationType, PropertyType, FinishingType, FurnishingType } from '../types';
 import { DISTRICTS_LIST, AMENITIES_LIST } from '../data/mockData';
 import { StorageService } from '../services/storageService';
-import { FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
 import confetti from 'canvas-confetti';
 import { 
   Upload, 
@@ -358,7 +358,12 @@ export const SellAddPropertyPage: React.FC<SellAddPropertyPageProps> = ({
                       <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
                         {images.map((img, idx) => (
                           <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-200 group">
-                            <img src={img} alt="" className="w-full h-full object-cover" />
+                            <img 
+                              src={resolveImageUrl(img)} 
+                              alt="" 
+                              className="w-full h-full object-cover" 
+                              onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
+                            />
                             <button
                               type="button"
                               onClick={() => handleRemoveImage(idx)}

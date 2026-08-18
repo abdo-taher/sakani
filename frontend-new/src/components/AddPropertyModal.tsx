@@ -3,7 +3,7 @@ import { Property, OperationType, PropertyType, FinishingType, FurnishingType, D
 import { DISTRICTS_LIST, AMENITIES_LIST } from '../data/mockData';
 import { StorageService } from '../services/storageService';
 import { ApiService } from '../services/apiService';
-import { FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
 import confetti from 'canvas-confetti';
 import { 
   X, 
@@ -641,7 +641,12 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-2">
                       {images.map((img, idx) => (
                         <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 group">
-                          <img src={img} alt="" className="w-full h-full object-cover" />
+                          <img 
+                            src={resolveImageUrl(img)} 
+                            alt="" 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
+                          />
                           <button
                             type="button"
                             onClick={() => handleRemoveImage(idx)}

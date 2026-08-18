@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Property, PropertyVideo } from '../types';
 import { StorageService } from '../services/storageService';
 import { ApiService } from '../services/apiService';
-import { generateAndUploadVideoThumbnail, extractFirstFrameDataUrl, isYouTubeUrl, getYouTubeEmbedUrl, getVideoThumbnailUrl } from '../utils/media';
+import { generateAndUploadVideoThumbnail, extractFirstFrameDataUrl, isYouTubeUrl, getYouTubeEmbedUrl, getVideoThumbnailUrl, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 import { PropertyVideoThumbnail } from './PropertyVideoThumbnail';
 import { 
   X, 
@@ -605,9 +605,10 @@ export const AdminMediaManagementModal: React.FC<AdminMediaManagementModalProps>
                       {/* Image Preview Container */}
                       <div className="relative aspect-4/3 rounded-xl overflow-hidden bg-slate-900 group">
                         <img 
-                          src={img.url} 
+                          src={resolveImageUrl(img.url)} 
                           alt={`صورة ${idx + 1}`} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                         />
 
                         {/* Primary Badge */}
@@ -1003,7 +1004,7 @@ export const AdminMediaManagementModal: React.FC<AdminMediaManagementModalProps>
             <X className="w-6 h-6" />
           </button>
           <img 
-            src={previewZoomImage} 
+            src={resolveImageUrl(previewZoomImage)} 
             alt="تكبير الصورة" 
             className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}

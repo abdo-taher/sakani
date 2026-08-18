@@ -3,7 +3,7 @@ import { ApiService } from '../../services/apiService';
 import { StorageService } from '../../services/storageService';
 import { LocationMapPicker } from '../../components/LocationMapPicker';
 import { AdminModal } from '../../components/AdminModal';
-import { FALLBACK_PROPERTY_IMAGE } from '../../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../../utils/media';
 import { 
   Building2, 
   CheckCircle2, 
@@ -263,7 +263,7 @@ export const AdminPropertySubmissionsPage: React.FC = () => {
                 {/* Image Banner & Status Badge */}
                 <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
                   <img 
-                    src={primaryImg} 
+                    src={resolveImageUrl(primaryImg)} 
                     alt={sub.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {

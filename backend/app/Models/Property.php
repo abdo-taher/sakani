@@ -294,4 +294,73 @@ class Property extends Model
     {
         return $this->belongsToMany(Tag::class, 'property_tags');
     }
+
+    /**
+     * Ensure video_url is resolved to full public CDN URL
+     */
+    public function getVideoUrlAttribute($value)
+    {
+        if (empty($value)) return $value;
+        if (preg_match('/^(https?:\/\/|\/\/|data:|blob:)/i', $value)) {
+            return $value;
+        }
+        if (str_starts_with($value, '/') && !str_starts_with($value, '/sakani/') && !str_starts_with($value, '/properties/')) {
+            return $value;
+        }
+        $r2Url = rtrim(config('filesystems.disks.r2.url', 'https://pub-53f4892d4ffe491787baac754cbe0059.r2.dev'), '/');
+        $clean = ltrim($value, '/');
+        if (str_starts_with($clean, 'sakani/')) {
+            return "{$r2Url}/{$clean}";
+        }
+        if (str_starts_with($clean, 'storage/')) {
+            return url($clean);
+        }
+        return "{$r2Url}/sakani/{$clean}";
+    }
+
+    /**
+     * Ensure video_thumbnail_url is resolved to full public CDN URL
+     */
+    public function getVideoThumbnailUrlAttribute($value)
+    {
+        if (empty($value)) return $value;
+        if (preg_match('/^(https?:\/\/|\/\/|data:|blob:)/i', $value)) {
+            return $value;
+        }
+        if (str_starts_with($value, '/') && !str_starts_with($value, '/sakani/') && !str_starts_with($value, '/properties/')) {
+            return $value;
+        }
+        $r2Url = rtrim(config('filesystems.disks.r2.url', 'https://pub-53f4892d4ffe491787baac754cbe0059.r2.dev'), '/');
+        $clean = ltrim($value, '/');
+        if (str_starts_with($clean, 'sakani/')) {
+            return "{$r2Url}/{$clean}";
+        }
+        if (str_starts_with($clean, 'storage/')) {
+            return url($clean);
+        }
+        return "{$r2Url}/sakani/{$clean}";
+    }
+
+    /**
+     * Ensure image_url attribute resolves to full public CDN URL
+     */
+    public function getImageUrlAttribute($value)
+    {
+        if (empty($value)) return $value;
+        if (preg_match('/^(https?:\/\/|\/\/|data:|blob:)/i', $value)) {
+            return $value;
+        }
+        if (str_starts_with($value, '/') && !str_starts_with($value, '/sakani/') && !str_starts_with($value, '/properties/')) {
+            return $value;
+        }
+        $r2Url = rtrim(config('filesystems.disks.r2.url', 'https://pub-53f4892d4ffe491787baac754cbe0059.r2.dev'), '/');
+        $clean = ltrim($value, '/');
+        if (str_starts_with($clean, 'sakani/')) {
+            return "{$r2Url}/{$clean}";
+        }
+        if (str_starts_with($clean, 'storage/')) {
+            return url($clean);
+        }
+        return "{$r2Url}/sakani/{$clean}";
+    }
 }

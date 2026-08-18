@@ -5,7 +5,7 @@ import { DISTRICTS_LIST, AMENITIES_LIST } from '../data/mockData';
 import { StorageService } from '../services/storageService';
 import { ApiService } from '../services/apiService';
 import { LocationMapPicker } from '../components/LocationMapPicker';
-import { FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
 import confetti from 'canvas-confetti';
 import { 
   Upload, 
@@ -615,7 +615,12 @@ export const AddPropertyPage: React.FC = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
                       {images.map((url, idx) => (
                         <div key={idx} className="relative rounded-xl overflow-hidden border border-slate-200 h-24 group bg-slate-100">
-                          <img src={url} alt={`صورة ${idx + 1}`} className="w-full h-full object-cover" />
+                          <img 
+                            src={resolveImageUrl(url)} 
+                            alt={`صورة ${idx + 1}`} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
+                          />
                           {idx === 0 && (
                             <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/70 text-white text-[10px] font-bold">
                               رئيسية

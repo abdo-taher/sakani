@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Property, InquiryReservation, PropertyType, ReferralStatsSummary } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { ApiService } from '../../services/apiService';
-import { FALLBACK_PROPERTY_IMAGE } from '../../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../../utils/media';
 import { 
   Building2, 
   MapPin, 
@@ -412,7 +412,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <img 
-                      src={prop.images?.[0] || FALLBACK_PROPERTY_IMAGE} 
+                      src={resolveImageUrl(prop.images?.[0])} 
                       alt={prop.title}
                       className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform" 
                       onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}

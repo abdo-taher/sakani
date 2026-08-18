@@ -7,7 +7,7 @@ import { AdminRoomManagementModal } from '../../components/AdminRoomManagementMo
 import { AdminOfferModal } from '../../components/AdminOfferModal';
 import { evaluatePropertyOffer } from '../../utils/offerUtils';
 import { DashboardTableSkeleton, ModernStateFeedback } from '../../components/Skeletons';
-import { FALLBACK_PROPERTY_IMAGE } from '../../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../../utils/media';
 import { 
   Building2, 
   Search, 
@@ -375,7 +375,7 @@ export const AdminPropertiesPage: React.FC<AdminPropertiesPageProps> = ({ onOpen
                     <div className="flex items-center gap-3">
                       <div className="relative shrink-0">
                         <img 
-                          src={prop.images[0] || FALLBACK_PROPERTY_IMAGE} 
+                          src={resolveImageUrl(prop.images[0])} 
                           alt={prop.title}
                           className="w-14 h-14 rounded-2xl object-cover border border-slate-200 group-hover:scale-105 transition-transform" 
                           onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
@@ -676,7 +676,7 @@ export const AdminPropertiesPage: React.FC<AdminPropertiesPageProps> = ({ onOpen
               >
                 <div className="relative shrink-0">
                   <img 
-                    src={prop.images[0] || FALLBACK_PROPERTY_IMAGE} 
+                    src={resolveImageUrl(prop.images[0])} 
                     alt={prop.title}
                     className="w-20 h-20 rounded-2xl object-cover border border-slate-200 group-hover:scale-105 transition-transform" 
                     onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}

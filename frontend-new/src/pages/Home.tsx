@@ -19,7 +19,7 @@ import {
 import { ApiService } from '../services/apiService';
 import { StorageService } from '../services/storageService';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
-import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia } from '../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia, resolveImageUrl } from '../utils/media';
 import { 
   Search, 
   MapPin, 
@@ -1290,7 +1290,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       className="min-w-[280px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink w-[80vw] sm:w-auto relative h-52 sm:h-60 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer border border-slate-200/80 bg-slate-900"
                     >
                       <img
-                        src={district.image_url}
+                        src={resolveImageUrl(district.image_url)}
                         alt={district.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100"
                         loading="lazy"

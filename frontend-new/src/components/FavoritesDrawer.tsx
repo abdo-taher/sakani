@@ -1,6 +1,7 @@
 import React from 'react';
 import { Property } from '../types';
 import { X, Heart, Trash2, MapPin, Maximize2, BedDouble, ChevronLeft } from 'lucide-react';
+import { resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 
 interface FavoritesDrawerProps {
   isOpen: boolean;
@@ -79,9 +80,10 @@ export const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
               >
                 {/* Image */}
                 <img
-                  src={property.images[0]}
+                  src={resolveImageUrl(property.images[0])}
                   alt={property.title}
                   className="w-24 h-24 rounded-xl object-cover shrink-0"
+                  onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                 />
 
                 {/* Info */}

@@ -15,7 +15,7 @@ import { ApiService } from '../services/apiService';
 import { getAmenityDisplay } from '../utils/amenities';
 import { validatePropertyStep, normalizeEgyptianPhone } from '../utils/validation';
 import { LocationMapPicker } from './LocationMapPicker';
-import { generateAndUploadVideoThumbnail, extractFirstFrameDataUrl } from '../utils/media';
+import { generateAndUploadVideoThumbnail, extractFirstFrameDataUrl, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 import { PropertyFormSkeleton } from './Skeletons';
 import { evaluatePropertyOffer, getTodayDateString } from '../utils/offerUtils';
 import confetti from 'canvas-confetti';
@@ -1446,7 +1446,12 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                           isPrimary ? 'border-[#8D6A28] ring-2 ring-[#8D6A28]' : 'border-slate-200'
                         }`}
                       >
-                        <img src={imgUrl} alt={`صورة ${idx + 1}`} className="w-full h-full object-cover" />
+                        <img 
+                          src={resolveImageUrl(imgUrl)} 
+                          alt={`صورة ${idx + 1}`} 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
+                        />
                         
                         {/* Primary Badge */}
                         {isPrimary && (
@@ -1560,7 +1565,12 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     {videoThumbnailUrl ? (
-                      <img src={videoThumbnailUrl} alt="Video cover" className="w-16 h-12 object-cover rounded-xl border border-slate-200" />
+                      <img 
+                        src={resolveImageUrl(videoThumbnailUrl)} 
+                        alt="Video cover" 
+                        className="w-16 h-12 object-cover rounded-xl border border-slate-200" 
+                        onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
+                      />
                     ) : (
                       <div className="w-16 h-12 bg-purple-100 text-purple-700 rounded-xl flex items-center justify-center">
                         <Film className="w-6 h-6" />
