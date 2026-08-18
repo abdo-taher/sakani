@@ -266,7 +266,7 @@ export function resolveImageUrl(url: string | null | undefined): string {
 }
 
 /**
- * Resolve any video URL (Cloudflare R2 keys, relative /storage/ paths, external CDNs, YouTube)
+ * Resolve any video URL (Cloudflare R2 keys, relative /storage/ paths, external CDNs, YouTube, public local files)
  */
 export function resolveVideoUrl(url: string | null | undefined): string {
   if (!url) return '';
@@ -275,6 +275,11 @@ export function resolveVideoUrl(url: string | null | undefined): string {
 
   // If absolute http / https or blob or data url
   if (/^(https?:|\/\/|blob:|data:)/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  // If local public static asset (e.g. /hero.mp4)
+  if (trimmed.startsWith('/') && !trimmed.startsWith('/sakani/') && !trimmed.startsWith('/properties/')) {
     return trimmed;
   }
 
@@ -294,7 +299,7 @@ export function resolveVideoUrl(url: string | null | undefined): string {
     }
   }
 
-  return cleanKey.startsWith('/') ? cleanKey : `/${cleanKey}`;
+  return `${R2_PUBLIC_BASE_URL}/sakani/${cleanKey}`;
 }
 
 /**

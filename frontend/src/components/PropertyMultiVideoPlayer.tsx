@@ -186,15 +186,30 @@ export const PropertyMultiVideoPlayer: React.FC<PropertyMultiVideoPlayerProps> =
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white bg-slate-900/95 space-y-3 z-20">
             <AlertCircle className="w-10 h-10 text-amber-400" />
             <p className="text-sm font-bold">تعذر تشغيل الفيديو داخل هذا المتصفح</p>
-            <a
-              href={currentVideo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 rounded-xl bg-[#8D6A28] hover:bg-[#73541D] text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-md"
-            >
-              <ExternalLink className="w-4 h-4" />
-              <span>مشاهدة الفيديو في نافذة جديدة</span>
-            </a>
+            <div className="flex items-center gap-2 flex-wrap justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setHasVideoError(false);
+                  if (videoRef.current) {
+                    videoRef.current.load();
+                    videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+                  }
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition cursor-pointer"
+              >
+                إعادة المحاولة
+              </button>
+              <a
+                href={currentVideo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-1.5 rounded-xl bg-[#8D6A28] hover:bg-[#73541D] text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-md"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>مشاهدة في نافذة جديدة</span>
+              </a>
+            </div>
           </div>
         ) : (
           <div className="relative w-full h-full flex items-center justify-center">
@@ -209,15 +224,15 @@ export const PropertyMultiVideoPlayer: React.FC<PropertyMultiVideoPlayerProps> =
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
               onEnded={() => setIsPlaying(false)}
-              onError={() => setHasVideoError(true)}
+              onError={(e) => {
+                const err = (e.currentTarget as HTMLVideoElement).error;
+                if (err && err.code > 0) {
+                  setHasVideoError(true);
+                }
+              }}
               onClick={handlePlayToggle}
               className="w-full h-full object-contain bg-black cursor-pointer"
-            >
-              <source src={currentVideo.url} type="video/mp4" />
-              <source src={currentVideo.url} type="video/webm" />
-              <source src={currentVideo.url} type="video/quicktime" />
-              متصفحك لا يدعم تشغيل هذا الفيديو مباشرة.
-            </video>
+            />
 
             {/* Large Center Play / Resume Button Overlay (when paused) */}
             {!isPlaying && (
@@ -367,15 +382,30 @@ export const PropertyMultiVideoPlayer: React.FC<PropertyMultiVideoPlayerProps> =
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white bg-slate-900/90 space-y-3">
             <AlertCircle className="w-10 h-10 text-amber-400" />
             <p className="text-sm font-bold">تعذر تشغيل الفيديو داخل المشغل المدمج</p>
-            <a
-              href={currentVideo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 rounded-xl bg-[#8D6A28] hover:bg-[#73541D] text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-md"
-            >
-              <ExternalLink className="w-4 h-4" />
-              <span>مشاهدة الفيديو في نافذة جديدة</span>
-            </a>
+            <div className="flex items-center gap-2 flex-wrap justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setHasVideoError(false);
+                  if (videoRef.current) {
+                    videoRef.current.load();
+                    videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+                  }
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition cursor-pointer"
+              >
+                إعادة المحاولة
+              </button>
+              <a
+                href={currentVideo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-1.5 rounded-xl bg-[#8D6A28] hover:bg-[#73541D] text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-md"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>مشاهدة في نافذة جديدة</span>
+              </a>
+            </div>
           </div>
         ) : (
           <div className="relative w-full h-full">
@@ -389,15 +419,15 @@ export const PropertyMultiVideoPlayer: React.FC<PropertyMultiVideoPlayerProps> =
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
               onEnded={() => setIsPlaying(false)}
-              onError={() => setHasVideoError(true)}
+              onError={(e) => {
+                const err = (e.currentTarget as HTMLVideoElement).error;
+                if (err && err.code > 0) {
+                  setHasVideoError(true);
+                }
+              }}
               onClick={handlePlayToggle}
               className="w-full h-full object-contain bg-black cursor-pointer"
-            >
-              <source src={currentVideo.url} type="video/mp4" />
-              <source src={currentVideo.url} type="video/webm" />
-              <source src={currentVideo.url} type="video/quicktime" />
-              متصفحك لا يدعم تشغيل هذا الفيديو مباشرة.
-            </video>
+            />
 
             {/* Custom Overlay Play Button when paused */}
             {!isPlaying && (

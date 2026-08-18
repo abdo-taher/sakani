@@ -102,16 +102,16 @@ export const INITIAL_PROPERTIES: Property[] = [
       'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
       'https://images.unsplash.com/photo-1600573472591-ee6981cf35b6?auto=format&fit=crop&w=1200&q=80'
     ],
-    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-living-room-42861-large.mp4',
+    video_url: '/hero.mp4',
     video_thumbnail_url: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=80',
     videos: [
       {
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-living-room-42861-large.mp4',
+        url: '/hero.mp4',
         title: 'جولة داخل الريسبشن والصالة الرئيسية',
         is_primary: true
       },
       {
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-bright-kitchen-with-wooden-details-42863-large.mp4',
+        url: '/hero.mp4',
         title: 'معاينة المطبخ والتجهيزات'
       }
     ],
@@ -148,7 +148,7 @@ export const INITIAL_PROPERTIES: Property[] = [
       'https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=1200&q=80',
       'https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1200&q=80'
     ],
-    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-cozy-living-room-with-modern-furniture-42860-large.mp4',
+    video_url: '/hero.mp4',
     video_thumbnail_url: 'https://images.unsplash.com/photo-1600585155526-990dced4db0d?auto=format&fit=crop&w=600&q=80',
     amenities: ['garden', 'natural_gas', 'super_lux', 'security', 'parking', 'ac'],
     tags: ['دور أرضي بحديقة', 'دوبلكس', 'مدخل خاص', 'مناسب للعائلات'],
@@ -183,7 +183,7 @@ export const INITIAL_PROPERTIES: Property[] = [
       'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1200&q=80',
       'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80'
     ],
-    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-luxurious-villa-with-a-pool-42865-large.mp4',
+    video_url: '/hero.mp4',
     video_thumbnail_url: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80',
     amenities: ['pool', 'garden', 'sea_view', 'security', 'parking', 'ac', 'equipped_kitchen', 'internet'],
     tags: ['فيلا مستقلة', 'حمام سباحة', 'مؤثث بالكامل', 'فيو بحر'],
@@ -226,7 +226,7 @@ export const INITIAL_PROPERTIES: Property[] = [
       'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80',
       'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80'
     ],
-    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-living-room-42861-large.mp4',
+    video_url: '/hero.mp4',
     amenities: ['elevator', 'natural_gas', 'ac', 'equipped_kitchen', 'internet', 'balcony'],
     tags: ['مفروش بالكامل', 'قريب من الجامعة', 'تكييف', 'سكن طالبات أو عائلات'],
     created_at: '2026-08-12T11:00:00Z',
@@ -527,7 +527,7 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   hero_title: 'عقارك المناسب أقرب مما تتخيل',
   hero_subtitle: 'اكتشف أفضل العقارات للبيع والإيجار في دمياط الجديدة والمناطق المميزة مع خدمات المعاينة والتوثيق القانوني',
   hero_bg_image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1800&q=80',
-  hero_video_url: 'https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-living-room-42861-large.mp4',
+  hero_video_url: '/hero.mp4',
   hero_use_video: true,
   hero_cta_text: 'بحث عن العقار المناسب',
   // Announcement Bar
