@@ -19,7 +19,7 @@ import {
 import { ApiService } from '../services/apiService';
 import { StorageService } from '../services/storageService';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
-import { FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia } from '../utils/media';
 import { 
   Search, 
   MapPin, 
@@ -169,7 +169,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     ApiService.getTopViewedProperties()
       .then((data) => {
         if (isMounted && Array.isArray(data) && data.length > 0) {
-          const mapped = data.map((p: any) => ({
+          const mapped = data.map((p: any) => sanitizePropertyMedia({
             id: String(p.id),
             ref_id: p.ref_id || `SK-${p.id}`,
             title: p.title,
@@ -195,6 +195,8 @@ export const HomePage: React.FC<HomePageProps> = ({
             images: Array.isArray(p.images) && p.images.length > 0
               ? p.images.map((img: any) => typeof img === 'string' ? img : (img.image_url || img.url || img.image_path)).filter(Boolean)
               : (p.image_url ? [p.image_url] : [FALLBACK_PROPERTY_IMAGE]),
+            video_url: p.video_url,
+            video_thumbnail_url: p.video_thumbnail_url,
             amenities: Array.isArray(p.amenities)
               ? p.amenities.map((a: any) => typeof a === 'string' ? a : a.slug || a.name || a.id)
               : [],
@@ -229,7 +231,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     ApiService.getFeaturedProperties()
       .then((data) => {
         if (isMounted && Array.isArray(data) && data.length > 0) {
-          const mapped = data.map((p: any) => ({
+          const mapped = data.map((p: any) => sanitizePropertyMedia({
             id: String(p.id),
             ref_id: p.ref_id || `SK-${p.id}`,
             title: p.title,
@@ -255,6 +257,8 @@ export const HomePage: React.FC<HomePageProps> = ({
             images: Array.isArray(p.images) && p.images.length > 0
               ? p.images.map((img: any) => typeof img === 'string' ? img : (img.image_url || img.url || img.image_path)).filter(Boolean)
               : (p.image_url ? [p.image_url] : [FALLBACK_PROPERTY_IMAGE]),
+            video_url: p.video_url,
+            video_thumbnail_url: p.video_thumbnail_url,
             amenities: Array.isArray(p.amenities)
               ? p.amenities.map((a: any) => typeof a === 'string' ? a : a.slug || a.name || a.id)
               : [],

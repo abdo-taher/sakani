@@ -4,7 +4,7 @@ import { Property, LocationDistrict, OperationType, PropertyType, DetailedRoom, 
 import { StorageService } from './services/storageService';
 import { ApiService } from './services/apiService';
 import { initializeFirebase } from './services/firebaseService';
-import { FALLBACK_PROPERTY_IMAGE } from './utils/media';
+import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia } from './utils/media';
 
 // Layouts
 import { PublicLayout } from './layouts/PublicLayout';
@@ -122,7 +122,7 @@ function MainApp() {
 
       if (backendProps.status === 'fulfilled' && Array.isArray(backendProps.value) && backendProps.value.length > 0) {
         // Map backend properties if needed
-        const mappedProps: Property[] = backendProps.value.map((p: any) => ({
+        const mappedProps: Property[] = backendProps.value.map((p: any) => sanitizePropertyMedia({
           id: String(p.id),
           ref_id: p.ref_id || `SK-${p.id}`,
           title: p.title,
@@ -148,6 +148,7 @@ function MainApp() {
             ? p.images.map((img: any) => typeof img === 'string' ? img : (img.image_url || img.url || img.image_path)).filter(Boolean)
             : (p.image_url ? [p.image_url] : [FALLBACK_PROPERTY_IMAGE]),
           video_url: p.video_url,
+          video_thumbnail_url: p.video_thumbnail_url,
           amenities: Array.isArray(p.amenities)
             ? p.amenities.map((a: any) => typeof a === 'string' ? a : a.slug || a.name || a.id)
             : [],

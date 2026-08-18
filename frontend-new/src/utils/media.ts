@@ -269,3 +269,78 @@ export function getVideoThumbnailUrl(
 
   return resolved ? `${resolved}#t=0.5` : FALLBACK_PROPERTY_IMAGE;
 }
+
+/**
+ * Detect if a media URL is a video (.mp4, .webm, .mov, /videos/, YouTube, etc.)
+ */
+export function isVideoUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const str = url.trim();
+  if (!str) return false;
+  if (isYouTubeUrl(str)) return true;
+  if (isCloudinaryVideoUrl(str)) return true;
+  if (/\.(mp4|webm|mov|mkv|avi|m3u8|flv|wmv)(\?.*)?$/i.test(str)) return true;
+  if (/\/properties\/videos\/|\/videos\//i.test(str)) return true;
+  return false;
+}
+
+/**
+ * Detect if a media URL is an image
+ */
+export function isImageUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const str = url.trim();
+  if (!str) return false;
+  if (str.startsWith('data:image/') || str.startsWith('blob:')) return true;
+  if (isVideoUrl(str)) return false;
+  return true;
+}
+
+/**
+ * Sanitize property media to strictly separate images from videos:
+ * - If any video (.mp4) was accidentally added to `images` or `image_url`, it is extracted into `video_url`
+ * - `images` will ONLY contain pure image URLs
+ * - `image_url` is guaranteed to be a valid photo (not a .mp4)
+ */
+export function sanitizePropertyMedia(p: any): any {
+  if (!p || typeof p !== 'object') return p;
+
+  const rawImages: any[] = Array.isArray(p.images) ? p.images : (p.image_url ? [p.image_url] : []);
+  
+  const extractedImageUrls: string[] = [];
+  let detectedVideoUrl: string = p.video_url || '';
+
+  for (const item of rawImages) {
+    const url = typeof item === 'string' ? item.trim() : (item?.image_url || item?.url || item?.image_path || '').trim();
+    if (!url) continue;
+
+    if (isVideoUrl(url)) {
+      if (!detectedVideoUrl) {
+        detectedVideoUrl = url;
+      }
+    } else {
+      extractedImageUrls.push(url);
+    }
+  }
+
+  // Also check direct image_url field
+  if (p.image_url && isVideoUrl(p.image_url)) {
+    if (!detectedVideoUrl) {
+      detectedVideoUrl = p.image_url;
+    }
+  }
+
+  const finalImages = extractedImageUrls.length > 0 ? extractedImageUrls : [FALLBACK_PROPERTY_IMAGE];
+  const finalImageUrl = extractedImageUrls[0] || (p.video_thumbnail_url && !isVideoUrl(p.video_thumbnail_url) ? p.video_thumbnail_url : FALLBACK_PROPERTY_IMAGE);
+
+  return {
+    ...p,
+    images: finalImages,
+    image_url: finalImageUrl,
+    video_url: detectedVideoUrl || p.video_url || undefined,
+    video_thumbnail_url: p.video_thumbnail_url && !isVideoUrl(p.video_thumbnail_url) 
+      ? p.video_thumbnail_url 
+      : (detectedVideoUrl ? getVideoThumbnailUrl(detectedVideoUrl, undefined, finalImageUrl) : undefined),
+  };
+}
+

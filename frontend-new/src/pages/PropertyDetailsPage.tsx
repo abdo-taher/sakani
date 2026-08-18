@@ -10,7 +10,7 @@ import { PropertyMultiVideoPlayer } from '../components/PropertyMultiVideoPlayer
 import { PropertyVideoThumbnail } from '../components/PropertyVideoThumbnail';
 import { PropertyDetailSkeleton, ModernStateFeedback } from '../components/Skeletons';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
-import { FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia } from '../utils/media';
 import { 
   MapPin, 
   BedDouble, 
@@ -195,7 +195,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
         ApiService.recordPropertyView(numId).catch(() => {});
         const liveProp = await ApiService.getProperty(numId);
         if (liveProp && isMounted) {
-          const mapped: Property = {
+          const mapped: Property = sanitizePropertyMedia({
             id: String(liveProp.id),
             ref_id: liveProp.ref_id || `SK-${liveProp.id}`,
             title: liveProp.title,
@@ -279,7 +279,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 })()
               : [],
             created_at: liveProp.created_at || new Date().toISOString(),
-          };
+          });
           setProperty(mapped);
           StorageService.saveProperty(mapped);
         }
