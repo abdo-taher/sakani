@@ -231,8 +231,14 @@ class NotificationController extends Controller
      */
     public function markAsRead(Request $request, $id)
     {
-        $notification = Notification::findOrFail($id);
-        $notification->update(['is_read' => true]);
+        if (!is_numeric($id)) {
+            return response()->json(['success' => true]);
+        }
+
+        $notification = Notification::find($id);
+        if ($notification) {
+            $notification->update(['is_read' => true]);
+        }
 
         return response()->json(['success' => true]);
     }

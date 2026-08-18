@@ -12,10 +12,10 @@ let audioCtx: AudioContext | null = null;
 let hasUserInteracted = false;
 
 /**
- * Initialize Audio Context on first user gesture.
+ * Initialize Audio Context strictly on/after first user gesture.
  */
-export function initAudioContext() {
-  if (!hasUserInteracted) return;
+export function initAudioContext(): AudioContext | null {
+  if (!hasUserInteracted) return null;
   try {
     const AudioContextClass = typeof window !== 'undefined' ? (window.AudioContext || (window as any).webkitAudioContext) : null;
     if (AudioContextClass) {
@@ -29,6 +29,7 @@ export function initAudioContext() {
   } catch (e) {
     // AudioContext not supported
   }
+  return audioCtx;
 }
 
 // Auto-attach gesture listeners once on client
@@ -41,10 +42,12 @@ if (typeof window !== 'undefined') {
     window.removeEventListener('click', unlock);
     window.removeEventListener('keydown', unlock);
     window.removeEventListener('touchstart', unlock);
+    window.removeEventListener('pointerdown', unlock);
   };
   window.addEventListener('click', unlock, { once: true, passive: true });
   window.addEventListener('keydown', unlock, { once: true, passive: true });
   window.addEventListener('touchstart', unlock, { once: true, passive: true });
+  window.addEventListener('pointerdown', unlock, { once: true, passive: true });
 }
 
 /**
@@ -68,22 +71,18 @@ export function setSoundEnabled(enabled: boolean): void {
  * Synthesize and play a distinctive chime using Web Audio API.
  */
 function playTone(frequencies: number[], duration = 0.15, interval = 0.08, type: OscillatorType = 'sine') {
-  if (!isSoundEnabled()) return;
+  if (!isSoundEnabled() || !hasUserInteracted) return;
 
   try {
-    initAudioContext();
-    if (!audioCtx) return;
+    const ctx = initAudioContext();
+    if (!ctx || ctx.state === 'suspended') return;
 
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-
-    const now = audioCtx.currentTime;
+    const now = ctx.currentTime;
 
     frequencies.forEach((freq, idx) => {
-      if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
       osc.type = type;
       osc.frequency.setValueAtTime(freq, now + idx * interval);
@@ -93,7 +92,7 @@ function playTone(frequencies: number[], duration = 0.15, interval = 0.08, type:
       gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * interval + duration);
 
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(ctx.destination);
 
       osc.start(now + idx * interval);
       osc.stop(now + idx * interval + duration + 0.05);
@@ -135,7 +134,7 @@ export function playCustomerNotificationSound(notificationId?: string) {
  * falling back seamlessly to Web Audio API synthesis.
  */
 export function playNotificationSound(notificationId?: string, role: 'admin' | 'customer' = 'admin') {
-  if (!isSoundEnabled()) return;
+  if (!isSoundEnabled() || !hasUserInteracted) return;
 
   if (notificationId) {
     if (playedNotificationIds.has(notificationId)) return;

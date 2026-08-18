@@ -644,6 +644,10 @@ export const ApiService = {
   },
 
   async markNotificationAsRead(id: string | number) {
+    if (!id || (typeof id === 'string' && (id.startsWith('welcome') || id.startsWith('cnotif') || isNaN(Number(id))))) {
+      // Local client-side synthetic notification - successfully handled locally without remote auth
+      return { success: true };
+    }
     return apiRequest(`/notifications/${id}/read`, { method: 'POST' });
   },
 
@@ -655,6 +659,9 @@ export const ApiService = {
   },
 
   async deleteNotification(id: string | number) {
+    if (!id || (typeof id === 'string' && (id.startsWith('welcome') || id.startsWith('cnotif') || isNaN(Number(id))))) {
+      return { success: true };
+    }
     return apiRequest(`/notifications/${id}`, { method: 'DELETE' });
   },
 

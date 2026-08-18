@@ -73,6 +73,7 @@ Route::post('/device-tokens', [NotificationController::class, 'storeDeviceToken'
 Route::delete('/device-tokens', [NotificationController::class, 'destroyDeviceToken']);
 Route::get('/customer/notifications', [NotificationController::class, 'customerIndex']);
 Route::post('/customer/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+Route::post('/customer/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 Route::get('/customer/reservations', [ReservationController::class, 'customerIndex']);
 // Public property submission for review
 Route::post('/properties/submit', [PropertySubmissionController::class, 'submit']);
