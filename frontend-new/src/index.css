@@ -94,3 +94,16 @@
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(12px);
 }
+
+/* Performance optimizations */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 380px;
+}
+
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+

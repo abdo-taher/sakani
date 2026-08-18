@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Property, LocationDistrict, OperationType, PropertyType, DetailedRoom, PropertyFilterState, SystemSettings } from './types';
 import { StorageService } from './services/storageService';
@@ -10,38 +10,39 @@ import { FALLBACK_PROPERTY_IMAGE } from './utils/media';
 import { PublicLayout } from './layouts/PublicLayout';
 import { AdminLayout } from './layouts/AdminLayout';
 
+// Immediate Homepage for 0ms initial load
 import { HomePage } from './pages/Home';
-import { ListingPage } from './pages/ListingPage';
-import { PropertyDetailsPage } from './pages/PropertyDetailsPage';
-import { SellAddPropertyPage } from './pages/SellAddProperty';
-import { AboutContactPage } from './pages/AboutContact';
-import { MyReservationsPage } from './pages/MyReservationsPage';
-import { AdminLoginPage } from './pages/AdminLoginPage';
-import { PlacesPage } from './pages/PlacesPage';
 
-// Dedicated Modular Admin Pages
-import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
-import { AdminPropertiesPage } from './pages/admin/AdminPropertiesPage';
-import { AdminPropertyFormPage } from './pages/admin/AdminPropertyFormPage';
-import { AdminPropertyDetailPage } from './pages/admin/AdminPropertyDetailPage';
-import { AdminPropertySubmissionsPage } from './pages/admin/AdminPropertySubmissionsPage';
-import { AdminReservationsPage } from './pages/admin/AdminReservationsPage';
-import { AdminNeedRequestsPage } from './pages/admin/AdminNeedRequestsPage';
-import { AdminCustomersPage } from './pages/admin/AdminCustomersPage';
-import { AdminMarketingMailPage } from './pages/admin/AdminMarketingMailPage';
-import { AdminContactMessagesPage } from './pages/admin/AdminContactMessagesPage';
-import { AdminLocationsPage } from './pages/admin/AdminLocationsPage';
-import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage';
-import { AdminTagsPage } from './pages/admin/AdminTagsPage';
-import { AdminAmenitiesPage } from './pages/admin/AdminAmenitiesPage';
-import { AdminStatisticsPage } from './pages/admin/AdminStatisticsPage';
-import { AdminWebsiteContentPage } from './pages/admin/AdminWebsiteContentPage';
-import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
-import { AdminNotificationsPage } from './pages/admin/AdminNotificationsPage';
+// Lazy Loaded Secondary Public Pages
+const ListingPage = lazy(() => import('./pages/ListingPage').then(m => ({ default: m.ListingPage })));
+const PropertyDetailsPage = lazy(() => import('./pages/PropertyDetailsPage').then(m => ({ default: m.PropertyDetailsPage })));
+const SellAddPropertyPage = lazy(() => import('./pages/SellAddProperty').then(m => ({ default: m.SellAddPropertyPage })));
+const AboutContactPage = lazy(() => import('./pages/AboutContact').then(m => ({ default: m.AboutContactPage })));
+const MyReservationsPage = lazy(() => import('./pages/MyReservationsPage').then(m => ({ default: m.MyReservationsPage })));
+const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage').then(m => ({ default: m.AdminLoginPage })));
+const PlacesPage = lazy(() => import('./pages/PlacesPage').then(m => ({ default: m.PlacesPage })));
+const AddPropertyPage = lazy(() => import('./pages/AddPropertyPage').then(m => ({ default: m.AddPropertyPage })));
+const NeedPropertyPage = lazy(() => import('./pages/NeedPropertyPage').then(m => ({ default: m.NeedPropertyPage })));
 
-// Public Full Pages
-import { AddPropertyPage } from './pages/AddPropertyPage';
-import { NeedPropertyPage } from './pages/NeedPropertyPage';
+// Lazy Loaded Admin Sub-Pages (Only downloaded when Admin logs in)
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
+const AdminPropertiesPage = lazy(() => import('./pages/admin/AdminPropertiesPage').then(m => ({ default: m.AdminPropertiesPage })));
+const AdminPropertyFormPage = lazy(() => import('./pages/admin/AdminPropertyFormPage').then(m => ({ default: m.AdminPropertyFormPage })));
+const AdminPropertyDetailPage = lazy(() => import('./pages/admin/AdminPropertyDetailPage').then(m => ({ default: m.AdminPropertyDetailPage })));
+const AdminPropertySubmissionsPage = lazy(() => import('./pages/admin/AdminPropertySubmissionsPage').then(m => ({ default: m.AdminPropertySubmissionsPage })));
+const AdminReservationsPage = lazy(() => import('./pages/admin/AdminReservationsPage').then(m => ({ default: m.AdminReservationsPage })));
+const AdminNeedRequestsPage = lazy(() => import('./pages/admin/AdminNeedRequestsPage').then(m => ({ default: m.AdminNeedRequestsPage })));
+const AdminCustomersPage = lazy(() => import('./pages/admin/AdminCustomersPage').then(m => ({ default: m.AdminCustomersPage })));
+const AdminMarketingMailPage = lazy(() => import('./pages/admin/AdminMarketingMailPage').then(m => ({ default: m.AdminMarketingMailPage })));
+const AdminContactMessagesPage = lazy(() => import('./pages/admin/AdminContactMessagesPage').then(m => ({ default: m.AdminContactMessagesPage })));
+const AdminLocationsPage = lazy(() => import('./pages/admin/AdminLocationsPage').then(m => ({ default: m.AdminLocationsPage })));
+const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage').then(m => ({ default: m.AdminCategoriesPage })));
+const AdminTagsPage = lazy(() => import('./pages/admin/AdminTagsPage').then(m => ({ default: m.AdminTagsPage })));
+const AdminAmenitiesPage = lazy(() => import('./pages/admin/AdminAmenitiesPage').then(m => ({ default: m.AdminAmenitiesPage })));
+const AdminStatisticsPage = lazy(() => import('./pages/admin/AdminStatisticsPage').then(m => ({ default: m.AdminStatisticsPage })));
+const AdminWebsiteContentPage = lazy(() => import('./pages/admin/AdminWebsiteContentPage').then(m => ({ default: m.AdminWebsiteContentPage })));
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage })));
+const AdminNotificationsPage = lazy(() => import('./pages/admin/AdminNotificationsPage').then(m => ({ default: m.AdminNotificationsPage })));
 
 // Modals & Drawers & Notifications
 import { QuickPreviewModal } from './components/QuickPreviewModal';
@@ -68,7 +69,7 @@ function MainApp() {
   const [favorites, setFavorites] = useState<string[]>(() => StorageService.getFavorites());
   const [isAdmin, setIsAdmin] = useState<boolean>(() => StorageService.isAdminLoggedIn());
   const [settings, setSettings] = useState<SystemSettings>(() => StorageService.getSettings());
-  const [isLoadingApi, setIsLoadingApi] = useState(true);
+  const [isLoadingApi, setIsLoadingApi] = useState(false);
 
   // Modal States
   const [selectedQuickPreviewProperty, setSelectedQuickPreviewProperty] = useState<Property | null>(null);
@@ -311,7 +312,8 @@ function MainApp() {
       {/* Global Top Animated Progress Bar on all route & fetch transitions */}
       <TopLoadingBar isLoading={isLoadingApi || isDataLoading} />
 
-      <Routes>
+      <Suspense fallback={<PageLoader fullScreen={false} message="جاري تجهيز الصفحة..." />}>
+        <Routes>
         {/* Dedicated Admin Login Route */}
         <Route 
           path="/admin/login" 
@@ -474,6 +476,7 @@ function MainApp() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      </Suspense>
 
       {/* ---------------- MODALS & DRAWERS (Global) ---------------- */}
 
