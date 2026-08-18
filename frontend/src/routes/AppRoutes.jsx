@@ -33,6 +33,7 @@ import Notifications from "../pages/dashboard/Notifications";
 import Tags from "../pages/dashboard/Tags";
 import NotFound from "../pages/NotFound";
 import PublicPropertyDetail from "../pages/PublicPropertyDetail";
+import EnhancingExperience from "../pages/EnhancingExperience";
 import { ADMIN_LOGIN_TOKEN } from "../constants/constants";
 import { Navigate } from "react-router-dom";
 
@@ -119,6 +120,8 @@ function AppRoutes({
       <Route path="/contact" element={<Contact />} />
 
       <Route path="/property/:id" element={<PublicPropertyDetail />} />
+      <Route path="/maintenance" element={<EnhancingExperience />} />
+      <Route path="/updating" element={<EnhancingExperience />} />
 
       <Route path="/admin/:token/login" element={
         <AdminLoginGuard>

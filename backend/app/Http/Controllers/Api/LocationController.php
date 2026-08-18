@@ -11,7 +11,18 @@ class LocationController extends Controller
     // عرض كل الأماكن
     public function index()
     {
-        $locations = Location::all();
+        $locations = Location::withCount(['properties as available_count' => function ($q) {
+            $q->where('status', 'available')->where('is_uploading', false);
+        }])->get();
+
+        $locations->transform(function ($loc) {
+            $minPrice = $loc->properties()
+                ->where('status', 'available')
+                ->where('price', '>', 0)
+                ->min('price');
+            $loc->min_price = $minPrice ? (float) $minPrice : null;
+            return $loc;
+        });
 
         return response()->json($locations);
     }

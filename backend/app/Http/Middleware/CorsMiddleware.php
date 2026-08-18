@@ -20,6 +20,7 @@ class CorsMiddleware
             'http://localhost:5173',
             'http://127.0.0.1:5173',
             'http://localhost:3000',
+            'http://127.0.0.1:3000',
             'https://sakani.site',
             'https://www.sakani.site',
             'https://api.sakani.site',
@@ -34,10 +35,11 @@ class CorsMiddleware
             $response = $next($request);
         }
 
-        // Set CORS headers — allow any sakani.site subdomain or matched origin
+        // Set CORS headers — allow any sakani.site subdomain, local ports, or matched origin
         $isAllowed = in_array($origin, $allowedOrigins)
             || app()->environment('local')
-            || (bool) preg_match('/^https?:\/\/(.+\.)?sakani\.site$/', $origin);
+            || (bool) preg_match('/^https?:\/\/(.+\.)?sakani\.site$/', $origin ?? '')
+            || (bool) preg_match('/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/', $origin ?? '');
 
         if ($isAllowed && $origin) {
             $response->headers->set('Access-Control-Allow-Origin', $origin);
@@ -45,10 +47,10 @@ class CorsMiddleware
             $response->headers->set('Access-Control-Allow-Origin', '*');
         }
 
-        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-XSRF-TOKEN, X-CSRF-TOKEN');
         $response->headers->set('Access-Control-Allow-Credentials', 'true');
-        $response->headers->set('Access-Control-Max-Age', '3600');
+        $response->headers->set('Access-Control-Max-Age', '86400');
 
         return $response;
     }

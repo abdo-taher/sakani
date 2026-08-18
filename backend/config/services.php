@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'firebase' => [
+        'project_id' => env('FIREBASE_PROJECT_ID', 'sakani-fa8db'),
+        'server_key' => env('FIREBASE_SERVER_KEY'),
+        'client_email' => env('FIREBASE_CLIENT_EMAIL', 'firebase-adminsdk-fbsvc@sakani-fa8db.iam.gserviceaccount.com'),
+        'private_key' => env('FIREBASE_PRIVATE_KEY'),
+        'credentials_file' => env('FIREBASE_CREDENTIALS', storage_path('app/firebase/service-account.json')),
+    ],
+
 ];

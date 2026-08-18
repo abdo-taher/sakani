@@ -1,6 +1,6 @@
-    <?php
+<?php
 
-    use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Application;
     use Illuminate\Foundation\Configuration\Exceptions;
     use Illuminate\Foundation\Configuration\Middleware;
     use Illuminate\Http\Request;
@@ -18,6 +18,8 @@
             health: '/up',
         )
         ->withMiddleware(function (Middleware $middleware): void {
+
+    $middleware->redirectGuestsTo(fn () => null);
 
     $middleware->alias([
         'admin' => AdminMiddleware::class,
@@ -44,8 +46,17 @@
 })
         ->withExceptions(function (Exceptions $exceptions): void {
             $exceptions->shouldRenderJsonWhen(
-                fn (Request $request) => $request->is('api/*'),
+                fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
             );
+
+            $exceptions->renderable(function (\Illuminate\Auth\AuthenticationException $e, Request $request) {
+                if ($request->is('api/*') || $request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthenticated or session expired.'
+                    ], 401);
+                }
+            });
 
             $exceptions->renderable(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, Request $request) {
                 if ($request->is('api/*')) {

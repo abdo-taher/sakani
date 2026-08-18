@@ -132,4 +132,26 @@ $saleRatio = $totalProperties > 0
             'summary'                => $summary,
         ]);
     }
+
+    public function publicStats()
+    {
+        $availableProperties = Property::where('status', 'available')->where('is_uploading', false)->count();
+        $locationsCount = Location::count();
+        $reservationsCount = Reservation::count();
+        $roomsCount = \Illuminate\Support\Facades\DB::table('rooms')->where('status', 'available')->count();
+        $totalViews = Property::sum('views');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'available_properties' => $availableProperties,
+                'locations_count' => $locationsCount,
+                'reservations_count' => $reservationsCount,
+                'available_rooms' => $roomsCount,
+                'total_views' => $totalViews,
+                'satisfaction_rate' => 98,
+                'commission_rate' => '2.5%',
+            ]
+        ]);
+    }
 }

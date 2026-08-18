@@ -66,10 +66,10 @@ class PropertyImage extends Model
     }
 
     /**
-     * Scope to order by sort order
+     * Scope to order by sort order (primary image always first)
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('sort_order', 'asc')->orderBy('created_at', 'asc');
+        return $query->orderByDesc('is_primary')->orderBy('sort_order', 'asc')->orderBy('created_at', 'asc');
     }
 }

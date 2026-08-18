@@ -4,54 +4,112 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class SettingController extends Controller
 {
+    /**
+     * Get all merged settings (defaults + database values)
+     */
     public function index()
     {
-        return response()->json(Setting::first());
+        $defaults = Setting::defaults();
+        $saved = [];
+
+        try {
+            if (Schema::hasTable('settings')) {
+                // If table has key/value columns
+                if (Schema::hasColumn('settings', 'key') && Schema::hasColumn('settings', 'value')) {
+                    $rows = Setting::all();
+                    foreach ($rows as $row) {
+                        $val = $row->value;
+                        // Try JSON decode
+                        $decoded = json_decode($val, true);
+                        $saved[$row->key] = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : $val;
+                    }
+                } else {
+                    // Fallback if settings table has specific columns
+                    $first = Setting::first();
+                    if ($first) {
+                        $saved = $first->toArray();
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Use defaults if table query fails
+        }
+
+        $merged = array_merge($defaults, $saved);
+
+        return response()->json($merged);
     }
 
+    /**
+     * Update or save settings
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'site_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'email' => 'required|email',
-            'address' => 'nullable|string',
-            'facebook' => 'nullable|string',
-            'instagram' => 'nullable|string',
-            'whatsapp' => 'nullable|string',
-            'about' => 'nullable|string',
-        ]);
+        $data = $request->all();
 
-        $setting = Setting::create($request->all());
+        // If wrapped in 'data' or 'settings' key
+        if (isset($data['settings']) && is_array($data['settings'])) {
+            $data = $data['settings'];
+        }
 
-        return response()->json([
-            'message' => 'Settings saved successfully',
-            'data' => $setting
-        ], 201);
+        try {
+            if (Schema::hasTable('settings') && Schema::hasColumn('settings', 'key') && Schema::hasColumn('settings', 'value')) {
+                foreach ($data as $key => $val) {
+                    $encodedVal = is_array($val) ? json_encode($val, JSON_UNESCAPED_UNICODE) : (string) $val;
+                    Setting::updateOrCreate(
+                        ['key' => $key],
+                        ['value' => $encodedVal]
+                    );
+                }
+            } else {
+                $setting = Setting::first() ?: new Setting();
+                $setting->fill($data);
+                $setting->save();
+            }
+
+            try {
+                Notification::create([
+                    'type' => 'settings',
+                    'title' => 'تحديث إعدادات الموقع',
+                    'message' => 'تم تحديث إعدادات ومحتوى الموقع العام بنجاح',
+                    'link' => '/admin?tab=cms',
+                ]);
+            } catch (\Exception $e) {}
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'حدث خطأ أثناء حفظ الإعدادات: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        return $this->index();
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Update settings (same as store for convenience)
+     */
+    public function update(Request $request, $id = null)
     {
-        $setting = Setting::findOrFail($id);
-
-        $setting->update($request->all());
-
-        return response()->json([
-            'message' => 'Settings updated successfully',
-            'data' => $setting
-        ]);
+        return $this->store($request);
     }
 
+    /**
+     * Delete setting by key
+     */
     public function destroy($id)
     {
-        Setting::findOrFail($id)->delete();
+        try {
+            Setting::where('key', $id)->orWhere('id', $id)->delete();
+        } catch (\Exception $e) {}
 
         return response()->json([
-            'message' => 'Settings deleted successfully'
+            'message' => 'تم حذف الإعداد بنجاح',
         ]);
     }
 }

@@ -1,0 +1,6 @@
+{
+  "name": "سكني - منصة العقارات في دمياط الجديدة",
+  "description": "منصة سكني العقارية الرائدة للبيع والشراء والإيجار في دمياط الجديدة والمناطق المميزة",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

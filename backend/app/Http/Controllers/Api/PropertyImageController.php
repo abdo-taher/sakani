@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\PropertyImage;
 use App\Models\Property;
-use App\Services\CloudinaryService;
+use App\Services\R2MediaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -13,11 +13,11 @@ use Exception;
 
 class PropertyImageController extends Controller
 {
-    protected CloudinaryService $cloudinaryService;
+    protected R2MediaService $r2MediaService;
 
-    public function __construct(CloudinaryService $cloudinaryService)
+    public function __construct(R2MediaService $r2MediaService)
     {
-        $this->cloudinaryService = $cloudinaryService;
+        $this->r2MediaService = $r2MediaService;
     }
 
     public function index(Request $request)
@@ -79,13 +79,12 @@ class PropertyImageController extends Controller
 
                 foreach ($images as $index => $image) {
                     try {
-                        Log::info("Uploading image {$index} for property {$propertyId}");
+                        Log::info("Uploading image {$index} for property {$propertyId} to R2");
 
-                        // Upload to Cloudinary
-                        $imageUrl = $this->cloudinaryService->uploadImage($image);
-                        
-                        // Extract public_id from URL (Cloudinary specific)
-                        $publicId = $this->extractPublicIdFromUrl($imageUrl);
+                        // Upload to Cloudflare R2
+                        $uploadResult = $this->r2MediaService->uploadImage($image, 'sakani/properties/images');
+                        $imageUrl = $uploadResult['url'];
+                        $publicId = $uploadResult['key'];
 
                         // Create database record
                         $propertyImage = PropertyImage::create([
@@ -165,16 +164,9 @@ class PropertyImageController extends Controller
 
             // If uploading new image file
             if ($request->hasFile('image')) {
-                $imageUrl = $this->cloudinaryService->uploadImage($request->file('image'));
-                $publicId = $this->extractPublicIdFromUrl($imageUrl);
-            }
-
-            // Validate URL format and domain (Cloudinary) in production (skip for videos)
-            if ($request->input('media_type', 'image') === 'image' && !str_contains($imageUrl, 'cloudinary.com') && !app()->environment('local')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid image URL. Only Cloudinary URLs are allowed.'
-                ], 422);
+                $uploadResult = $this->r2MediaService->uploadImage($request->file('image'), 'sakani/properties/images');
+                $imageUrl = $uploadResult['url'];
+                $publicId = $uploadResult['key'];
             }
 
             DB::beginTransaction();
@@ -256,14 +248,6 @@ class PropertyImageController extends Controller
                 'image_type', 'caption', 'is_primary'
             ]);
 
-            // Validate URL format if provided
-            if (isset($updateData['image_url']) && !str_contains($updateData['image_url'], 'cloudinary.com') && !app()->environment('local')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid image URL. Only Cloudinary URLs are allowed.'
-                ], 422);
-            }
-
             DB::beginTransaction();
 
             try {
@@ -281,16 +265,20 @@ class PropertyImageController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Image updated successfully',
-                    'data' => $image->load('property')
+                    'data' => $image
                 ]);
 
             } catch (Exception $e) {
                 DB::rollBack();
-                throw $e;
-            }
+                Log::error('Image update failed: ' . $e->getMessage());
 
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Image update failed: ' . $e->getMessage()
+                ], 422);
+            }
         } catch (Exception $e) {
-            Log::error('Image update failed: ' . $e->getMessage());
+            Log::error('Image validation/update error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -346,24 +334,34 @@ class PropertyImageController extends Controller
 
             DB::beginTransaction();
 
-            // Clear existing primary images for this property
-            PropertyImage::where('property_id', $image->property_id)
-                ->where('is_primary', true)
-                ->update(['is_primary' => false]);
+            try {
+                // Clear existing primary images for this property
+                PropertyImage::where('property_id', $image->property_id)
+                    ->where('id', '!=', $image->id)
+                    ->where('is_primary', true)
+                    ->update(['is_primary' => false]);
 
-            // Set this image as primary
-            $image->update(['is_primary' => true]);
+                // Set this image as primary
+                $image->update(['is_primary' => true]);
 
-            DB::commit();
+                DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Primary image set successfully',
-                'data' => $image
-            ]);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Primary image set successfully',
+                    'data' => $image
+                ]);
 
+            } catch (Exception $e) {
+                DB::rollBack();
+                Log::error('Set primary image failed: ' . $e->getMessage());
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Set primary image failed: ' . $e->getMessage()
+                ], 422);
+            }
         } catch (Exception $e) {
-            DB::rollBack();
             Log::error('Set primary image failed: ' . $e->getMessage());
 
             return response()->json([
@@ -378,12 +376,14 @@ class PropertyImageController extends Controller
         try {
             $image = PropertyImage::findOrFail($id);
 
-            // Try to delete from Cloudinary (optional, may fail silently)
+            // Try to delete from Cloudflare R2
             try {
-                // Note: Cloudinary deletion requires admin API which might not be configured
-                // You can implement this if needed
+                $target = $image->image_url ?: $image->image_public_id;
+                if ($target) {
+                    $this->r2MediaService->delete($target);
+                }
             } catch (Exception $e) {
-                Log::warning("Failed to delete image from Cloudinary: " . $e->getMessage());
+                Log::warning("Failed to delete image from R2: " . $e->getMessage());
             }
 
             $image->delete();
@@ -454,13 +454,10 @@ class PropertyImageController extends Controller
     }
 
     /**
-     * Extract Cloudinary public_id from URL
+     * Extract public key / id from media URL
      */
     protected function extractPublicIdFromUrl(string $url): string
     {
-        // Extract public_id from Cloudinary URL
-        // Example: https://res.cloudinary.com/demo/image/upload/v1234567890/sample.jpg
-        preg_match('/\/upload\/(?:v\d+\/)?([^\/]+\.[^\/]+)/', $url, $matches);
-        return $matches[1] ?? basename($url);
+        return $this->r2MediaService->extractKeyFromUrl($url);
     }
 }

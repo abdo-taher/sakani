@@ -176,7 +176,7 @@ class EnhancedVideoUploadService
             return [
                 'driver' => $driver,
                 'file_path' => $filePath,
-                'url' => $disk->url($filePath),
+                'url' => $this->getVideoUrl($driver, $filePath),
                 'size' => $totalSize,
                 'mime_type' => $this->getMimeTypeFromChunks($chunks),
             ];
@@ -404,6 +404,9 @@ class EnhancedVideoUploadService
      */
     public function getVideoUrl(string $driver, string $filePath): string
     {
+        if ($driver === 'r2') {
+            return (new R2MediaService())->getUrl($filePath);
+        }
         return Storage::disk($driver)->url($filePath);
     }
 
@@ -412,17 +415,23 @@ class EnhancedVideoUploadService
      */
     protected function uploadToPrimaryDriver(UploadedFile $file, string $filePath): array
     {
-        $url = Storage::disk($this->primaryDriver)->putFileAs(
-            dirname($filePath),
+        $normalizedFolder = R2MediaService::normalizeFolder(dirname($filePath));
+        $fileName = basename($filePath);
+
+        $storedPath = Storage::disk($this->primaryDriver)->putFileAs(
+            $normalizedFolder,
             $file,
-            basename($filePath),
+            $fileName,
             'public'
         );
 
+        $key = $storedPath ? R2MediaService::normalizeKey($storedPath) : ($normalizedFolder . '/' . $fileName);
+        $url = (new R2MediaService())->getUrl($key);
+
         return [
             'driver' => $this->primaryDriver,
-            'file_path' => $url,
-            'url' => Storage::disk($this->primaryDriver)->url($url),
+            'file_path' => $key,
+            'url' => $url,
             'size' => $file->getSize(),
             'mime_type' => $file->getMimeType(),
         ];

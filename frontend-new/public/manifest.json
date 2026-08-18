@@ -1,0 +1,25 @@
+{
+  "name": "سكني للعقارات - دمياط الجديدة",
+  "short_name": "سكني",
+  "description": "منصة سكني العقارية الرائدة للبيع والشراء والإيجار في دمياط الجديدة والمناطق المميزة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#8D6A28",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
