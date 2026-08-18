@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\PropertySubmissionController;
 use App\Http\Controllers\Api\CustomerIntelligenceController;
 use App\Http\Controllers\Api\MediaUploadController;
 use App\Http\Controllers\Api\ReferralFeedbackController;
+use App\Http\Controllers\Api\FeedbackCampaignController;
 
 // Health check and configuration - No auth required
 Route::get('/health', [ConfigController::class, 'health']);
@@ -45,6 +46,8 @@ Route::delete('/media/delete', [MediaUploadController::class, 'destroy']);
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login-status', [AuthController::class, 'loginStatus']);
 Route::post('/contact-messages', [ContactMessageController::class, 'store']);
+Route::post('/contact-messages/{id}/reply', [ContactMessageController::class, 'reply']);
+Route::get('/contact-messages', [ContactMessageController::class, 'index']);
 Route::post('/reservations', [ReservationController::class, 'store']);
 Route::get('/reservations', [ReservationController::class, 'index']);
 Route::post('/reservations/check', [ReservationController::class, 'check']);
@@ -73,8 +76,17 @@ Route::post('/customer/notifications/read-all', [NotificationController::class, 
 Route::get('/customer/reservations', [ReservationController::class, 'customerIndex']);
 // Public property submission for review
 Route::post('/properties/submit', [PropertySubmissionController::class, 'submit']);
+
 // Public acquisition feedback (How users found us)
 Route::post('/feedback/referral', [ReferralFeedbackController::class, 'store']);
+Route::get('/feedback/campaigns/active', [FeedbackCampaignController::class, 'active']);
+Route::post('/feedback/responses', [FeedbackCampaignController::class, 'storeResponse']);
+Route::get('/feedback/campaigns', [FeedbackCampaignController::class, 'index']);
+Route::post('/feedback/campaigns', [FeedbackCampaignController::class, 'store']);
+Route::put('/feedback/campaigns/{id}', [FeedbackCampaignController::class, 'update']);
+Route::delete('/feedback/campaigns/{id}', [FeedbackCampaignController::class, 'destroy']);
+Route::get('/feedback/responses', [FeedbackCampaignController::class, 'responses']);
+Route::get('/feedback/stats', [FeedbackCampaignController::class, 'stats']);
 
 // Public favorite routes (for guest users using local storage)
 Route::prefix('favorites')->group(function () {
@@ -123,6 +135,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     Route::apiResource('reservations', ReservationController::class)->except(['store']);
     Route::apiResource('need-requests', NeedRequestController::class)->except(['store']);
+    Route::post('contact-messages/{id}/reply', [ContactMessageController::class, 'reply']);
     Route::apiResource('contact-messages', ContactMessageController::class)->except(['store']);
     Route::apiResource('settings', SettingController::class)->except(['index']);
     Route::post('/settings/bulk', [SettingController::class, 'store']);

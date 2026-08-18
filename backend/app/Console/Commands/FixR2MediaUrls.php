@@ -137,6 +137,7 @@ class FixR2MediaUrls extends Command
         }
 
         // Perform update if not dry-run
+        // Perform update if not dry-run
         if (!$isDryRun) {
             if ($totalSafeToFix === 0) {
                 $this->info("No records require updating.");

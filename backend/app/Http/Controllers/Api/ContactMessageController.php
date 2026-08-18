@@ -25,6 +25,20 @@ class ContactMessageController extends Controller
             'message' => 'required|string'
         ]);
 
+        // Prevent rapid repeated duplicate submissions within 30 seconds
+        $existing = ContactMessage::where('phone', $request->phone)
+            ->where('message', $request->message)
+            ->where('created_at', '>=', now()->subSeconds(30))
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Message already received',
+                'data' => $existing
+            ], 200);
+        }
+
         $contact = ContactMessage::create([
             'name' => $request->name,
             'phone' => $request->phone,
@@ -60,6 +74,44 @@ class ContactMessageController extends Controller
 
         return response()->json([
             'message' => 'Message updated successfully',
+            'data' => $contact
+        ]);
+    }
+
+    public function reply(Request $request, $id)
+    {
+        $contact = ContactMessage::findOrFail($id);
+
+        $request->validate([
+            'reply' => 'required|string',
+            'channel' => 'nullable|string',
+            'admin_name' => 'nullable|string'
+        ]);
+
+        $replyText = $request->input('reply');
+        $channel = $request->input('channel', 'platform');
+
+        $contact->update([
+            'status' => 'replied',
+            'admin_reply' => $replyText,
+            'reply_channel' => $channel,
+            'replied_at' => now()
+        ]);
+
+        try {
+            Notification::create([
+                'title' => 'رد جديد على رسالتك: ' . ($contact->subject ?: 'استفسار'),
+                'body' => $replyText,
+                'type' => 'contact_reply',
+                'target_id' => $contact->id,
+                'target_phone' => $contact->phone,
+                'is_read' => false,
+            ]);
+        } catch (\Throwable $e) {}
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إرسال وحفظ الرد بنجاح',
             'data' => $contact
         ]);
     }

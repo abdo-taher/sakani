@@ -34,6 +34,20 @@ class NeedRequestController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        // Prevent accidental rapid duplicate submission
+        $existing = NeedRequest::where('phone', $validated['phone'])
+            ->where('budget', $validated['budget'])
+            ->where('created_at', '>=', now()->subSeconds(30))
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success' => true,
+                'message' => 'تم استلام طلبك مسبقاً وجاري معالجته.',
+                'data' => $existing
+            ], 200);
+        }
+
         $needRequest = NeedRequest::create($validated);
 
         try {

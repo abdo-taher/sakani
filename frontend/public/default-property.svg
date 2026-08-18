@@ -1,0 +1,117 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1200" y2="800" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="50%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#090D16"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="40%" stop-color="#D6A94E"/>
+      <stop offset="100%" stop-color="#8D6A28"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="30" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="800" fill="url(#bgGrad)"/>
+
+  <!-- Subtle Radial Glow behind logo -->
+  <circle cx="600" cy="350" r="280" fill="#8D6A28" opacity="0.12" filter="url(#glow)"/>
+
+  <!-- Geometric Grid Pattern Overlay -->
+  <g opacity="0.04" stroke="#FFFFFF" stroke-width="1">
+    <line x1="100" y1="0" x2="100" y2="800"/>
+    <line x1="300" y1="0" x2="300" y2="800"/>
+    <line x1="500" y1="0" x2="500" y2="800"/>
+    <line x1="700" y1="0" x2="700" y2="800"/>
+    <line x1="900" y1="0" x2="900" y2="800"/>
+    <line x1="1100" y1="0" x2="1100" y2="800"/>
+    <line x1="0" y1="200" x2="1200" y2="200"/>
+    <line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="0" y1="600" x2="1200" y2="600"/>
+  </g>
+
+  <!-- Centered Logo Group -->
+  <g transform="translate(480, 200)">
+    <!-- Outer Navy/Slate Roof & Frame with White Glow -->
+    <path 
+      d="M120 28L36 100V200H204V100L120 28Z" 
+      stroke="#FFFFFF" 
+      stroke-width="12" 
+      stroke-linecap="round" 
+      stroke-linejoin="round"
+      opacity="0.9"
+    />
+    <!-- Chimney -->
+    <path 
+      d="M68 74V38H92V52" 
+      stroke="#FFFFFF" 
+      stroke-width="10" 
+      stroke-linecap="round" 
+      stroke-linejoin="round"
+      opacity="0.9"
+    />
+    <!-- Inner Golden House -->
+    <path 
+      d="M120 76L62 128V200H178V128L120 76Z" 
+      stroke="url(#goldGrad)" 
+      stroke-width="11" 
+      stroke-linecap="round" 
+      stroke-linejoin="round"
+    />
+    <!-- Arched Doorway -->
+    <path 
+      d="M96 200V152C96 138.745 106.745 128 120 128C133.255 128 144 138.745 144 152V200" 
+      stroke="url(#goldGrad)" 
+      stroke-width="10" 
+      stroke-linecap="round" 
+      stroke-linejoin="round"
+    />
+  </g>
+
+  <!-- Typography: SAKANI -->
+  <text 
+    x="600" 
+    y="510" 
+    text-anchor="middle" 
+    fill="#FFFFFF" 
+    font-family="system-ui, -apple-system, sans-serif" 
+    font-size="46" 
+    font-weight="900" 
+    letter-spacing="4"
+  >
+    سَــكَــنِــي
+  </text>
+
+  <text 
+    x="600" 
+    y="560" 
+    text-anchor="middle" 
+    fill="#D6A94E" 
+    font-family="system-ui, -apple-system, sans-serif" 
+    font-size="18" 
+    font-weight="800" 
+    letter-spacing="8"
+  >
+    SAKANI REAL ESTATE • دمياط الجديدة
+  </text>
+
+  <text 
+    x="600" 
+    y="610" 
+    text-anchor="middle" 
+    fill="#94A3B8" 
+    font-family="system-ui, -apple-system, sans-serif" 
+    font-size="15" 
+    font-weight="600"
+  >
+    منصة العقارات الرائدة في دمياط الجديدة
+  </text>
+
+  <!-- Subtle Bottom Accent Line -->
+  <line x1="450" y1="650" x2="750" y2="650" stroke="url(#goldGrad)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+</svg>

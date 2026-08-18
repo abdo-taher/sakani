@@ -392,11 +392,22 @@ class CustomerIntelligenceController extends Controller
             return strcmp($b['date'] ?? '', $a['date'] ?? '');
         });
 
+        // Deduplicate timeline items
+        $uniqueTimeline = [];
+        $seenKeys = [];
+        foreach ($timeline as $item) {
+            $key = $item['type'] . '_' . ($item['title'] ?? '') . '_' . ($item['description'] ?? '') . '_' . substr($item['date'] ?? '', 0, 16);
+            if (!isset($seenKeys[$key])) {
+                $seenKeys[$key] = true;
+                $uniqueTimeline[] = $item;
+            }
+        }
+
         return response()->json([
             'success' => true,
             'phone' => $norm,
-            'timeline' => $timeline,
-            'total_events' => count($timeline),
+            'timeline' => $uniqueTimeline,
+            'total_events' => count($uniqueTimeline),
         ]);
     }
 
