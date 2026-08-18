@@ -67,4 +67,15 @@ class Setting extends Model
             ],
         ];
     }
+
+    protected static function booted()
+    {
+        static::saved(function ($setting) {
+            \App\Helpers\CacheHelper::clearSettingCaches();
+        });
+
+        static::deleted(function ($setting) {
+            \App\Helpers\CacheHelper::clearSettingCaches();
+        });
+    }
 }

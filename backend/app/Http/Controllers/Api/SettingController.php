@@ -8,40 +8,41 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
+use Illuminate\Support\Facades\Cache;
+
 class SettingController extends Controller
 {
     /**
-     * Get all merged settings (defaults + database values)
+     * Get all merged settings (defaults + database values) with 5-minute cache
      */
     public function index()
     {
-        $defaults = Setting::defaults();
-        $saved = [];
+        $merged = Cache::remember('sakani_settings_merged', 300, function () {
+            $defaults = Setting::defaults();
+            $saved = [];
 
-        try {
-            if (Schema::hasTable('settings')) {
-                // If table has key/value columns
-                if (Schema::hasColumn('settings', 'key') && Schema::hasColumn('settings', 'value')) {
-                    $rows = Setting::all();
-                    foreach ($rows as $row) {
-                        $val = $row->value;
-                        // Try JSON decode
-                        $decoded = json_decode($val, true);
-                        $saved[$row->key] = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : $val;
-                    }
-                } else {
-                    // Fallback if settings table has specific columns
-                    $first = Setting::first();
-                    if ($first) {
-                        $saved = $first->toArray();
+            try {
+                if (Schema::hasTable('settings')) {
+                    if (Schema::hasColumn('settings', 'key') && Schema::hasColumn('settings', 'value')) {
+                        $rows = Setting::all();
+                        foreach ($rows as $row) {
+                            $val = $row->value;
+                            $decoded = json_decode($val, true);
+                            $saved[$row->key] = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : $val;
+                        }
+                    } else {
+                        $first = Setting::first();
+                        if ($first) {
+                            $saved = $first->toArray();
+                        }
                     }
                 }
+            } catch (\Exception $e) {
+                // Use defaults if table query fails
             }
-        } catch (\Exception $e) {
-            // Use defaults if table query fails
-        }
 
-        $merged = array_merge($defaults, $saved);
+            return array_merge($defaults, $saved);
+        });
 
         return response()->json($merged);
     }
@@ -51,6 +52,7 @@ class SettingController extends Controller
      */
     public function store(Request $request)
     {
+        Cache::forget('sakani_settings_merged');
         $data = $request->all();
 
         // If wrapped in 'data' or 'settings' key

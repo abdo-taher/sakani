@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Helpers\CacheHelper;
 use Exception;
 
 class PropertyController extends Controller
@@ -192,17 +193,27 @@ class PropertyController extends Controller
             $isProximityFiltered = true;
         }
 
+        $propVersion = Cache::get('sakani_props_version', 1);
+        $cacheKey = 'sakani_props_pub_v' . $propVersion . '_' . md5(json_encode($request->all()));
+        $isPublicQuery = !$user && !$request->boolean('include_pending') && !$request->boolean('all_statuses');
+
+        if ($isPublicQuery) {
+            $cached = Cache::get($cacheKey);
+            if ($cached) {
+                return response()->json($cached)->header('X-Cache', 'HIT');
+            }
+        }
+
         $properties = $isProximityFiltered ? $query->get() : $query->latest()->get();
 
-        // Add primary image and images grouped by type for each property
+        // Add sanitized images and multi-videos for each property
         $properties->transform(function ($property) use ($user) {
-            $property->primary_image = $property->images->where('is_primary', true)->first();
-            $property->images_by_type = $property->images->groupBy('image_type');
-            $property->total_images = $property->images->count();
-            $property->is_favorite = $property->isFavoritedBy($user);
-            $property->cached_views = ($property->views ?? 0) + (Cache::get("property_views_{$property->id}", 0));
-            return $property;
+            return $this->formatPropertyMedia($property, $user);
         });
+
+        if ($isPublicQuery) {
+            Cache::put($cacheKey, $properties, 180);
+        }
 
         return response()->json($properties);
     }
@@ -502,6 +513,8 @@ class PropertyController extends Controller
             if (!empty($imageErrors)) {
                 $message .= '. Some images failed to upload: ' . implode(', ', $imageErrors);
             }
+
+            CacheHelper::clearPropertyCaches();
 
             return response()->json([
                 'success' => true,
@@ -903,6 +916,8 @@ class PropertyController extends Controller
         $fresh = Property::with(['category', 'propertyType', 'location', 'images', 'amenities', 'tags', 'detailedRooms', 'detailedRooms.roomImages'])->find($property->id);
         $fresh = $this->formatPropertyMedia($fresh, $request->user());
 
+        CacheHelper::clearPropertyCaches();
+
         return response()->json([
             'success' => true,
             'message' => 'Property updated successfully',
@@ -925,6 +940,7 @@ class PropertyController extends Controller
         }
 
         $property->delete();
+        CacheHelper::clearPropertyCaches();
         
         return response()->json(['message' => 'Property deleted successfully']);
     }
@@ -933,6 +949,7 @@ class PropertyController extends Controller
     {
         $property = Property::findOrFail($id);
         $property->update(['is_uploading' => false]);
+        CacheHelper::clearPropertyCaches();
 
         return response()->json([
             'success' => true,
@@ -1200,6 +1217,8 @@ class PropertyController extends Controller
             ]);
         }
 
+        CacheHelper::clearPropertyCaches();
+
         return response()->json([
             'success' => true,
             'message' => $property->has_offer ? 'تم تحديث وتفعيل العرض بنجاح' : 'تم إيقاف العرض بنجاح',
@@ -1242,50 +1261,74 @@ class PropertyController extends Controller
     }
 
     /**
-     * Consistently format images and multi-videos for property responses
+     * Consistently format images and multi-videos for property responses, strictly isolating videos from images
      */
     protected function formatPropertyMedia($property, $user = null)
     {
         if (!$property) return $property;
 
-        $videoMedia = $property->images ? $property->images->where('media_type', 'video')->values() : collect();
+        $rawImages = $property->images ?: collect();
+        $pureImages = collect();
         $videosList = [];
-        foreach ($videoMedia as $vm) {
-            $videosList[] = [
-                'id' => $vm->id,
-                'url' => $vm->image_url,
-                'title' => $vm->caption ?: 'فيديو جولة العقار',
-                'type' => $vm->image_type ?: 'walkthrough',
-                'thumbnail_url' => $property->video_thumbnail_url ?: ($property->images ? $property->images->where('is_primary', true)->first()?->image_url : null),
-                'is_primary' => (bool)$vm->is_primary,
-            ];
+
+        // Check if property already has a primary video URL
+        $primaryVideoUrl = $property->video_url;
+
+        foreach ($rawImages as $img) {
+            $url = $img->image_url ?? '';
+            $isVideo = ($img->media_type === 'video') || 
+                       preg_match('/\.(mp4|webm|mov|mkv|avi|m3u8)(\?.*)?$/i', $url) ||
+                       str_contains($url, '/sakani/properties/videos/') ||
+                       str_contains($url, '/video/upload/') ||
+                       str_contains($url, 'youtube.com') ||
+                       str_contains($url, 'youtu.be');
+
+            if ($isVideo) {
+                if (empty($primaryVideoUrl)) {
+                    $primaryVideoUrl = $url;
+                }
+                $videosList[] = [
+                    'id' => $img->id,
+                    'url' => $url,
+                    'title' => $img->caption ?: 'فيديو جولة العقار',
+                    'type' => $img->image_type ?: 'walkthrough',
+                    'thumbnail_url' => $property->video_thumbnail_url ?: null,
+                    'is_primary' => (bool)$img->is_primary,
+                ];
+            } else {
+                $pureImages->push($img);
+            }
         }
 
-        if (empty($videosList) && !empty($property->video_url)) {
+        if (empty($videosList) && !empty($primaryVideoUrl)) {
             $videosList[] = [
                 'id' => 0,
-                'url' => $property->video_url,
+                'url' => $primaryVideoUrl,
                 'title' => 'فيديو جولة العقار الرئيسية',
                 'type' => 'walkthrough',
-                'thumbnail_url' => $property->video_thumbnail_url ?: ($property->images ? $property->images->where('is_primary', true)->first()?->image_url : null),
+                'thumbnail_url' => $property->video_thumbnail_url ?: null,
                 'is_primary' => true,
             ];
         }
 
+        $property->video_url = $primaryVideoUrl;
         $property->videos = $videosList;
+        $property->setRelation('images', $pureImages);
 
-        if ($property->images) {
-            $property->primary_image = $property->images->where('is_primary', true)->first() ?: $property->images->first();
-            $property->images_by_type = $property->images->groupBy('image_type')->map(function ($typeImages, $type) {
-                return [
-                    'type' => $type,
-                    'type_label' => PropertyImage::IMAGE_TYPES[$type] ?? $type,
-                    'images' => $typeImages,
-                    'count' => $typeImages->count(),
-                ];
-            });
-            $property->total_images = $property->images->count();
-        }
+        // Assign primary image (guaranteed to be a photo, never a video)
+        $primaryImage = $pureImages->where('is_primary', true)->first() ?: $pureImages->first();
+        $property->primary_image = $primaryImage;
+        $property->image_url = $primaryImage?->image_url ?: ($property->video_thumbnail_url ?: '/default-property.svg');
+
+        $property->images_by_type = $pureImages->groupBy('image_type')->map(function ($typeImages, $type) {
+            return [
+                'type' => $type,
+                'type_label' => PropertyImage::IMAGE_TYPES[$type] ?? $type,
+                'images' => $typeImages,
+                'count' => $typeImages->count(),
+            ];
+        });
+        $property->total_images = $pureImages->count();
 
         $property->cached_views = ($property->views ?? 0) + (Cache::get("property_views_{$property->id}", 0));
         if ($user) {

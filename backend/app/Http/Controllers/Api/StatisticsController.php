@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\Property;
 use App\Models\Reservation;
+use Illuminate\Support\Facades\Cache;
 
 class StatisticsController extends Controller
 {
@@ -135,15 +136,14 @@ $saleRatio = $totalProperties > 0
 
     public function publicStats()
     {
-        $availableProperties = Property::where('status', 'available')->where('is_uploading', false)->count();
-        $locationsCount = Location::count();
-        $reservationsCount = Reservation::count();
-        $roomsCount = \Illuminate\Support\Facades\DB::table('rooms')->where('status', 'available')->count();
-        $totalViews = Property::sum('views');
+        $stats = Cache::remember('sakani_public_stats_v2', 300, function () {
+            $availableProperties = Property::where('status', 'available')->where('is_uploading', false)->count();
+            $locationsCount = Location::count();
+            $reservationsCount = Reservation::count();
+            $roomsCount = \Illuminate\Support\Facades\DB::table('rooms')->where('status', 'available')->count();
+            $totalViews = Property::sum('views');
 
-        return response()->json([
-            'success' => true,
-            'data' => [
+            return [
                 'available_properties' => $availableProperties,
                 'locations_count' => $locationsCount,
                 'reservations_count' => $reservationsCount,
@@ -151,7 +151,12 @@ $saleRatio = $totalProperties > 0
                 'total_views' => $totalViews,
                 'satisfaction_rate' => 98,
                 'commission_rate' => '2.5%',
-            ]
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats
         ]);
     }
 }

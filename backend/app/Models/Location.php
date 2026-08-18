@@ -14,8 +14,19 @@ class Location extends Model
         'image_url',
         'image_public_id',
     ];
+    protected static function booted()
+    {
+        static::saved(function ($location) {
+            \App\Helpers\CacheHelper::clearLocationCaches();
+        });
+
+        static::deleted(function ($location) {
+            \App\Helpers\CacheHelper::clearLocationCaches();
+        });
+    }
+
     public function properties()
-{
-    return $this->hasMany(Property::class);
-}
+    {
+        return $this->hasMany(Property::class);
+    }
 }

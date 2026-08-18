@@ -4,24 +4,30 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Location;
+use App\Helpers\CacheHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class LocationController extends Controller
 {
     // عرض كل الأماكن
     public function index()
     {
-        $locations = Location::withCount(['properties as available_count' => function ($q) {
-            $q->where('status', 'available')->where('is_uploading', false);
-        }])->get();
+        $locations = Cache::remember('sakani_locations_all', 300, function () {
+            $data = Location::withCount(['properties as available_count' => function ($q) {
+                $q->where('status', 'available')->where('is_uploading', false);
+            }])->get();
 
-        $locations->transform(function ($loc) {
-            $minPrice = $loc->properties()
-                ->where('status', 'available')
-                ->where('price', '>', 0)
-                ->min('price');
-            $loc->min_price = $minPrice ? (float) $minPrice : null;
-            return $loc;
+            $data->transform(function ($loc) {
+                $minPrice = $loc->properties()
+                    ->where('status', 'available')
+                    ->where('price', '>', 0)
+                    ->min('price');
+                $loc->min_price = $minPrice ? (float) $minPrice : null;
+                return $loc;
+            });
+
+            return $data;
         });
 
         return response()->json($locations);
@@ -47,6 +53,8 @@ class LocationController extends Controller
             'image_url' => $request->image_url,
             'image_public_id' => $request->image_public_id,
         ]);
+
+        CacheHelper::clearLocationCaches();
 
         return response()->json([
             'message' => 'Location created successfully',
@@ -85,6 +93,8 @@ class LocationController extends Controller
             'image_public_id' => $request->image_public_id,
         ]);
 
+        CacheHelper::clearLocationCaches();
+
         return response()->json([
             'message' => 'Location updated successfully',
             'data' => $location,
@@ -97,6 +107,8 @@ class LocationController extends Controller
         $location = Location::findOrFail($id);
 
         $location->delete();
+
+        CacheHelper::clearLocationCaches();
 
         return response()->json([
             'message' => 'Location deleted successfully'

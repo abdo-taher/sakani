@@ -206,8 +206,48 @@ export function getCloudinaryVideoThumbnail(url: string | null | undefined): str
   }
 }
 
+export const R2_PUBLIC_BASE_URL = 'https://pub-53f4892d4ffe491787baac754cbe0059.r2.dev';
+
 /**
- * Resolve any video URL (relative /storage/ paths, backend storage, external CDNs, YouTube)
+ * Resolve any image URL (Cloudflare R2 keys, relative /storage/ paths, backend storage, external CDNs)
+ */
+export function resolveImageUrl(url: string | null | undefined): string {
+  if (!url) return FALLBACK_PROPERTY_IMAGE;
+  const trimmed = url.trim();
+  if (!trimmed) return FALLBACK_PROPERTY_IMAGE;
+
+  // If already absolute http / https or data/blob url
+  if (/^(https?:|\/\/|blob:|data:)/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  // If Cloudflare R2 key (starts with /sakani/ or sakani/)
+  const cleanKey = trimmed.replace(/^\/+/, '');
+  if (cleanKey.startsWith('sakani/')) {
+    return `${R2_PUBLIC_BASE_URL}/${cleanKey}`;
+  }
+
+  // If local /storage/ path from Laravel
+  if (cleanKey.startsWith('storage/')) {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return `http://${hostname}:8000/${cleanKey}`;
+      }
+      return `https://api.sakani.site/${cleanKey}`;
+    }
+  }
+
+  // If static public file (e.g. /default-property.svg, /hero-poster.jpg)
+  if (trimmed.startsWith('/') && !trimmed.startsWith('/sakani/')) {
+    return trimmed;
+  }
+
+  return `${R2_PUBLIC_BASE_URL}/sakani/${cleanKey}`;
+}
+
+/**
+ * Resolve any video URL (Cloudflare R2 keys, relative /storage/ paths, external CDNs, YouTube)
  */
 export function resolveVideoUrl(url: string | null | undefined): string {
   if (!url) return '';
@@ -219,17 +259,23 @@ export function resolveVideoUrl(url: string | null | undefined): string {
     return trimmed;
   }
 
+  const cleanKey = trimmed.replace(/^\/+/, '');
+  if (cleanKey.startsWith('sakani/')) {
+    return `${R2_PUBLIC_BASE_URL}/${cleanKey}`;
+  }
+
   // If starts with /storage/ or storage/
-  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-  
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return `${protocol}//${hostname}:8000${cleanPath}`;
+  if (cleanKey.startsWith('storage/')) {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return `http://${hostname}:8000/${cleanKey}`;
+      }
+      return `https://api.sakani.site/${cleanKey}`;
     }
   }
-  return cleanPath;
+
+  return cleanKey.startsWith('/') ? cleanKey : `/${cleanKey}`;
 }
 
 /**
@@ -316,30 +362,30 @@ export function sanitizePropertyMedia(p: any): any {
 
     if (isVideoUrl(url)) {
       if (!detectedVideoUrl) {
-        detectedVideoUrl = url;
+        detectedVideoUrl = resolveVideoUrl(url);
       }
     } else {
-      extractedImageUrls.push(url);
+      extractedImageUrls.push(resolveImageUrl(url));
     }
   }
 
   // Also check direct image_url field
   if (p.image_url && isVideoUrl(p.image_url)) {
     if (!detectedVideoUrl) {
-      detectedVideoUrl = p.image_url;
+      detectedVideoUrl = resolveVideoUrl(p.image_url);
     }
   }
 
   const finalImages = extractedImageUrls.length > 0 ? extractedImageUrls : [FALLBACK_PROPERTY_IMAGE];
-  const finalImageUrl = extractedImageUrls[0] || (p.video_thumbnail_url && !isVideoUrl(p.video_thumbnail_url) ? p.video_thumbnail_url : FALLBACK_PROPERTY_IMAGE);
+  const finalImageUrl = extractedImageUrls[0] || (p.video_thumbnail_url && !isVideoUrl(p.video_thumbnail_url) ? resolveImageUrl(p.video_thumbnail_url) : FALLBACK_PROPERTY_IMAGE);
 
   return {
     ...p,
     images: finalImages,
     image_url: finalImageUrl,
-    video_url: detectedVideoUrl || p.video_url || undefined,
+    video_url: detectedVideoUrl || (p.video_url ? resolveVideoUrl(p.video_url) : undefined),
     video_thumbnail_url: p.video_thumbnail_url && !isVideoUrl(p.video_thumbnail_url) 
-      ? p.video_thumbnail_url 
+      ? resolveImageUrl(p.video_thumbnail_url) 
       : (detectedVideoUrl ? getVideoThumbnailUrl(detectedVideoUrl, undefined, finalImageUrl) : undefined),
   };
 }

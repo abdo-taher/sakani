@@ -45,4 +45,15 @@ class Room extends Model
     {
         return $query->where('status', 'available');
     }
+
+    protected static function booted()
+    {
+        static::saved(function ($room) {
+            \App\Helpers\CacheHelper::clearPropertyCaches();
+        });
+
+        static::deleted(function ($room) {
+            \App\Helpers\CacheHelper::clearPropertyCaches();
+        });
+    }
 }

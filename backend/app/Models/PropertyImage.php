@@ -72,4 +72,15 @@ class PropertyImage extends Model
     {
         return $query->orderByDesc('is_primary')->orderBy('sort_order', 'asc')->orderBy('created_at', 'asc');
     }
+
+    protected static function booted()
+    {
+        static::saved(function ($image) {
+            \App\Helpers\CacheHelper::clearPropertyCaches();
+        });
+
+        static::deleted(function ($image) {
+            \App\Helpers\CacheHelper::clearPropertyCaches();
+        });
+    }
 }

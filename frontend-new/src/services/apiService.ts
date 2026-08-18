@@ -4,17 +4,26 @@
  */
 
 export function getApiUrl(): string {
-  if (typeof window === 'undefined') return 'http://localhost:8000/api';
-  
-  // Environment variable override if present
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  if (typeof window === 'undefined') {
+    return (import.meta.env.VITE_API_URL as string) || 'http://localhost:8000/api';
   }
 
   const hostname = window.location.hostname;
   const protocol = window.location.protocol;
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
 
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+  // Environment variable override if present
+  const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+  if (envUrl) {
+    // If running in production browser on a real domain but the envUrl was baked with localhost, ignore localhost and auto-route
+    if (!isLocalhost && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
+      // Fall through to domain-based resolution
+    } else {
+      return envUrl;
+    }
+  }
+
+  if (isLocalhost) {
     return `${protocol}//${hostname}:8000/api`;
   }
 

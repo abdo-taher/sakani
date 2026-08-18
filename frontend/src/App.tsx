@@ -4,7 +4,7 @@ import { Property, LocationDistrict, OperationType, PropertyType, DetailedRoom, 
 import { StorageService } from './services/storageService';
 import { ApiService } from './services/apiService';
 import { initializeFirebase } from './services/firebaseService';
-import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia } from './utils/media';
+import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia, resolveImageUrl } from './utils/media';
 
 // Layouts
 import { PublicLayout } from './layouts/PublicLayout';
@@ -180,7 +180,7 @@ function MainApp() {
           id: String(d.id),
           name: d.name,
           available_count: Number(d.available_count) || 0,
-          image_url: d.image_url || FALLBACK_PROPERTY_IMAGE,
+          image_url: resolveImageUrl(d.image_url),
           description: d.address || d.description || '',
           coordinates: (d.latitude && d.longitude) ? { lat: Number(d.latitude), lng: Number(d.longitude) } : undefined,
         }));

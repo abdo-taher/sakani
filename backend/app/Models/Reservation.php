@@ -24,4 +24,15 @@ class Reservation extends Model
     {
         return $this->belongsTo(Room::class);
     }
+
+    protected static function booted()
+    {
+        static::saved(function ($res) {
+            \App\Helpers\CacheHelper::clearStatsCaches();
+        });
+
+        static::deleted(function ($res) {
+            \App\Helpers\CacheHelper::clearStatsCaches();
+        });
+    }
 }

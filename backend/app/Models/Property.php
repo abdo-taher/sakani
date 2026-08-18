@@ -80,6 +80,20 @@ class Property extends Model
     ];
 
     /**
+     * Booted method for automatic cache invalidation
+     */
+    protected static function booted()
+    {
+        static::saved(function ($property) {
+            \App\Helpers\CacheHelper::clearPropertyCaches();
+        });
+
+        static::deleted(function ($property) {
+            \App\Helpers\CacheHelper::clearPropertyCaches();
+        });
+    }
+
+    /**
      * Get human-friendly formatted reference ID (e.g. SK-0081)
      */
     public function getRefIdAttribute(): string
@@ -193,7 +207,15 @@ class Property extends Model
 
     public function images()
     {
-        return $this->hasMany(PropertyImage::class)->ordered();
+        return $this->hasMany(PropertyImage::class)
+            ->where(function ($q) {
+                $q->whereNull('media_type')->orWhere('media_type', '!=', 'video');
+            })
+            ->where('image_url', 'not like', '%.mp4%')
+            ->where('image_url', 'not like', '%.webm%')
+            ->where('image_url', 'not like', '%.mov%')
+            ->where('image_url', 'not like', '%/properties/videos/%')
+            ->ordered();
     }
 
     /**
@@ -201,7 +223,15 @@ class Property extends Model
      */
     public function primaryImage()
     {
-        return $this->hasOne(PropertyImage::class)->primary();
+        return $this->hasOne(PropertyImage::class)
+            ->where(function ($q) {
+                $q->whereNull('media_type')->orWhere('media_type', '!=', 'video');
+            })
+            ->where('image_url', 'not like', '%.mp4%')
+            ->where('image_url', 'not like', '%.webm%')
+            ->where('image_url', 'not like', '%.mov%')
+            ->where('image_url', 'not like', '%/properties/videos/%')
+            ->primary();
     }
 
     /**

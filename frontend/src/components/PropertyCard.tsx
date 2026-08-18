@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '../types';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
-import { FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
 import { 
   MapPin, 
   BedDouble, 
@@ -155,7 +155,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
       {/* Image Carousel Container */}
       <div className={`relative aspect-[16/10] sm:aspect-[4/3] w-full overflow-hidden bg-slate-100 ${isUploading ? 'pt-6' : ''}`}>
         <img
-          src={images[currentImageIndex]}
+          src={resolveImageUrl(images[currentImageIndex])}
           alt={property.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
