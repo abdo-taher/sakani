@@ -54,9 +54,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const prevUnreadCountRef = useRef<number | null>(null);
+
   useEffect(() => {
     StorageService.ensureWelcomeNotification();
     loadNotifications();
+
+    // Auto-register admin device token in background if permission is already granted
+    if (role === 'admin' && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      requestNotificationPermission('admin').catch(() => {});
+    }
 
     // 1. Subscribe to live incoming push notifications
     const unsubscribe = onPushNotification((payload: PushNotificationPayload) => {
@@ -97,9 +104,30 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
     window.addEventListener('sakani_customer_notifications_updated', handleLocalNotifsUpdated);
 
+    // 3. Periodic real-time sync (every 15 seconds) & focus sync for Admin
+    let intervalId: any = null;
+    if (role === 'admin') {
+      intervalId = setInterval(() => {
+        loadNotifications(true);
+      }, 15000);
+
+      const handleWindowFocus = () => {
+        loadNotifications(true);
+      };
+      window.addEventListener('focus', handleWindowFocus);
+
+      return () => {
+        unsubscribe();
+        window.removeEventListener('sakani_customer_notifications_updated', handleLocalNotifsUpdated);
+        window.removeEventListener('focus', handleWindowFocus);
+        if (intervalId) clearInterval(intervalId);
+      };
+    }
+
     return () => {
       unsubscribe();
       window.removeEventListener('sakani_customer_notifications_updated', handleLocalNotifsUpdated);
+      if (intervalId) clearInterval(intervalId);
     };
   }, [role, customerPhone]);
 
@@ -118,7 +146,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     };
   }, [isOpen]);
 
-  const loadNotifications = async () => {
+  const loadNotifications = async (isPeriodicSync = false) => {
     try {
       if (role === 'customer') {
         StorageService.ensureWelcomeNotification();
@@ -160,8 +188,30 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         if (StorageService.isAdminLoggedIn()) {
           const res = await ApiService.getNotifications().catch(() => null);
           if (res && Array.isArray(res.data)) {
+            const currentUnread = res.unread_count ?? res.data.filter((n: any) => !n.is_read).length;
+            
+            // If new unread notifications arrived during periodic sync
+            if (isPeriodicSync && prevUnreadCountRef.current !== null && currentUnread > prevUnreadCountRef.current) {
+              playAdminNotificationSound();
+              
+              // Trigger browser desktop notification if permitted
+              if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                const latest = res.data[0];
+                if (latest) {
+                  try {
+                    new Notification(latest.title || 'إشعار جديد في لوحة التحكم', {
+                      body: latest.message,
+                      icon: '/favicon.svg',
+                      tag: `admin-notif-${latest.id}`,
+                    });
+                  } catch (e) {}
+                }
+              }
+            }
+
+            prevUnreadCountRef.current = currentUnread;
             setNotifications(res.data);
-            setUnreadCount(res.unread_count || res.data.filter((n: any) => !n.is_read).length);
+            setUnreadCount(currentUnread);
           }
         } else {
           setNotifications([]);

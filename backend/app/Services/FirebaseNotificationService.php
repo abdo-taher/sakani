@@ -58,10 +58,23 @@ class FirebaseNotificationService
      */
     public static function getServiceAccountData(): ?array
     {
+        // 1. Direct JSON string from environment variable (ideal for production servers)
+        $jsonString = env('FIREBASE_CREDENTIALS_JSON');
+        if (!empty($jsonString)) {
+            $decoded = json_decode($jsonString, true);
+            if (is_array($decoded) && !empty($decoded['private_key']) && !empty($decoded['client_email'])) {
+                return $decoded;
+            }
+        }
+
         $customPath = self::safeConfig('services.firebase.credentials_file') ?: env('FIREBASE_CREDENTIALS');
         $possiblePaths = array_filter([
             $customPath,
+            $customPath ? self::safeBasePath($customPath) : null,
+            $customPath ? self::safeStoragePath(str_replace(['storage/app/', 'storage/'], '', $customPath)) : null,
             self::safeStoragePath('app/firebase/service-account.json'),
+            self::safeStoragePath('firebase/service-account.json'),
+            self::safeBasePath('storage/app/firebase/service-account.json'),
             self::safeBasePath('firebase-service-account.json'),
             self::safeStoragePath('firebase-service-account.json'),
         ]);

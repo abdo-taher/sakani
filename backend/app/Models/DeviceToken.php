@@ -25,7 +25,11 @@ class DeviceToken extends Model
 
     public function scopeForAdmins($query)
     {
-        return $query->whereNotNull('user_id')->orWhereNull('phone');
+        return $query->where(function ($q) {
+            $q->whereNotNull('user_id')
+              ->orWhere('device_type', 'admin_web')
+              ->orWhereNull('phone');
+        });
     }
 
     public function scopeForPhone($query, string $phone)
