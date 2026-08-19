@@ -106,6 +106,7 @@ class Property extends Model
                 $clean = trim($clean, '-');
                 $newSlug = $clean ? "{$property->id}-{$clean}" : (string)$property->id;
                 if ($property->slug !== $newSlug) {
+                    $property->slug = $newSlug;
                     \Illuminate\Support\Facades\DB::table('properties')
                         ->where('id', $property->id)
                         ->update(['slug' => $newSlug]);
