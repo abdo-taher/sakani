@@ -595,8 +595,11 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
                           </div>
                           <div className="flex flex-wrap gap-1.5">
                             {Object.entries(district.extra.propertyTypes).sort((a, b) => (b[1] as number) - (a[1] as number)).map(([type, count]) => (
-                              <span key={type} className="px-2.5 py-1 rounded-lg bg-[#8D6A28]/10 text-[#8D6A28] text-[11px] font-bold">
-                                {PROPERTY_TYPE_LABELS[type] || type} ({count})
+                              <span key={type} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200/80">
+                                {PROPERTY_TYPE_LABELS[type] || type}
+                                <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-[#8D6A28] text-white text-[9px] font-bold leading-none">
+                                  {count}
+                                </span>
                               </span>
                             ))}
                           </div>
@@ -609,7 +612,7 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
                           <Users className="w-3.5 h-3.5 text-[#8D6A28]" />
                           <span>ملخص العقارات:</span>
                         </div>
-                        <p className="text-xs text-slate-600 font-medium bg-amber-50/60 text-amber-950 p-2.5 rounded-xl border border-amber-200/50">
+                        <p className="text-xs text-slate-600 font-medium bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
                           {district.extra.suitableFor}
                         </p>
                       </div>
