@@ -16,7 +16,7 @@ import {
   StatsCardsSkeleton,
   RoomCardSkeleton
 } from '../components/Skeletons';
-import { HomeAppInstallHub } from '../components/HomeAppInstallHub';
+import { QRCodeShareModal } from '../components/QRCodeShareModal';
 import { ApiService } from '../services/apiService';
 import { StorageService } from '../services/storageService';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
@@ -50,7 +50,10 @@ import {
   TrendingUp,
   MessageCircle,
   ArrowLeft,
-  X
+  X,
+  QrCode,
+  Smartphone,
+  Download
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -109,6 +112,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [searchAudience, setSearchAudience] = useState<string>('all');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState<boolean>(false);
   const [isMobileFilterPopupOpen, setIsMobileFilterPopupOpen] = useState<boolean>(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState<boolean>(false);
 
   // Video states
   const [isVideoMuted, setIsVideoMuted] = useState(true);
@@ -850,6 +854,34 @@ export const HomePage: React.FC<HomePageProps> = ({
               )}
             </form>
 
+            {/* Small Smart Install App & QR idea strip */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 text-xs text-slate-700 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
+                  <Smartphone className="w-4 h-4" />
+                </span>
+                <div>
+                  <span className="font-bold text-slate-900 text-xs block sm:inline">
+                    تطبيق سكني متاح الآن للجوال
+                  </span>
+                  <span className="text-slate-500 text-[11px] sm:mr-1">
+                    — تثبيت سريع ومباشر مع تنبيهات فورية بالعروض
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsQrModalOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-2xs"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-[#8D6A28]" />
+                  <span>تثبيت التطبيق ورمز QR 📲</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -1516,11 +1548,6 @@ export const HomePage: React.FC<HomePageProps> = ({
           </section>
         )}
 
-        {/* ----------------- 8.5. APP INSTALL & NOTIFICATIONS HUB ----------------- */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <HomeAppInstallHub settings={settings} />
-        </section>
-
         {/* ----------------- 9. TRUST & REAL STATISTICS (سكني بالأرقام) ----------------- */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-slate-50/80 rounded-3xl p-6 sm:p-10 border border-slate-200/80 space-y-8">
@@ -1652,6 +1679,13 @@ export const HomePage: React.FC<HomePageProps> = ({
         </section>
 
       </div>
+
+      {/* QR Code & Mobile App Install Modal */}
+      <QRCodeShareModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        initialMode="install_app"
+      />
 
     </div>
   );

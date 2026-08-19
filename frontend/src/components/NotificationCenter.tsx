@@ -318,17 +318,48 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     activeTab === 'unread' ? !n.is_read : true
   );
 
+  const isNotifUnapproved = permissionState !== 'granted';
+
   return (
-    <div className="relative" ref={dropdownRef} dir="rtl">
+    <div className="relative flex items-center gap-1.5" ref={dropdownRef} dir="rtl">
+      {/* Optional Highlight Badge on Desktop when unapproved */}
+      {isNotifUnapproved && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/15 via-amber-400/25 to-amber-500/15 border border-amber-400/50 text-[#8D6A28] text-[11px] font-black animate-pulse shadow-2xs hover:brightness-105 transition cursor-pointer"
+          title="انقر لتفعيل الإشعارات وتلقي أحدث العروض فوراً"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-80" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500 shadow-[0_0_8px_#F59E0B]" />
+          </span>
+          <span>فعّل التنبيهات 🔔</span>
+        </button>
+      )}
+
       {/* Bell Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2.5 rounded-2xl bg-white border border-slate-200 hover:border-[#8D6A28] text-slate-700 hover:text-[#8D6A28] transition shadow-xs flex items-center justify-center cursor-pointer"
+        className={`relative p-2.5 rounded-2xl bg-white border transition shadow-xs flex items-center justify-center cursor-pointer ${
+          isNotifUnapproved
+            ? 'border-amber-400 text-amber-900 ring-2 ring-amber-400/60 ring-offset-1 shadow-[0_0_15px_rgba(245,158,11,0.35)]'
+            : 'border-slate-200 hover:border-[#8D6A28] text-slate-700 hover:text-[#8D6A28]'
+        }`}
         aria-label="مركز الإشعارات"
-        title="مركز الإشعارات"
+        title={isNotifUnapproved ? 'يرجى تفعيل الإشعارات (اضغط هنا للموافقة)' : 'مركز الإشعارات — مفعل ومتصل 🟢'}
       >
-        <Bell className={`w-4 h-4 sm:w-5 sm:h-5 ${unreadCount > 0 ? 'animate-wiggle' : ''}`} />
+        <Bell className={`w-4 h-4 sm:w-5 sm:h-5 ${unreadCount > 0 ? 'animate-wiggle text-[#8D6A28]' : isNotifUnapproved ? 'text-amber-700' : ''}`} />
         
+        {/* Pulsating Beacon Light Indicator for Unapproved or Granted Status */}
+        {isNotifUnapproved ? (
+          <span className="absolute -top-1 -left-1 flex h-3 w-3 pointer-events-none" title="تنبيه: اضغط لتفعيل الإشعارات">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-85" />
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500 shadow-[0_0_8px_#F59E0B]" />
+          </span>
+        ) : (
+          <span className="absolute -top-0.5 -left-0.5 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10B981] border border-white pointer-events-none" title="الإشعارات مفعلة 🟢" />
+        )}
+
         {/* Unread Count Badge */}
         {unreadCount > 0 && (
           <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-rose-600 text-white font-mono font-black text-[10px] flex items-center justify-center border-2 border-white shadow-md animate-pulse">
@@ -356,7 +387,19 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   <Bell className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-black text-slate-900 text-sm">الإشعارات</h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-black text-slate-900 text-sm">الإشعارات</h4>
+                    {isNotifUnapproved ? (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
+                        بانتظار التفعيل 🟡
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span>مفعل 🟢</span>
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[10px] text-slate-500 font-medium">
                     {unreadCount > 0 ? `${unreadCount} إشعار غير مقروء` : 'لا توجد إشعارات جديدة'}
                   </p>
@@ -390,19 +433,24 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </div>
           </div>
 
-          {/* Permission Prompt Banner if default */}
-          {permissionState === 'default' && (
-            <div className="bg-amber-50/80 p-3 border-b border-amber-100 flex items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-2 text-amber-900">
-                <ShieldCheck className="w-4 h-4 text-[#8D6A28] shrink-0" />
-                <span>فعّل الإشعارات الفورية لتلقي التحديثات</span>
+          {/* High-Impact Permission Prompt Banner if unapproved */}
+          {isNotifUnapproved && (
+            <div className="p-3.5 bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-amber-500/20 border-b border-amber-300/50 flex items-center justify-between gap-3 animate-fadeIn">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm animate-bounce">
+                  <Bell className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <h5 className="text-xs font-black text-slate-900 leading-tight">يرجى تفعيل التنبيهات الفورية 🔔</h5>
+                  <p className="text-[10px] text-slate-600 truncate mt-0.5">لتصلك العروض وتخفيضات الأسعار فوراً</p>
+                </div>
               </div>
               <button
                 onClick={handleRequestPermission}
                 disabled={isRequestingPermission}
-                className="px-2.5 py-1 rounded-lg bg-[#8D6A28] text-white text-[10px] font-bold hover:bg-[#AC7F2B] transition shrink-0 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl gold-gradient gold-gradient-hover text-white text-[11px] font-black shadow-sm transition shrink-0 cursor-pointer hover:scale-105 active:scale-95"
               >
-                {isRequestingPermission ? 'جاري...' : 'تفعيل'}
+                {isRequestingPermission ? 'جاري...' : 'موافقة وتفعيل 🟢'}
               </button>
             </div>
           )}
