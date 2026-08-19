@@ -649,9 +649,9 @@ function MainApp() {
 
 export function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <MainApp />
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Property, LocationDistrict, OperationType, PropertyType, DetailedRoom, PropertyFilterState, SystemSettings } from './types';
 import { StorageService } from './services/storageService';
 import { ApiService } from './services/apiService';
@@ -91,6 +91,17 @@ function MainApp() {
     loadData();
     initializeFirebase();
   }, []);
+
+  // Handle legacy hash route backward compatibility (e.g. /#/properties/1 -> /properties/1)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash;
+      if (hash.startsWith('#/')) {
+        const cleanPath = hash.substring(1);
+        navigate(cleanPath, { replace: true });
+      }
+    }
+  }, [navigate]);
 
   // Global scroll to top on page navigation
   useEffect(() => {
@@ -427,6 +438,57 @@ function MainApp() {
               />
             }
           />
+          <Route
+            path="rent"
+            element={
+              <ListingPage
+                properties={properties}
+                favorites={favorites}
+                districts={districts}
+                isLoading={isDataLoading}
+                initialFilters={{ operation_type: 'rent' }}
+                onToggleFavorite={handleToggleFavorite}
+                onSelectProperty={handleSelectProperty}
+                onQuickPreview={handleQuickPreview}
+                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenNeedModal={() => navigate('/need-property')}
+              />
+            }
+          />
+          <Route
+            path="buy"
+            element={
+              <ListingPage
+                properties={properties}
+                favorites={favorites}
+                districts={districts}
+                isLoading={isDataLoading}
+                initialFilters={{ operation_type: 'sale' }}
+                onToggleFavorite={handleToggleFavorite}
+                onSelectProperty={handleSelectProperty}
+                onQuickPreview={handleQuickPreview}
+                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenNeedModal={() => navigate('/need-property')}
+              />
+            }
+          />
+          <Route
+            path="rooms-for-rent"
+            element={
+              <ListingPage
+                properties={properties}
+                favorites={favorites}
+                districts={districts}
+                isLoading={isDataLoading}
+                initialFilters={{ mode: 'room', operation_type: 'rent' }}
+                onToggleFavorite={handleToggleFavorite}
+                onSelectProperty={handleSelectProperty}
+                onQuickPreview={handleQuickPreview}
+                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenNeedModal={() => navigate('/need-property')}
+              />
+            }
+          />
 
           {/* Dedicated Full Property Details Page */}
           <Route
@@ -439,10 +501,28 @@ function MainApp() {
               />
             }
           />
+          <Route
+            path="property/:id"
+            element={
+              <PropertyDetailsPage
+                favorites={favorites}
+                onToggleFavorite={handleToggleFavorite}
+                onOpenInquiry={handleOpenInquiryFromProperty}
+              />
+            }
+          />
 
           {/* Places & Districts Guide Page */}
           <Route
             path="places"
+            element={<PlacesPage districts={districts} properties={properties} />}
+          />
+          <Route
+            path="places/:districtId"
+            element={<PlacesPage districts={districts} properties={properties} />}
+          />
+          <Route
+            path="locations/:districtId"
             element={<PlacesPage districts={districts} properties={properties} />}
           />
           <Route path="locations" element={<Navigate to="/places" replace />} />
@@ -569,9 +649,9 @@ function MainApp() {
 
 export function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <MainApp />
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
