@@ -45,6 +45,16 @@ class Setting extends Model
             'instagram_url' => 'https://instagram.com/sakani.estate',
             'tiktok_url' => 'https://tiktok.com/@sakani.estate',
             'about' => 'سكني هي المنصة العقارية الرائدة المتخصصة في تسويق وإدارة العقارات بمدينة دمياط الجديدة والمناطق المحيطة بها.',
+            // Feedback & Surveys Control
+            'feedback_enabled' => true,
+            'feedback_delay_seconds' => 60,
+            'feedback_trigger_mode' => 'first_visit',
+            'feedback_welcome_modal_enabled' => true,
+            'feedback_welcome_delay_seconds' => 60,
+            // App Install & Notification Hub Controls
+            'home_install_banner_enabled' => true,
+            'pwa_install_enabled' => true,
+            'notification_prompt_enabled' => true,
             'why_us_items' => [
                 [
                     'id' => '1',

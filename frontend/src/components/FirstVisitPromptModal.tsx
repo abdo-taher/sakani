@@ -12,6 +12,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { requestNotificationPermission } from '../services/firebaseService';
+import { StorageService } from '../services/storageService';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -36,6 +37,15 @@ export const FirstVisitPromptModal: React.FC = () => {
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
 
   useEffect(() => {
+    // Check admin settings
+    const settings = StorageService.getSettings();
+    const isPwaEnabled = settings?.pwa_install_enabled !== false;
+    const isNotifEnabled = settings?.notification_prompt_enabled !== false;
+
+    if (!isPwaEnabled && !isNotifEnabled) {
+      return;
+    }
+
     // 1. Detect environment
     const ua = navigator.userAgent || '';
     const mobileCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || window.innerWidth < 768;

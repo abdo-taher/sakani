@@ -220,6 +220,16 @@ export interface SystemSettings {
   facebook_url?: string;
   instagram_url?: string;
   tiktok_url?: string;
+  // Feedback & Visitor Surveys
+  feedback_enabled?: boolean;
+  feedback_delay_seconds?: number;
+  feedback_trigger_mode?: 'first_visit' | 'every_visit' | 'cooldown';
+  feedback_welcome_modal_enabled?: boolean;
+  feedback_welcome_delay_seconds?: number;
+  // App Install & Notification Hub Controls
+  home_install_banner_enabled?: boolean;
+  pwa_install_enabled?: boolean;
+  notification_prompt_enabled?: boolean;
   // Why Us Items
   why_us_items: WhyUsItem[];
 }

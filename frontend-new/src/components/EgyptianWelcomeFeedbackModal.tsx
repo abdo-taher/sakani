@@ -69,6 +69,24 @@ export const EgyptianWelcomeFeedbackModal: React.FC = () => {
   const [appInstalled, setAppInstalled] = useState(false);
 
   useEffect(() => {
+    // 0. Check admin settings
+    const settings = StorageService.getSettings();
+    const isFeedbackEnabled = settings?.feedback_enabled !== false;
+    const isWelcomeModalEnabled = settings?.feedback_welcome_modal_enabled !== false;
+
+    if (!isFeedbackEnabled || !isWelcomeModalEnabled) {
+      return;
+    }
+
+    // Do not show on admin routes or if admin is logged in
+    if (typeof window !== 'undefined') {
+      const isHashAdmin = window.location.hash.startsWith('#/admin');
+      const isPathAdmin = window.location.pathname.startsWith('/admin');
+      if (isHashAdmin || isPathAdmin || StorageService.isAdminLoggedIn()) {
+        return;
+      }
+    }
+
     // 1. Detect Device & PWA Environment
     const ua = navigator.userAgent || '';
     const mobileCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || window.innerWidth < 768;
@@ -82,17 +100,28 @@ export const EgyptianWelcomeFeedbackModal: React.FC = () => {
       setNotifGranted(true);
     }
 
-    // 2. Check if already answered or dismissed
+    // 2. Check frequency & trigger mode
+    const triggerMode = settings?.feedback_trigger_mode || 'first_visit';
     const savedStatus = localStorage.getItem(STORAGE_KEY);
-    if (savedStatus === 'completed' || savedStatus === 'dismissed_forever') {
-      return;
-    }
+    const sessionSeen = sessionStorage.getItem(STORAGE_KEY + '_session');
 
-    // Cooldown check (if dismissed temporarily, wait 3 days)
-    if (savedStatus) {
-      const parsed = parseInt(savedStatus, 10);
-      if (!isNaN(parsed) && Date.now() - parsed < 3 * 24 * 60 * 60 * 1000) {
+    if (triggerMode === 'first_visit') {
+      if (savedStatus === 'completed' || savedStatus === 'dismissed_forever') {
         return;
+      }
+    } else if (triggerMode === 'every_visit') {
+      if (sessionSeen) {
+        return;
+      }
+    } else if (triggerMode === 'cooldown') {
+      if (savedStatus === 'completed' || savedStatus === 'dismissed_forever') {
+        return;
+      }
+      if (savedStatus) {
+        const parsed = parseInt(savedStatus, 10);
+        if (!isNaN(parsed) && Date.now() - parsed < 3 * 24 * 60 * 60 * 1000) {
+          return;
+        }
       }
     }
 
@@ -110,11 +139,18 @@ export const EgyptianWelcomeFeedbackModal: React.FC = () => {
     };
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // 4. Reveal Egyptian Hospitality Welcome Modal after 1.8 seconds
+    // 4. Reveal Egyptian Hospitality Welcome Modal after admin-configured delay
+    const delaySeconds = settings?.feedback_welcome_delay_seconds ?? settings?.feedback_delay_seconds ?? 60;
+    const delayMs = Math.max(1500, delaySeconds * 1000);
+
     const timer = setTimeout(() => {
+      if (StorageService.isAdminLoggedIn()) return;
+      if (window.location.hash.startsWith('#/admin') || window.location.pathname.startsWith('/admin')) return;
+      
       setIsOpen(true);
+      sessionStorage.setItem(STORAGE_KEY + '_session', 'true');
       sendEgyptianGreetingNotification();
-    }, 1800);
+    }, delayMs);
 
     return () => {
       clearTimeout(timer);

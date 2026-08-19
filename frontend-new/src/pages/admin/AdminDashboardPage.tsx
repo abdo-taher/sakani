@@ -27,10 +27,12 @@ import {
   Award,
   ThumbsUp,
   Radio,
-  CheckCircle2
+  CheckCircle2,
+  QrCode
 } from 'lucide-react';
 import { ModernStateFeedback } from '../../components/Skeletons';
 import { AdminFeedbackCampaignModal } from '../../components/AdminFeedbackCampaignModal';
+import { QRCodeShareModal } from '../../components/QRCodeShareModal';
 
 interface AdminDashboardPageProps {
   onOpenAddProperty?: () => void;
@@ -46,6 +48,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
   const [monthlyStats, setMonthlyStats] = useState(StorageService.getMonthlyStats());
   const [referralStats, setReferralStats] = useState<ReferralStatsSummary>(() => StorageService.getReferralStats());
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -150,6 +153,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
           >
             <Plus className="w-4 h-4" />
             <span>إضافة عقار جديد</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsQrModalOpen(true)}
+            className="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+          >
+            <QrCode className="w-4 h-4 text-amber-300" />
+            <span className="hidden sm:inline">رمز QR والمشاركة</span>
           </button>
           <Link
             to="/"
@@ -928,6 +939,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
           setIsFeedbackModalOpen(false);
           loadData();
         }}
+      />
+
+      {/* Admin QR Code Marketing & Platform Share Modal */}
+      <QRCodeShareModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        initialMode="website"
       />
 
     </div>

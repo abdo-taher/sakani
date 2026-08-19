@@ -538,6 +538,16 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   facebook_url: 'https://facebook.com/sakani.eg',
   instagram_url: 'https://instagram.com/sakani.eg',
   tiktok_url: 'https://tiktok.com/@sakani.eg',
+  // Feedback & Visitor Surveys
+  feedback_enabled: true,
+  feedback_delay_seconds: 60,
+  feedback_trigger_mode: 'first_visit',
+  feedback_welcome_modal_enabled: true,
+  feedback_welcome_delay_seconds: 60,
+  // App Install & Notification Hub Controls
+  home_install_banner_enabled: true,
+  pwa_install_enabled: true,
+  notification_prompt_enabled: true,
   // Why Us Items
   why_us_items: [
     {

@@ -30,6 +30,12 @@ export const ClientFeedbackCampaignModal: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
 
   useEffect(() => {
+    // 0. Check admin settings
+    const settings = StorageService.getSettings();
+    if (settings?.feedback_enabled === false) {
+      return;
+    }
+
     // Never show client feedback survey to admin or on admin dashboard routes
     if (typeof window !== 'undefined') {
       const isHashAdmin = window.location.hash.startsWith('#/admin');
@@ -40,7 +46,10 @@ export const ClientFeedbackCampaignModal: React.FC = () => {
       }
     }
 
-    // Delay prompt by 7 seconds so it doesn't disturb client during initial landing/loading
+    // Respect admin-configured feedback delay time (e.g. 1m = 60s, 10m = 600s)
+    const delaySeconds = settings?.feedback_delay_seconds ?? 60;
+    const delayMs = Math.max(3000, delaySeconds * 1000);
+
     const timer = setTimeout(() => {
       if (StorageService.isAdminLoggedIn()) return;
       if (window.location.hash.startsWith('#/admin') || window.location.pathname.startsWith('/admin')) return;
@@ -54,7 +63,7 @@ export const ClientFeedbackCampaignModal: React.FC = () => {
         setActiveCampaign(camp);
         setIsOpen(true);
       }
-    }, 7000);
+    }, delayMs);
 
     return () => clearTimeout(timer);
   }, []);

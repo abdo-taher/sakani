@@ -16,6 +16,7 @@ import {
   StatsCardsSkeleton,
   RoomCardSkeleton
 } from '../components/Skeletons';
+import { HomeAppInstallHub } from '../components/HomeAppInstallHub';
 import { ApiService } from '../services/apiService';
 import { StorageService } from '../services/storageService';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
@@ -1514,6 +1515,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
           </section>
         )}
+
+        {/* ----------------- 8.5. APP INSTALL & NOTIFICATIONS HUB ----------------- */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <HomeAppInstallHub settings={settings} />
+        </section>
 
         {/* ----------------- 9. TRUST & REAL STATISTICS (سكني بالأرقام) ----------------- */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
