@@ -193,9 +193,23 @@ export const Footer: React.FC<FooterProps> = ({
 
         {/* Bottom copyright line */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-3">
-          <p>
-            جميع الحقوق محفوظة © {settings.site_name || 'سكني'} {new Date().getFullYear()}
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-right">
+            <p>
+              جميع الحقوق محفوظة © {settings.site_name || 'سكني'} {new Date().getFullYear()}
+            </p>
+            <span className="hidden sm:inline text-slate-600">•</span>
+            <p className="text-slate-400">
+              تطوير{' '}
+              <a
+                href="https://abdotaher.me/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-300 hover:text-[#8D6A28] transition-colors font-medium underline-offset-4 hover:underline"
+              >
+                عبدالرحمن طاهر
+              </a>
+            </p>
+          </div>
           <div className="flex items-center gap-4 text-slate-400 text-xs">
             <button onClick={() => onSelectTab('contact')} className="hover:text-white transition cursor-pointer">عن سكني</button>
             <span>•</span>
