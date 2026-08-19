@@ -540,38 +540,53 @@ class PropertyController extends Controller
     public function show(Request $request, $id)
     {
         $user = $request->user();
+        $idOrSlug = trim((string)$id);
+
+        $numericId = null;
+        if (is_numeric($idOrSlug)) {
+            $numericId = (int)$idOrSlug;
+        } elseif (preg_match('/^(\d+)-/u', $idOrSlug, $matches)) {
+            $numericId = (int)$matches[1];
+        } elseif (preg_match('/-(\d+)$/u', $idOrSlug, $matches)) {
+            $numericId = (int)$matches[1];
+        } elseif (preg_match('/^SK-(\d+)$/i', $idOrSlug, $matches)) {
+            $numericId = (int)$matches[1];
+        }
+
+        $relations = [
+            'category', 
+            'propertyType', 
+            'location', 
+            'images' => function($query) {
+                $query->ordered();
+            }, 
+            'amenities',
+            'tags',
+            'reservations',
+            'detailedRooms' => function($query) {
+                $query->with('roomImages');
+            },
+        ];
 
         $property = null;
 
         // Try with all relations first
         try {
-            $property = Property::with([
-                'category', 
-                'propertyType', 
-                'location', 
-                'images' => function($query) {
-                    $query->ordered();
-                }, 
-                'amenities',
-                'tags',
-                'reservations',
-                'detailedRooms' => function($query) {
-                    $query->with('roomImages');
-                },
-            ])->findOrFail($id);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'العقار غير موجود'
-            ], 404);
+            $query = Property::with($relations);
+            if ($numericId) {
+                $property = $query->where('id', $numericId)->first();
+            }
+            if (!$property) {
+                $property = $query->where('slug', $idOrSlug)->orWhere('id', $idOrSlug)->first();
+            }
         } catch (\Exception $e) {
-            Log::error("Property show eager load failed for id {$id}: " . $e->getMessage());
+            Log::error("Property show eager load failed for {$idOrSlug}: " . $e->getMessage());
         }
 
         // Fallback: try with only essential relations
         if (!$property) {
             try {
-                $property = Property::with([
+                $query = Property::with([
                     'category', 
                     'propertyType', 
                     'location', 
@@ -579,27 +594,37 @@ class PropertyController extends Controller
                         $query->ordered();
                     }, 
                     'amenities',
-                ])->findOrFail($id);
-            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'العقار غير موجود'
-                ], 404);
+                ]);
+                if ($numericId) {
+                    $property = $query->where('id', $numericId)->first();
+                }
+                if (!$property) {
+                    $property = $query->where('slug', $idOrSlug)->orWhere('id', $idOrSlug)->first();
+                }
             } catch (\Exception $e) {
-                Log::error("Property show basic load failed for id {$id}: " . $e->getMessage());
+                Log::error("Property show basic load failed for {$idOrSlug}: " . $e->getMessage());
             }
         }
 
-        // Last resort: load property without any eager loading
+        // Last resort: direct find
         if (!$property) {
             try {
-                $property = Property::findOrFail($id);
+                if ($numericId) {
+                    $property = Property::find($numericId);
+                }
+                if (!$property) {
+                    $property = Property::where('slug', $idOrSlug)->orWhere('id', $idOrSlug)->first();
+                }
             } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'العقار غير موجود'
-                ], 404);
+                Log::error("Property show fallback find failed: " . $e->getMessage());
             }
+        }
+
+        if (!$property) {
+            return response()->json([
+                'success' => false,
+                'message' => 'العقار غير موجود'
+            ], 404);
         }
 
         // Add computed attributes and multi-video support for frontend display

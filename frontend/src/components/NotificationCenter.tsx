@@ -298,20 +298,66 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     }
   };
 
-  const getNotificationIcon = (type: string) => {
+// Relative time formatter helper
+const formatRelativeTime = (dateStr: string) => {
+  try {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'الآن';
+    if (diffMins < 60) return `منذ ${diffMins} د`;
+    if (diffHours < 24) return `منذ ${diffHours} س`;
+    if (diffDays === 1) return 'أمس';
+    if (diffDays < 7) return `منذ ${diffDays} أيام`;
+    return d.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
+  } catch {
+    return dateStr;
+  }
+};
+
+  const getNotificationBadge = (type: string) => {
     if (type.includes('welcome') || type === 'egyptian_welcome') {
-      return <span className="text-base leading-none">🇪🇬</span>;
+      return {
+        icon: <span className="text-sm leading-none">🇪🇬</span>,
+        tag: 'ترحيب',
+        tagBg: 'bg-amber-100 text-amber-800 border-amber-200',
+        iconBg: 'bg-amber-50 text-amber-700'
+      };
     }
     if (type.includes('reservation')) {
-      return <CalendarCheck className="w-4 h-4 text-[#8D6A28]" />;
+      return {
+        icon: <CalendarCheck className="w-4 h-4 text-emerald-600" />,
+        tag: 'طلب حجز',
+        tagBg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        iconBg: 'bg-emerald-50 text-emerald-700'
+      };
     }
     if (type.includes('contact') || type.includes('message')) {
-      return <MessageSquare className="w-4 h-4 text-blue-600" />;
+      return {
+        icon: <MessageSquare className="w-4 h-4 text-blue-600" />,
+        tag: 'رسالة',
+        tagBg: 'bg-blue-100 text-blue-800 border-blue-200',
+        iconBg: 'bg-blue-50 text-blue-700'
+      };
     }
     if (type.includes('need')) {
-      return <FileText className="w-4 h-4 text-purple-600" />;
+      return {
+        icon: <FileText className="w-4 h-4 text-purple-600" />,
+        tag: 'طلب عقار',
+        tagBg: 'bg-purple-100 text-purple-800 border-purple-200',
+        iconBg: 'bg-purple-50 text-purple-700'
+      };
     }
-    return <Sparkles className="w-4 h-4 text-emerald-600" />;
+    return {
+      icon: <Sparkles className="w-4 h-4 text-[#8D6A28]" />,
+      tag: 'عرض جديد',
+      tagBg: 'bg-amber-100 text-[#8D6A28] border-amber-200',
+      iconBg: 'bg-amber-50 text-[#8D6A28]'
+    };
   };
 
   const filteredNotifications = notifications.filter((n) =>
@@ -321,43 +367,28 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const isNotifUnapproved = permissionState !== 'granted';
 
   return (
-    <div className="relative flex items-center gap-1.5" ref={dropdownRef} dir="rtl">
-      {/* Optional Highlight Badge on Desktop when unapproved */}
-      {isNotifUnapproved && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/15 via-amber-400/25 to-amber-500/15 border border-amber-400/50 text-[#8D6A28] text-[11px] font-black animate-pulse shadow-2xs hover:brightness-105 transition cursor-pointer"
-          title="انقر لتفعيل الإشعارات وتلقي أحدث العروض فوراً"
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-80" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500 shadow-[0_0_8px_#F59E0B]" />
-          </span>
-          <span>فعّل التنبيهات 🔔</span>
-        </button>
-      )}
-
+    <div className="relative" ref={dropdownRef} dir="rtl">
       {/* Bell Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative p-2.5 rounded-2xl bg-white border transition shadow-xs flex items-center justify-center cursor-pointer ${
+        className={`relative p-2.5 rounded-xl transition-all shadow-2xs flex items-center justify-center cursor-pointer ${
           isNotifUnapproved
-            ? 'border-amber-400 text-amber-900 ring-2 ring-amber-400/60 ring-offset-1 shadow-[0_0_15px_rgba(245,158,11,0.35)]'
-            : 'border-slate-200 hover:border-[#8D6A28] text-slate-700 hover:text-[#8D6A28]'
+            ? 'bg-amber-50/80 border border-amber-400/80 text-amber-900 ring-2 ring-amber-400/50 ring-offset-1 shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:bg-amber-100/80'
+            : 'bg-white border border-slate-200 hover:border-[#8D6A28] text-slate-700 hover:text-[#8D6A28] hover:bg-slate-50'
         }`}
         aria-label="مركز الإشعارات"
-        title={isNotifUnapproved ? 'يرجى تفعيل الإشعارات (اضغط هنا للموافقة)' : 'مركز الإشعارات — مفعل ومتصل 🟢'}
+        title={isNotifUnapproved ? 'اضغط لتفعيل إشعارات الفرص والعروض المباشرة' : 'مركز الإشعارات — متصل 🟢'}
       >
-        <Bell className={`w-4 h-4 sm:w-5 sm:h-5 ${unreadCount > 0 ? 'animate-wiggle text-[#8D6A28]' : isNotifUnapproved ? 'text-amber-700' : ''}`} />
+        <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'animate-wiggle text-[#8D6A28]' : isNotifUnapproved ? 'text-amber-700' : ''}`} />
         
-        {/* Pulsating Beacon Light Indicator for Unapproved or Granted Status */}
+        {/* Pulsating Beacon Light Indicator */}
         {isNotifUnapproved ? (
-          <span className="absolute -top-1 -left-1 flex h-3 w-3 pointer-events-none" title="تنبيه: اضغط لتفعيل الإشعارات">
+          <span className="absolute -top-1 -left-1 flex h-3.5 w-3.5 pointer-events-none" title="تنبيه: اضغط لتفعيل الإشعارات">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-85" />
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500 shadow-[0_0_8px_#F59E0B]" />
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500 shadow-[0_0_8px_#F59E0B]" />
           </span>
         ) : (
-          <span className="absolute -top-0.5 -left-0.5 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10B981] border border-white pointer-events-none" title="الإشعارات مفعلة 🟢" />
+          <span className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10B981] border-2 border-white pointer-events-none" title="الإشعارات مفعلة 🟢" />
         )}
 
         {/* Unread Count Badge */}
@@ -368,205 +399,255 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         )}
       </button>
 
-      {/* Notification Dropdown / Panel */}
+      {/* Modern Luxury Notification Dropdown / Panel */}
       {isOpen && (
         <>
           {/* Mobile backdrop overlay */}
           <div
-            className="fixed inset-0 bg-black/20 backdrop-blur-xs z-40 sm:hidden"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 sm:hidden animate-fade-in"
             onClick={() => setIsOpen(false)}
             aria-hidden="true"
           />
 
-          <div className="fixed left-3 right-3 top-20 sm:absolute sm:top-full sm:mt-3 sm:left-0 sm:right-auto sm:w-96 max-w-[calc(100vw-2rem)] bg-white rounded-3xl border border-slate-200/90 shadow-2xl z-50 overflow-hidden animate-fade-in flex flex-col max-h-[82vh] sm:max-h-[520px]">
+          <div className="fixed left-3 right-3 top-18 sm:absolute sm:top-full sm:mt-3 sm:left-0 sm:right-auto sm:w-[410px] max-w-[calc(100vw-1.5rem)] bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/90 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.25)] z-50 overflow-hidden animate-fade-in flex flex-col max-h-[85vh] sm:max-h-[540px]">
             
             {/* Header */}
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#8D6A28]/10 text-[#8D6A28] flex items-center justify-center font-bold shrink-0">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-[#8D6A28]/10 text-[#8D6A28] flex items-center justify-center font-bold shadow-2xs">
                   <Bell className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="font-black text-slate-900 text-sm">الإشعارات</h4>
+                    <h4 className="font-black text-slate-900 text-sm">مركز الإشعارات</h4>
                     {isNotifUnapproved ? (
-                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
-                        بانتظار التفعيل 🟡
+                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold border border-amber-200">
+                        بانتظار الموافقة 🟡
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold border border-emerald-200 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         <span>مفعل 🟢</span>
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] text-slate-500 font-medium">
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
                     {unreadCount > 0 ? `${unreadCount} إشعار غير مقروء` : 'لا توجد إشعارات جديدة'}
                   </p>
                 </div>
               </div>
 
-            <div className="flex items-center gap-1.5">
-              {/* Sound Toggle */}
-              <button
-                onClick={handleToggleSound}
-                className={`p-1.5 rounded-lg border transition ${
-                  soundActive 
-                    ? 'bg-amber-50 border-amber-200 text-[#8D6A28]' 
-                    : 'bg-slate-100 border-slate-200 text-slate-400'
-                }`}
-                title={soundActive ? 'كتم صوت الإشعارات' : 'تفعيل صوت الإشعارات'}
-              >
-                {soundActive ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-              </button>
-
-              {/* Mark All Read */}
-              {unreadCount > 0 && (
+              {/* Action Controls */}
+              <div className="flex items-center gap-1.5">
+                {/* Sound Toggle */}
                 <button
-                  onClick={handleMarkAllAsRead}
-                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs transition"
-                  title="تحديد الكل كمقروء"
+                  onClick={handleToggleSound}
+                  className={`p-2 rounded-xl border transition cursor-pointer ${
+                    soundActive 
+                      ? 'bg-amber-50 border-amber-200 text-[#8D6A28]' 
+                      : 'bg-slate-100 border-slate-200 text-slate-400'
+                  }`}
+                  title={soundActive ? 'كتم صوت التنبيهات' : 'تفعيل صوت التنبيهات'}
                 >
-                  <CheckCheck className="w-3.5 h-3.5" />
+                  {soundActive ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                 </button>
-              )}
-            </div>
-          </div>
 
-          {/* High-Impact Permission Prompt Banner if unapproved */}
-          {isNotifUnapproved && (
-            <div className="p-3.5 bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-amber-500/20 border-b border-amber-300/50 flex items-center justify-between gap-3 animate-fadeIn">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm animate-bounce">
-                  <Bell className="w-4 h-4" />
+                {/* Mark All Read */}
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllAsRead}
+                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs transition cursor-pointer"
+                    title="تحديد الكل كمقروء"
+                  >
+                    <CheckCheck className="w-4 h-4" />
+                  </button>
+                )}
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+                  title="إغلاق"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* High-Impact Interactive Approval Card if Unapproved */}
+            {isNotifUnapproved && (
+              <div className="p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-b border-slate-800 space-y-3 shrink-0">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-[#8D6A28] text-white flex items-center justify-center shrink-0 shadow-md">
+                    <Bell className="w-5 h-5 animate-wiggle" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h5 className="font-extrabold text-xs sm:text-sm text-white">تفعيل التنبيهات المباشرة 🔔</h5>
+                      <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-bold">فرص حصرية</span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                      وافق على إشعارات المتصفح لتصلك الشقق المخفضة وعروض الإيجار فور نزولها في دمياط الجديدة.
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h5 className="text-xs font-black text-slate-900 leading-tight">يرجى تفعيل التنبيهات الفورية 🔔</h5>
-                  <p className="text-[10px] text-slate-600 truncate mt-0.5">لتصلك العروض وتخفيضات الأسعار فوراً</p>
+
+                <div>
+                  <button
+                    onClick={handleRequestPermission}
+                    disabled={isRequestingPermission}
+                    className="w-full py-2.5 px-4 rounded-xl gold-gradient gold-gradient-hover text-white text-xs font-black shadow-md transition flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-95"
+                  >
+                    {isRequestingPermission ? (
+                      <span>جاري طلب الإذن...</span>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>الموافقة وتفعيل الإشعارات الآن 🟢</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={handleRequestPermission}
-                disabled={isRequestingPermission}
-                className="px-3.5 py-1.5 rounded-xl gold-gradient gold-gradient-hover text-white text-[11px] font-black shadow-sm transition shrink-0 cursor-pointer hover:scale-105 active:scale-95"
-              >
-                {isRequestingPermission ? 'جاري...' : 'موافقة وتفعيل 🟢'}
-              </button>
-            </div>
-          )}
+            )}
 
-          {/* Tabs: الكل / غير المقروءة */}
-          <div className="flex border-b border-slate-100 bg-slate-50 text-xs font-bold">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`flex-1 py-2 text-center transition ${
-                activeTab === 'all'
-                  ? 'border-b-2 border-[#8D6A28] text-[#8D6A28] bg-white'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              الكل ({notifications.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('unread')}
-              className={`flex-1 py-2 text-center transition ${
-                activeTab === 'unread'
-                  ? 'border-b-2 border-[#8D6A28] text-[#8D6A28] bg-white'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              غير المقروءة ({unreadCount})
-            </button>
-          </div>
-
-          {/* Notifications List */}
-          <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
-            {filteredNotifications.length === 0 ? (
-              <div className="p-8 text-center space-y-2">
-                <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-                  <Bell className="w-5 h-5" />
-                </div>
-                <p className="text-xs font-bold text-slate-600">لا توجد إشعارات حالياً</p>
-                <p className="text-[10px] text-slate-400">ستظهر هنا أحدث التحديثات والطلبات الواردة فور حدوثها</p>
-              </div>
-            ) : (
-              filteredNotifications.map((n) => (
-                <div
-                  key={n.id}
-                  onClick={() => handleItemClick(n)}
-                  className={`p-3.5 flex items-start gap-3 hover:bg-slate-50 transition cursor-pointer relative ${
-                    !n.is_read ? 'bg-amber-50/40' : 'bg-white'
+            {/* Tabs: الكل / غير المقروءة */}
+            <div className="p-2 border-b border-slate-100 bg-slate-50/90 shrink-0">
+              <div className="grid grid-cols-2 p-1 bg-slate-200/60 rounded-2xl text-xs font-bold gap-1">
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={`py-1.5 rounded-xl transition text-center cursor-pointer ${
+                    activeTab === 'all'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
-                    {getNotificationIcon(n.type)}
+                  الكل ({notifications.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('unread')}
+                  className={`py-1.5 rounded-xl transition text-center cursor-pointer ${
+                    activeTab === 'unread'
+                      ? 'bg-white text-[#8D6A28] shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  غير المقروءة ({unreadCount})
+                </button>
+              </div>
+            </div>
+
+            {/* Notifications List */}
+            <div className="flex-1 overflow-y-auto divide-y divide-slate-100/90 p-2 space-y-1.5">
+              {filteredNotifications.length === 0 ? (
+                <div className="p-10 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-3xl bg-amber-50 text-[#8D6A28] flex items-center justify-center mx-auto shadow-2xs">
+                    <Sparkles className="w-6 h-6" />
                   </div>
-
-                  <div className="flex-1 min-w-0 space-y-0.5">
-                    <div className="flex items-center justify-between gap-1">
-                      <h5 className="font-extrabold text-xs text-slate-900 truncate break-words">
-                        {n.title}
-                      </h5>
-                      <span className="text-[9px] font-mono text-slate-400 shrink-0">
-                        {new Date(n.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-
-                    <p className="text-[11px] text-slate-600 leading-snug line-clamp-2 break-words [overflow-wrap:anywhere]">
-                      {n.message}
+                  <div>
+                    <h5 className="text-sm font-extrabold text-slate-800">لا توجد إشعارات حالياً</h5>
+                    <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">
+                      {activeTab === 'unread' 
+                        ? 'رائع! لقد قرأت جميع الإشعارات الواردة.' 
+                        : 'ستصلك كافة التحديثات والعروض فور ورودها.'}
                     </p>
+                  </div>
+                </div>
+              ) : (
+                filteredNotifications.map((n) => {
+                  const badge = getNotificationBadge(n.type);
+                  return (
+                    <div
+                      key={n.id}
+                      onClick={() => handleItemClick(n)}
+                      className={`p-3.5 rounded-2xl transition-all cursor-pointer border ${
+                        !n.is_read 
+                          ? 'bg-amber-50/50 border-amber-200/80 shadow-2xs' 
+                          : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50/70'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-9 h-9 rounded-2xl ${badge.iconBg} flex items-center justify-center shrink-0 mt-0.5 shadow-2xs`}>
+                          {badge.icon}
+                        </div>
 
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-[9px] text-slate-400 flex items-center gap-1 font-mono">
-                        <Clock className="w-2.5 h-2.5" />
-                        <span>{new Date(n.created_at).toLocaleDateString('ar-EG')}</span>
-                      </span>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center justify-between gap-1">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className={`px-2 py-0.2 rounded-full text-[10px] font-bold border ${badge.tagBg}`}>
+                                {badge.tag}
+                              </span>
+                              <h5 className="font-extrabold text-xs text-slate-900 truncate">
+                                {n.title}
+                              </h5>
+                            </div>
+                            <span className="text-[10px] font-mono text-slate-400 shrink-0 font-medium">
+                              {formatRelativeTime(n.created_at)}
+                            </span>
+                          </div>
 
-                      <div className="flex items-center gap-2">
+                          <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                            {n.message}
+                          </p>
+
+                          <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400 font-medium">
+                            <span className="flex items-center gap-1 font-mono">
+                              <Clock className="w-3 h-3 text-slate-400" />
+                              <span>{new Date(n.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</span>
+                            </span>
+
+                            <div className="flex items-center gap-2">
+                              {!n.is_read && (
+                                <button
+                                  onClick={(e) => handleMarkAsRead(n.id, e)}
+                                  className="text-[11px] text-[#8D6A28] hover:underline font-bold"
+                                >
+                                  تحديد كمقروء
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => handleDeleteNotification(n.id, e)}
+                                className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition"
+                                title="حذف الإشعار"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
                         {!n.is_read && (
-                          <button
-                            onClick={(e) => handleMarkAsRead(n.id, e)}
-                            className="text-[10px] text-[#8D6A28] hover:underline font-bold"
-                          >
-                            تحديد كمقروء
-                          </button>
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#8D6A28] shadow-[0_0_6px_#8D6A28] shrink-0 mt-1.5" />
                         )}
-                        <button
-                          onClick={(e) => handleDeleteNotification(n.id, e)}
-                          className="text-slate-400 hover:text-rose-600 p-0.5"
-                          title="حذف"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
                       </div>
                     </div>
-                  </div>
-
-                  {!n.is_read && (
-                    <span className="w-2 h-2 rounded-full bg-[#8D6A28] shrink-0 mt-1.5" />
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Footer View All Link */}
-          {role === 'admin' && (
-            <div className="p-2.5 bg-slate-50 border-t border-slate-100 text-center">
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  navigate('/admin/reservations');
-                }}
-                className="text-xs font-bold text-[#8D6A28] hover:underline flex items-center justify-center gap-1 mx-auto"
-              >
-                <span>متابعة كافة طلبات الحجز والمعاينات</span>
-                <ExternalLink className="w-3 h-3" />
-              </button>
+                  );
+                })
+              )}
             </div>
-          )}
 
-        </div>
+            {/* Footer View All Link */}
+            {role === 'admin' ? (
+              <div className="p-3 bg-slate-50 border-t border-slate-100 text-center shrink-0">
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/admin/reservations');
+                  }}
+                  className="text-xs font-bold text-[#8D6A28] hover:underline flex items-center justify-center gap-1.5 mx-auto cursor-pointer"
+                >
+                  <span>متابعة كافة طلبات الحجز والمعاينات</span>
+                  <ExternalLink className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <div className="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 px-4 shrink-0 font-medium">
+                <span>سكني • إشعارات مباشرة</span>
+                <span className="text-[#8D6A28] font-bold">دمياط الجديدة</span>
+              </div>
+            )}
+
+          </div>
         </>
       )}
     </div>

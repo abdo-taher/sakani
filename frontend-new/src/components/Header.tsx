@@ -120,7 +120,17 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-5 text-slate-300">
+            <div className="flex items-center gap-4 text-slate-300">
+              <button
+                type="button"
+                onClick={() => setIsQrModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/10 hover:bg-[#8D6A28] text-amber-300 hover:text-white transition font-bold text-[11px] cursor-pointer"
+                title="تثبيت التطبيق على الجوال ومسح كود QR"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>تثبيت التطبيق ورمز QR 📲</span>
+              </button>
+
               <a href={`tel:${phone}`} className="flex items-center gap-1.5 hover:text-white transition">
                 <Phone className="w-3.5 h-3.5 text-[#8D6A28]" />
                 <span dir="ltr">{phone}</span>

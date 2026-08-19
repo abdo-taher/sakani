@@ -854,34 +854,6 @@ export const HomePage: React.FC<HomePageProps> = ({
               )}
             </form>
 
-            {/* Small Smart Install App & QR idea strip */}
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 text-xs text-slate-700 flex-wrap">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
-                  <Smartphone className="w-4 h-4" />
-                </span>
-                <div>
-                  <span className="font-bold text-slate-900 text-xs block sm:inline">
-                    تطبيق سكني متاح الآن للجوال
-                  </span>
-                  <span className="text-slate-500 text-[11px] sm:mr-1">
-                    — تثبيت سريع ومباشر مع تنبيهات فورية بالعروض
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsQrModalOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-2xs"
-                >
-                  <QrCode className="w-3.5 h-3.5 text-[#8D6A28]" />
-                  <span>تثبيت التطبيق ورمز QR 📲</span>
-                </button>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>

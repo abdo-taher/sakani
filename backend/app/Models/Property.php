@@ -56,6 +56,9 @@ class Property extends Model
         'audience_type',
         'video_thumbnail_url',
         'video_thumbnail_public_id',
+        'slug',
+        'seo_title',
+        'seo_description',
     ];
 
     protected $casts = [
@@ -77,20 +80,52 @@ class Property extends Model
         'is_offer_active',
         'effective_price',
         'discount_amount',
+        'canonical_url',
     ];
 
     /**
-     * Booted method for automatic cache invalidation
+     * Booted method for automatic cache invalidation and slug maintenance
      */
     protected static function booted()
     {
+        static::saving(function ($property) {
+            if (empty($property->slug) && !empty($property->title)) {
+                $cleanTitle = preg_replace('/[^\p{Arabic}\p{L}\p{N}\s-]/u', '', (string)$property->title);
+                $clean = preg_replace('/[\s-]+/', '-', trim($cleanTitle));
+                $clean = trim($clean, '-');
+                $id = $property->id ?: rand(100, 999);
+                $property->slug = $clean ? "{$id}-{$clean}" : (string)$id;
+            }
+        });
+
         static::saved(function ($property) {
+            // Ensure ID is prefixed if slug was created before ID was assigned
+            if ($property->id && (!str_starts_with((string)$property->slug, "{$property->id}-") && $property->slug !== (string)$property->id)) {
+                $cleanTitle = preg_replace('/[^\p{Arabic}\p{L}\p{N}\s-]/u', '', (string)$property->title);
+                $clean = preg_replace('/[\s-]+/', '-', trim($cleanTitle));
+                $clean = trim($clean, '-');
+                $newSlug = $clean ? "{$property->id}-{$clean}" : (string)$property->id;
+                if ($property->slug !== $newSlug) {
+                    \Illuminate\Support\Facades\DB::table('properties')
+                        ->where('id', $property->id)
+                        ->update(['slug' => $newSlug]);
+                }
+            }
             \App\Helpers\CacheHelper::clearPropertyCaches();
         });
 
         static::deleted(function ($property) {
             \App\Helpers\CacheHelper::clearPropertyCaches();
         });
+    }
+
+    /**
+     * Get the canonical frontend URL for the property
+     */
+    public function getCanonicalUrlAttribute(): string
+    {
+        $slug = $this->slug ?: $this->id;
+        return "https://sakani.site/properties/{$slug}";
     }
 
     /**

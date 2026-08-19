@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SakaniLogo } from './SakaniLogo';
 import { ActiveTab } from './BottomNav';
 import { StorageService } from '../services/storageService';
@@ -12,8 +12,11 @@ import {
   ChevronLeft,
   MessageCircle,
   Facebook,
-  Instagram
+  Instagram,
+  Smartphone,
+  QrCode
 } from 'lucide-react';
+import { QRCodeShareModal } from './QRCodeShareModal';
 
 interface FooterProps {
   onSelectTab: (tab: ActiveTab) => void;
@@ -24,6 +27,7 @@ export const Footer: React.FC<FooterProps> = ({
   onSelectTab,
   onOpenNeedModal,
 }) => {
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const settings = StorageService.getSettings();
   const phone = settings.phone || settings.company_phone || '01067725976';
   const rawWhatsapp = settings.whatsapp || settings.company_whatsapp || '201067725976';
@@ -40,16 +44,16 @@ export const Footer: React.FC<FooterProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-800/80">
           
           {/* Col 1: Brand & About */}
-          <div className="md:col-span-2 space-y-4">
+          <div className="space-y-4">
             <SakaniLogo size="lg" variant="light" />
-            <p className="text-slate-400 text-sm leading-relaxed max-w-md font-medium">
+            <p className="text-slate-400 text-xs leading-relaxed font-medium">
               {settings.about || 'سكني هي المنصة العقارية الأولى المتخصصة في مدينة دمياط الجديدة والمناطق الساحلية المجاورة، نوفر لك تجربة بيع وشراء وتأجير عقارات سلسة ومضمونة مع استشارات هندسية وقانونية متكاملة.'}
             </p>
 
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-2.5 pt-1">
               <a
                 href={`tel:${phone}`}
-                className="w-10 h-10 rounded-xl bg-slate-800 hover:bg-[#8D6A28] text-white flex items-center justify-center transition shadow-sm"
+                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#8D6A28] text-white flex items-center justify-center transition shadow-sm"
                 title="اتصال مباشر"
               >
                 <Phone className="w-4 h-4" />
@@ -57,7 +61,7 @@ export const Footer: React.FC<FooterProps> = ({
 
               <a
                 href={`mailto:${email}`}
-                className="w-10 h-10 rounded-xl bg-slate-800 hover:bg-[#8D6A28] text-white flex items-center justify-center transition shadow-sm"
+                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#8D6A28] text-white flex items-center justify-center transition shadow-sm"
                 title="البريد الإلكتروني"
               >
                 <Mail className="w-4 h-4" />
@@ -67,7 +71,7 @@ export const Footer: React.FC<FooterProps> = ({
                 href={`https://wa.me/${whatsappNum}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-xl bg-slate-800 hover:bg-emerald-600 text-white flex items-center justify-center transition shadow-sm"
+                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-emerald-600 text-white flex items-center justify-center transition shadow-sm"
                 title="واتساب"
               >
                 <MessageCircle className="w-4 h-4" />
@@ -78,7 +82,7 @@ export const Footer: React.FC<FooterProps> = ({
                   href={settings.facebook_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-xl bg-slate-800 hover:bg-blue-600 text-white flex items-center justify-center transition shadow-sm"
+                  className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-blue-600 text-white flex items-center justify-center transition shadow-sm"
                   title="فيسبوك"
                 >
                   <Facebook className="w-4 h-4" />
@@ -90,7 +94,7 @@ export const Footer: React.FC<FooterProps> = ({
                   href={settings.instagram_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-xl bg-slate-800 hover:bg-pink-600 text-white flex items-center justify-center transition shadow-sm"
+                  className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-pink-600 text-white flex items-center justify-center transition shadow-sm"
                   title="انستجرام"
                 >
                   <Instagram className="w-4 h-4" />
@@ -163,6 +167,27 @@ export const Footer: React.FC<FooterProps> = ({
             </ul>
           </div>
 
+          {/* Col 4: Smartphone App & QR Code */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-extrabold text-[#8D6A28] tracking-wider uppercase flex items-center gap-1.5">
+              <Smartphone className="w-4 h-4" />
+              <span>تطبيق سكني الذكي</span>
+            </h4>
+            <p className="text-xs text-slate-400 leading-relaxed font-medium">
+              ثبّت التطبيق على هاتفك لتصفح سريع بدون متجر مع تنبيهات فورية بأحدث العروض.
+            </p>
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => setIsQrModalOpen(true)}
+                className="w-full py-2.5 px-4 rounded-2xl gold-gradient gold-gradient-hover text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer hover:scale-[1.02] active:scale-95"
+              >
+                <QrCode className="w-4 h-4" />
+                <span>تثبيت التطبيق ومسح QR 📲</span>
+              </button>
+            </div>
+          </div>
+
         </div>
 
         {/* Bottom copyright line */}
@@ -178,6 +203,13 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
       </div>
+
+      {/* QR Code & App Install Modal */}
+      <QRCodeShareModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        initialMode="install_app"
+      />
     </footer>
   );
 };

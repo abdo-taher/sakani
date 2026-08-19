@@ -8,14 +8,28 @@ class Location extends Model
 {
     protected $fillable = [
         'name',
+        'slug',
         'latitude',
         'longitude',
         'address',
         'image_url',
         'image_public_id',
+        'seo_title',
+        'seo_description',
     ];
+
     protected static function booted()
     {
+        static::saving(function ($location) {
+            if (empty($location->slug) && !empty($location->name)) {
+                $cleanName = preg_replace('/[^\p{Arabic}\p{L}\p{N}\s-]/u', '', (string)$location->name);
+                $clean = preg_replace('/[\s-]+/', '-', trim($cleanName));
+                $clean = trim($clean, '-');
+                $id = $location->id ?: rand(10, 99);
+                $location->slug = $clean ? "{$id}-{$clean}" : (string)$id;
+            }
+        });
+
         static::saved(function ($location) {
             \App\Helpers\CacheHelper::clearLocationCaches();
         });
