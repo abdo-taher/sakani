@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { LocationDistrict, Property } from '../types';
 import { SEOHead } from '../components/SEOHead';
@@ -17,14 +17,17 @@ import {
   Compass, 
   CheckCircle2,
   Users,
-  Tag
+  Tag,
+  Loader2
 } from 'lucide-react';
-import { ModernStateFeedback, LocationSectionSkeleton } from '../components/Skeletons';
-import { resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { ModernStateFeedback, LocationSectionSkeleton, PropertyGridSkeleton } from '../components/Skeletons';
+import { PropertyCard } from '../components/PropertyCard';
+import { resolveImageUrl, FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia } from '../utils/media';
+import { ApiService } from '../services/apiService';
 
 interface PlacesPageProps {
-  districts: LocationDistrict[];
-  properties: Property[];
+  districts?: LocationDistrict[];
+  properties?: Property[];
 }
 
 interface DistrictExtendedInfo {
@@ -121,10 +124,170 @@ const DISTRICT_EXTRAS: Record<string, DistrictExtendedInfo> = {
   }
 };
 
-export const PlacesPage: React.FC<PlacesPageProps> = ({ districts, properties }) => {
+export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts, properties: propProperties }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'luxury' | 'student' | 'compounds' | 'coastal' | 'central'>('all');
+
+  // Internal data state (fetched from backend API)
+  const [districts, setDistricts] = useState<LocationDistrict[]>(propDistricts || []);
+  const [properties, setProperties] = useState<Property[]>(propProperties || []);
+  const [isLoading, setIsLoading] = useState(!propDistricts || propDistricts.length === 0);
+  const [error, setError] = useState<string | null>(null);
+  const [bestProperties, setBestProperties] = useState<Property[]>([]);
+  const [isLoadingBest, setIsLoadingBest] = useState(false);
+
+  // Fetch data from backend API on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      // If props already provide data, skip fetching
+      if (propDistricts && propDistricts.length > 0 && propProperties && propProperties.length > 0) {
+        setDistricts(propDistricts);
+        setProperties(propProperties);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const [rawLocations, rawProperties] = await Promise.allSettled([
+          ApiService.getLocations(),
+          ApiService.getProperties(),
+        ]);
+
+        // Process locations
+        if (rawLocations.status === 'fulfilled' && Array.isArray(rawLocations.value) && rawLocations.value.length > 0) {
+          const mappedDistricts: LocationDistrict[] = rawLocations.value.map((d: any) => ({
+            id: String(d.id),
+            name: d.name,
+            available_count: Number(d.available_count) || 0,
+            image_url: resolveImageUrl(d.image_url),
+            description: d.address || d.description || '',
+            coordinates: (d.latitude && d.longitude) ? { lat: Number(d.latitude), lng: Number(d.longitude) } : undefined,
+          }));
+          setDistricts(mappedDistricts);
+        }
+
+        // Process properties
+        if (rawProperties.status === 'fulfilled' && Array.isArray(rawProperties.value) && rawProperties.value.length > 0) {
+          const mappedProps: Property[] = rawProperties.value.map((p: any) => sanitizePropertyMedia({
+            id: String(p.id),
+            ref_id: p.ref_id || `SK-${p.id}`,
+            title: p.title,
+            description: p.description || '',
+            price: Number(p.price) || 0,
+            is_negotiable: Boolean(p.is_negotiable),
+            rent_duration: p.rent_duration || 'monthly',
+            operation_type: p.category?.slug === 'rent' || p.operation_type === 'rent' ? 'rent' : 'sale',
+            property_type: p.property_type?.slug || p.property_type || 'apartment',
+            location_id: String(p.location_id || p.location?.id || 'district-5'),
+            district_name: p.location?.name || p.district_name || 'دمياط الجديدة',
+            area: Number(p.area) || 120,
+            rooms: Number(p.rooms) || 3,
+            bathrooms: Number(p.bathrooms) || 2,
+            floor: Number(p.floor) || 1,
+            balconies: Number(p.balconies) || 1,
+            finishing: p.finishing || 'super_lux',
+            furnishing: p.furnishing || 'unfurnished',
+            status: p.status || 'available',
+            featured: Boolean(p.featured),
+            views: Number(p.views) || 0,
+            images: Array.isArray(p.images) && p.images.length > 0
+              ? p.images.map((img: any) => typeof img === 'string' ? img : (img.image_url || img.url || img.image_path)).filter(Boolean)
+              : (p.image_url ? [p.image_url] : [FALLBACK_PROPERTY_IMAGE]),
+            video_url: p.video_url,
+            video_thumbnail_url: p.video_thumbnail_url,
+            amenities: Array.isArray(p.amenities)
+              ? p.amenities.map((a: any) => typeof a === 'string' ? a : a.slug || a.name || a.id)
+              : [],
+            tags: Array.isArray(p.tags)
+              ? p.tags.map((t: any) => typeof t === 'string' ? t : t.name)
+              : [],
+            has_detailed_rooms: Boolean(p.has_detailed_rooms),
+            detailed_rooms: Array.isArray(p.detailed_rooms || p.detailedRooms)
+              ? (p.detailed_rooms || p.detailedRooms).map((r: any) => ({
+                  id: String(r.id),
+                  property_id: String(p.id),
+                  name: r.name,
+                  price: Number(r.price),
+                  area: Number(r.area),
+                  description: r.description || '',
+                  status: r.status || 'available',
+                  imageUrl: r.room_images?.[0]?.image_url || r.primary_image?.image_url || r.primary_image?.url || r.imageUrl,
+                  images: r.room_images?.map((img: any) => img.image_url) || [],
+                }))
+              : [],
+            created_at: p.created_at || new Date().toISOString(),
+          }));
+          setProperties(mappedProps);
+        }
+      } catch (err: any) {
+        console.error('Failed to load places data:', err);
+        setError('فشل تحميل البيانات من الخادم. تأكد من اتصالك بالإنترنت.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [propDistricts, propProperties]);
+
+  // Fetch best/featured properties separately
+  useEffect(() => {
+    const fetchBest = async () => {
+      try {
+        setIsLoadingBest(true);
+        const raw = await ApiService.getFeaturedProperties();
+        if (Array.isArray(raw) && raw.length > 0) {
+          const mapped: Property[] = raw.map((p: any) => sanitizePropertyMedia({
+            id: String(p.id),
+            ref_id: p.ref_id || `SK-${p.id}`,
+            title: p.title,
+            description: p.description || '',
+            price: Number(p.price) || 0,
+            is_negotiable: Boolean(p.is_negotiable),
+            rent_duration: p.rent_duration || 'monthly',
+            operation_type: p.category?.slug === 'rent' || p.operation_type === 'rent' ? 'rent' : 'sale',
+            property_type: p.property_type?.slug || p.property_type || 'apartment',
+            location_id: String(p.location_id || p.location?.id || 'district-5'),
+            district_name: p.location?.name || p.district_name || 'دمياط الجديدة',
+            area: Number(p.area) || 120,
+            rooms: Number(p.rooms) || 3,
+            bathrooms: Number(p.bathrooms) || 2,
+            floor: Number(p.floor) || 1,
+            balconies: Number(p.balconies) || 1,
+            finishing: p.finishing || 'super_lux',
+            furnishing: p.furnishing || 'unfurnished',
+            status: p.status || 'available',
+            featured: Boolean(p.featured),
+            views: Number(p.views) || 0,
+            images: Array.isArray(p.images) && p.images.length > 0
+              ? p.images.map((img: any) => typeof img === 'string' ? img : (img.image_url || img.url || img.image_path)).filter(Boolean)
+              : (p.image_url ? [p.image_url] : [FALLBACK_PROPERTY_IMAGE]),
+            video_url: p.video_url,
+            video_thumbnail_url: p.video_thumbnail_url,
+            amenities: Array.isArray(p.amenities)
+              ? p.amenities.map((a: any) => typeof a === 'string' ? a : a.slug || a.name || a.id)
+              : [],
+            tags: Array.isArray(p.tags)
+              ? p.tags.map((t: any) => typeof t === 'string' ? t : t.name)
+              : [],
+            has_detailed_rooms: Boolean(p.has_detailed_rooms),
+            detailed_rooms: [],
+            created_at: p.created_at || new Date().toISOString(),
+          }));
+          setBestProperties(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load best properties:', err);
+      } finally {
+        setIsLoadingBest(false);
+      }
+    };
+    fetchBest();
+  }, []);
 
   // Compute live property counts and dynamic info for each district
   const enhancedDistricts = useMemo(() => {
@@ -202,6 +365,15 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts, properties })
     ? `${SITE_BASE_URL}/places/${encodeURIComponent(currentDistrict.id)}`
     : `${SITE_BASE_URL}/places`;
 
+  const categories = [
+    { id: 'all', label: 'كافة الأحياء والمناطق', icon: Compass },
+    { id: 'luxury', label: 'أحياء راقية وفيلات', icon: Sparkles },
+    { id: 'student', label: 'سكن الطلبة والجامعات', icon: GraduationCap },
+    { id: 'compounds', label: 'كمبوندات وإسكان متكامل', icon: TreePine },
+    { id: 'coastal', label: 'ساحلي ومصيف', icon: Waves },
+    { id: 'central', label: 'المناطق التجارية والمركزية', icon: Landmark },
+  ];
+
   const locationSchemas = useMemo(() => {
     if (currentDistrict) {
       return [
@@ -220,6 +392,40 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts, properties })
       ]),
     ];
   }, [currentDistrict]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50/70 pb-20 pt-4" dir="rtl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <LocationSectionSkeleton />
+          <div className="flex flex-col items-center justify-center gap-4 mt-8">
+            <Loader2 className="w-8 h-8 text-[#8D6A28] animate-spin" />
+            <p className="text-sm font-bold text-slate-500">جاري تحميل بيانات الأحياء والعقارات...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50/70 pb-20 pt-4" dir="rtl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-xs text-center">
+            <ModernStateFeedback
+              type="error"
+              title="خطأ في تحميل البيانات"
+              description={error}
+              actionText="إعادة المحاولة"
+              onAction={() => { setError(null); setIsLoading(true); window.location.reload(); }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/70 pb-20 pt-4" dir="rtl">
@@ -417,11 +623,11 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts, properties })
                         navigate(`/properties?district=${encodeURIComponent(district.id)}`);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="w-full py-2.5 sm:py-3 rounded-xl sm:rounded-2xl gold-gradient gold-gradient-hover text-white text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-3 rounded-xl border-2 border-[#8D6A28]/30 bg-[#8D6A28]/5 hover:bg-[#8D6A28] hover:border-[#8D6A28] text-[#8D6A28] hover:text-white text-xs sm:text-sm font-black transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer group/btn"
                     >
-                      <Building2 className="w-4 h-4" />
-                      <span>استعراض كافة عقارات {district.name} ({district.totalAvailable})</span>
-                      <ChevronLeft className="w-4 h-4" />
+                      <Building2 className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
+                      <span>استعراض كافة العقارات</span>
+                      <ChevronLeft className="w-4 h-4 transition-transform group-hover/btn:-translate-x-1" />
                     </button>
 
                     {/* Secondary Quick Operation Buttons */}
@@ -459,7 +665,59 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts, properties })
         )}
       </div>
 
-      {/* ----------------- 4. BOTTOM ADVISORY CTA BANNER ----------------- */}
+      {/* ----------------- 4. BEST PROPERTIES SECTION ----------------- */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+        <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-8 border border-slate-200/80 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-slate-700 text-xs font-semibold mb-2 border border-slate-200/80">
+                <Sparkles className="w-3.5 h-3.5 text-[#8D6A28]" />
+                <span>أفضل الفرص العقارية المتاحة</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+                أفضل العقارات والخدمات المميزة
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 font-normal mt-1">
+                أعلى العقارات تقييماً وأفضل الأسعار في دمياط الجديدة، محدّثة يومياً من قاعدة البيانات
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                navigate('/properties');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#8D6A28] hover:text-[#AC7F2B] transition cursor-pointer self-start sm:self-auto"
+            >
+              <span>عرض جميع العقارات</span>
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
+
+          {isLoadingBest ? (
+            <PropertyGridSkeleton count={6} />
+          ) : bestProperties.length > 0 ? (
+            <div className="flex sm:grid overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 gap-4 sm:gap-6 snap-x sm:snap-none scrollbar-hide sm:grid-cols-2 lg:grid-cols-3 -mx-4 px-4 sm:mx-0 sm:px-0">
+              {bestProperties.map((property) => (
+                <div key={property.id} className="min-w-[285px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink w-[82vw] sm:w-auto">
+                  <PropertyCard
+                    property={property}
+                    isFavorite={false}
+                    onToggleFavorite={() => {}}
+                    onSelectProperty={(p) => navigate(`/property/${p.id}`)}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 space-y-3">
+              <Building2 className="w-10 h-10 text-slate-300 mx-auto" />
+              <p className="text-sm font-semibold text-slate-500">لا توجد عقارات مميزة متاحة حالياً</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ----------------- 5. BOTTOM ADVISORY CTA BANNER ----------------- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14">
         <div className="bg-gradient-to-r from-slate-900 via-[#1E293B] to-slate-900 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 text-right">
           <div className="space-y-2 max-w-xl">
@@ -477,7 +735,7 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts, properties })
                 navigate('/need-property');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="px-6 sm:px-8 py-3 rounded-full gold-gradient gold-gradient-hover text-white font-black text-xs sm:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="px-6 sm:px-8 py-3 rounded-xl bg-[#8D6A28] hover:bg-[#A07A2E] text-white font-black text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
             >
               طلب استشارة وبحث مخصص
             </button>
@@ -486,7 +744,7 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts, properties })
                 navigate('/properties');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/20 transition cursor-pointer"
+              className="px-6 sm:px-8 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/30 transition-all duration-300 cursor-pointer"
             >
               تصفح كافة العقارات
             </button>
