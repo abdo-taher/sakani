@@ -183,17 +183,52 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts, properties })
     });
   }, [enhancedDistricts, searchTerm, activeCategory]);
 
-  const categories = [
-    { id: 'all', label: 'كافة الأحياء والمناطق', icon: Compass },
-    { id: 'luxury', label: 'أحياء راقية وفيلات', icon: Sparkles },
-    { id: 'student', label: 'سكن الطلبة والجامعات', icon: GraduationCap },
-    { id: 'compounds', label: 'كمبوندات وإسكان متكامل', icon: TreePine },
-    { id: 'coastal', label: 'ساحلي ومصيف', icon: Waves },
-    { id: 'central', label: 'المناطق التجارية والمركزية', icon: Landmark },
-  ];
+  const { districtId } = useParams<{ districtId?: string }>();
+
+  const currentDistrict = useMemo(() => {
+    if (!districtId) return null;
+    return districts.find(d => d.id === districtId || d.name === districtId);
+  }, [districtId, districts]);
+
+  const seoTitle = currentDistrict 
+    ? `أحياء وعقارات ${currentDistrict.name} - دمياط الجديدة | سكني`
+    : 'دليل أحياء ومناطق دمياط الجديدة - أسعار السكن والاستثمار | سكني';
+
+  const seoDescription = currentDistrict
+    ? `دليل ومواصفات السكن في ${currentDistrict.name} بدمياط الجديدة. تصفح كافة الشقق والعقارات المعروضة ومتوسط الأسعار عبر منصة سكني.`
+    : 'استكشف أهم أحياء ومناطق دمياط الجديدة: المنطقة المركزية، منطقة 27، سكن مصر، دار مصر، والحي المتميز. دليلك الشامل لمتوسط الأسعار والخدمات.';
+
+  const seoCanonical = currentDistrict
+    ? `${SITE_BASE_URL}/places/${encodeURIComponent(currentDistrict.id)}`
+    : `${SITE_BASE_URL}/places`;
+
+  const locationSchemas = useMemo(() => {
+    if (currentDistrict) {
+      return [
+        buildLocationSchema(currentDistrict),
+        buildBreadcrumbsSchema([
+          { name: 'الرئيسية', url: '/' },
+          { name: 'دليل الأحياء والمناطق', url: '/places' },
+          { name: currentDistrict.name, url: `/places/${currentDistrict.id}` },
+        ]),
+      ].filter(Boolean);
+    }
+    return [
+      buildBreadcrumbsSchema([
+        { name: 'الرئيسية', url: '/' },
+        { name: 'دليل الأحياء والمناطق', url: '/places' },
+      ]),
+    ];
+  }, [currentDistrict]);
 
   return (
     <div className="min-h-screen bg-slate-50/70 pb-20 pt-4" dir="rtl">
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        canonical={seoCanonical}
+        schema={locationSchemas}
+      />
       
       {/* ----------------- 1. HERO BANNER ----------------- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">

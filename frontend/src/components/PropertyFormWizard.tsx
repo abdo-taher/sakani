@@ -18,6 +18,7 @@ import { LocationMapPicker } from './LocationMapPicker';
 import { generateAndUploadVideoThumbnail, extractFirstFrameDataUrl, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 import { PropertyFormSkeleton } from './Skeletons';
 import { evaluatePropertyOffer, getTodayDateString } from '../utils/offerUtils';
+import { generatePropertySlug, SITE_BASE_URL } from '../utils/seo';
 import confetti from 'canvas-confetti';
 import {
   Building2,
@@ -1666,6 +1667,41 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
               <div>
                 <span className="text-slate-400 block">التشطيب:</span>
                 <span className="font-black text-slate-900">{finishing}</span>
+              </div>
+            </div>
+
+            {/* Google Search Result Preview Widget (SEO Live Snippet) */}
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>معاينة ظهور العقار في محرك بحث جوجل (Google Search Preview)</span>
+                </h4>
+                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                  Rich Snippet Ready ⚡
+                </span>
+              </div>
+
+              {/* Google Search Card Simulator */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1 font-sans text-right" dir="rtl">
+                {/* URL Breadcrumb */}
+                <div className="flex items-center gap-1.5 text-xs text-slate-600 truncate font-mono">
+                  <span className="font-bold text-slate-800">sakani.site</span>
+                  <span className="text-slate-400">›</span>
+                  <span className="text-slate-600">properties</span>
+                  <span className="text-slate-400">›</span>
+                  <span className="text-slate-500 truncate">{generatePropertySlug({ id: propertyToEdit?.id || 'new', title }) || 'property-slug'}</span>
+                </div>
+
+                {/* Google Title (Blue Link) */}
+                <h3 className="text-base font-medium text-blue-800 hover:underline leading-snug cursor-pointer line-clamp-1">
+                  {title || 'عنوان العقار'} | عقارات {operationType === 'sale' ? 'للبيع' : 'للإيجار'} دمياط الجديدة - سكني
+                </h3>
+
+                {/* Google Description */}
+                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                  {description.trim() ? description.trim().slice(0, 150) + '...' : `عقار مميز ${operationType === 'sale' ? 'للبيع' : 'للإيجار'} في ${districtsList.find(d => d.id === locationId)?.name || 'دمياط الجديدة'} بمساحة ${area || '0'} م² بسعر ${Number(price).toLocaleString('ar-EG')} ج.م مع معاينات موثقة.`}
+                </p>
               </div>
             </div>
 

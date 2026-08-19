@@ -108,15 +108,19 @@ export const ClientFeedbackCampaignModal: React.FC = () => {
 
     const selectedOption = activeCampaign.options?.find(o => o.id === selectedOptionId);
 
+    const safeName = typeof clientName === 'string' ? clientName.trim() : '';
+    const safePhone = typeof clientPhone === 'string' ? clientPhone.trim() : (StorageService.getClientPhone() || '');
+    const safeComment = typeof comment === 'string' ? comment.trim() : '';
+
     const payload = {
-      campaign_id: activeCampaign.id,
-      campaign_title: activeCampaign.title,
-      client_name: clientName.trim() || undefined,
-      client_phone: clientPhone.trim() || StorageService.getClientPhone() || undefined,
+      campaign_id: String(activeCampaign.id),
+      campaign_title: String(activeCampaign.title || ''),
+      client_name: safeName || undefined,
+      client_phone: safePhone || undefined,
       rating: activeCampaign.type === 'rating' || activeCampaign.type === 'net_promoter' ? rating : undefined,
       selected_option_id: selectedOptionId || undefined,
       selected_option_label: selectedOption?.label || undefined,
-      comment: comment.trim() || undefined,
+      comment: safeComment || undefined,
       page_url: window.location.hash || window.location.pathname,
       device_type: window.innerWidth < 768 ? 'mobile' : 'desktop',
     };

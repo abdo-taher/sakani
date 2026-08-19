@@ -10,9 +10,10 @@ export interface ValidationResult {
 /**
  * Normalize Egyptian and international phone numbers into standard format (e.g. 01012345678).
  */
-export function normalizeEgyptianPhone(phone: string): string {
+export function normalizeEgyptianPhone(phone: any): string {
   if (!phone) return '';
-  let clean = phone.replace(/[^\d+]/g, '').trim();
+  const str = String(phone);
+  let clean = str.replace(/[^\d+]/g, '').trim();
 
   if (clean.startsWith('+')) {
     clean = clean.substring(1);

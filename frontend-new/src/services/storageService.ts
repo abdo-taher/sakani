@@ -120,6 +120,17 @@ export const StorageService = {
     return properties.find(p => p.id === id);
   },
 
+  setProperties(properties: Property[]): void {
+    if (Array.isArray(properties)) {
+      safeSet(KEYS.PROPERTIES, properties);
+      safeDispatchEvent('sakani_properties_updated', properties);
+    }
+  },
+
+  saveProperties(properties: Property[]): void {
+    this.setProperties(properties);
+  },
+
   saveProperty(property: Omit<Property, 'id' | 'created_at' | 'views' | 'ref_id'> & { id?: string; ref_id?: string }): Property {
     const properties = this.getProperties();
     
@@ -263,6 +274,16 @@ export const StorageService = {
     return safeGet<LocationDistrict[]>(KEYS.DISTRICTS, DISTRICTS_LIST);
   },
 
+  setDistricts(districts: LocationDistrict[]): void {
+    if (Array.isArray(districts)) {
+      safeSet(KEYS.DISTRICTS, districts);
+    }
+  },
+
+  saveDistricts(districts: LocationDistrict[]): void {
+    this.setDistricts(districts);
+  },
+
   saveDistrict(district: LocationDistrict): void {
     const districts = this.getDistricts();
     const idx = districts.findIndex(d => d.id === district.id);
@@ -310,6 +331,17 @@ export const StorageService = {
   // ---------------- Inquiries / Reservations Backend Rules ----------------
   getInquiries(): InquiryReservation[] {
     return safeGet<InquiryReservation[]>(KEYS.INQUIRIES, INITIAL_INQUIRIES);
+  },
+
+  setInquiries(inquiries: InquiryReservation[]): void {
+    if (Array.isArray(inquiries)) {
+      safeSet(KEYS.INQUIRIES, inquiries);
+      safeDispatchEvent('sakani_inquiries_updated', inquiries);
+    }
+  },
+
+  saveInquiries(inquiries: InquiryReservation[]): void {
+    this.setInquiries(inquiries);
   },
 
   /**

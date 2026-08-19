@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { StorageService } from '../services/storageService';
 import { ApiService } from '../services/apiService';
 import { ContactMessage } from '../types';
+import { SEOHead } from '../components/SEOHead';
+import { buildOrganizationSchema } from '../utils/seo';
 import confetti from 'canvas-confetti';
 import { 
   Phone, 
@@ -102,6 +104,12 @@ export const AboutContactPage: React.FC = () => {
 
   return (
     <div className="space-y-12 sm:space-y-16 pb-16" dir="rtl">
+      <SEOHead
+        title="تواصل معنا واستشارات عقارية مجانية | سكني"
+        description="تواصل مع فريق منصة سكني في دمياط الجديدة للحصول على استشارات عقارية مجانية، حجز مواعيد المعاينات، أو الاستفسارات العامة."
+        canonical="https://sakani.site/contact"
+        schema={buildOrganizationSchema(settings)}
+      />
       
       {/* 1. Header Hero */}
       <section className="bg-[#0F172A] text-white py-14 sm:py-18 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden rounded-b-3xl sm:rounded-b-[2.5rem]">

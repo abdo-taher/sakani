@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ApiService } from '../services/apiService';
 import { StorageService } from '../services/storageService';
 import { DISTRICTS_LIST } from '../data/mockData';
+import { SEOHead } from '../components/SEOHead';
 import confetti from 'canvas-confetti';
 import { 
   HelpCircle, 
@@ -94,6 +95,11 @@ export const NeedPropertyPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20 pt-6 sm:pt-10" dir="rtl">
+      <SEOHead
+        title="اطلب عقارك بمواصفات خاصة | سكني"
+        description="سجل مواصفات وميزانية العقار المطلوب وسيقوم فريق المستشارين العقاريين في سكني بالبحث عن أفضل الخيارات ومطابقتها وتوفيرها لك فوراً."
+        canonical="https://sakani.site/need-property"
+      />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Breadcrumb Navigation */}

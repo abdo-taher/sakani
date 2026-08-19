@@ -5,6 +5,7 @@ import { ApiService } from '../services/apiService';
 import { requestNotificationPermission, registerTokenWithBackend } from '../services/firebaseService';
 import { Lock, ShieldCheck, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { SakaniLogo } from '../components/SakaniLogo';
+import { SEOHead } from '../components/SEOHead';
 
 interface AdminLoginPageProps {
   onLoginSuccess?: () => void;
@@ -71,6 +72,10 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess }
 
   return (
     <div className="min-h-screen bg-[#0F172A] flex flex-col justify-center items-center p-4 selection:bg-[#8D6A28]/30 selection:text-[#8D6A28]" dir="rtl">
+      <SEOHead
+        title="تسجيل الدخول للإدارة | سكني"
+        robots="noindex, nofollow"
+      />
       
       {/* Background ambient lighting */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#8D6A28]/15 rounded-full blur-3xl pointer-events-none" />

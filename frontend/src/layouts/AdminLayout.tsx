@@ -3,6 +3,7 @@ import { NavLink, Link, useNavigate, useLocation, Outlet } from 'react-router-do
 import { StorageService } from '../services/storageService';
 import { SakaniLogo } from '../components/SakaniLogo';
 import { NotificationCenter } from '../components/NotificationCenter';
+import { SEOHead } from '../components/SEOHead';
 import { 
   LayoutDashboard, 
   Building2, 
@@ -123,6 +124,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-100/70 flex font-['Cairo'] text-slate-900 selection:bg-[#8D6A28]/20 selection:text-[#8D6A28]" dir="rtl">
+      <SEOHead
+        title="لوحة تحكم الإدارة | سكني"
+        robots="noindex, nofollow"
+      />
       
       {/* Mobile Sidebar Overlay */}
       {isMobileSidebarOpen && (

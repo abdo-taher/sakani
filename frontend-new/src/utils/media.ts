@@ -164,16 +164,16 @@ export async function generateAndUploadVideoThumbnail(videoSource: File | string
 /**
  * Check if a URL is a YouTube link
  */
-export function isYouTubeUrl(url: string | null | undefined): boolean {
-  if (!url) return false;
+export function isYouTubeUrl(url: any): boolean {
+  if (!url || typeof url !== 'string') return false;
   return /youtube\.com|youtu\.be/i.test(url);
 }
 
 /**
  * Extract YouTube video ID
  */
-export function getYouTubeVideoId(url: string | null | undefined): string | null {
-  if (!url) return null;
+export function getYouTubeVideoId(url: any): string | null {
+  if (!url || typeof url !== 'string') return null;
   const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/i;
   const match = url.match(regExp);
   return (match && match[1]) ? match[1] : null;
@@ -182,7 +182,7 @@ export function getYouTubeVideoId(url: string | null | undefined): string | null
 /**
  * Convert any YouTube URL to an embeddable iframe URL with optional autoplay
  */
-export function getYouTubeEmbedUrl(url: string | null | undefined, autoPlay: boolean = false): string | null {
+export function getYouTubeEmbedUrl(url: any, autoPlay: boolean = false): string | null {
   const videoId = getYouTubeVideoId(url);
   if (!videoId) return null;
   const base = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&enablejsapi=1`;
@@ -192,7 +192,7 @@ export function getYouTubeEmbedUrl(url: string | null | undefined, autoPlay: boo
 /**
  * Get high-quality thumbnail URL for a YouTube video
  */
-export function getYouTubeThumbnail(url: string | null | undefined): string | null {
+export function getYouTubeThumbnail(url: any): string | null {
   const videoId = getYouTubeVideoId(url);
   if (!videoId) return null;
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
@@ -201,16 +201,16 @@ export function getYouTubeThumbnail(url: string | null | undefined): string | nu
 /**
  * Check if a URL is a Cloudinary video URL
  */
-export function isCloudinaryVideoUrl(url: string | null | undefined): boolean {
-  if (!url) return false;
+export function isCloudinaryVideoUrl(url: any): boolean {
+  if (!url || typeof url !== 'string') return false;
   return url.includes('cloudinary.com') && (url.includes('/video/upload/') || /\.(mp4|webm|mov|mkv)$/i.test(url));
 }
 
 /**
  * Generate a poster/thumbnail JPG URL from a Cloudinary video URL
  */
-export function getCloudinaryVideoThumbnail(url: string | null | undefined): string | null {
-  if (!url || !isCloudinaryVideoUrl(url)) return null;
+export function getCloudinaryVideoThumbnail(url: any): string | null {
+  if (!url || typeof url !== 'string' || !isCloudinaryVideoUrl(url)) return null;
   try {
     let clean = url.trim();
     // Replace extension with .jpg
@@ -230,8 +230,15 @@ export const R2_PUBLIC_BASE_URL = 'https://pub-53f4892d4ffe491787baac754cbe0059.
 /**
  * Resolve any image URL (Cloudflare R2 keys, relative /storage/ paths, backend storage, external CDNs)
  */
-export function resolveImageUrl(url: string | null | undefined): string {
+export function resolveImageUrl(url: any): string {
   if (!url) return FALLBACK_PROPERTY_IMAGE;
+  if (typeof url !== 'string') {
+    if (typeof url === 'object' && url !== null) {
+      const candidate = url.url || url.image || url.image_url || url.path || url.file_url;
+      if (typeof candidate === 'string') return resolveImageUrl(candidate);
+    }
+    return FALLBACK_PROPERTY_IMAGE;
+  }
   const trimmed = url.trim();
   if (!trimmed) return FALLBACK_PROPERTY_IMAGE;
 
@@ -268,8 +275,15 @@ export function resolveImageUrl(url: string | null | undefined): string {
 /**
  * Resolve any video URL (Cloudflare R2 keys, relative /storage/ paths, external CDNs, YouTube, public local files)
  */
-export function resolveVideoUrl(url: string | null | undefined): string {
+export function resolveVideoUrl(url: any): string {
   if (!url) return '';
+  if (typeof url !== 'string') {
+    if (typeof url === 'object' && url !== null) {
+      const candidate = url.url || url.video_url || url.video || url.src || url.file_url;
+      if (typeof candidate === 'string') return resolveVideoUrl(candidate);
+    }
+    return '';
+  }
   const trimmed = url.trim();
   if (!trimmed) return '';
 

@@ -4,6 +4,7 @@ import { ApiService } from '../services/apiService';
 import { StorageService } from '../services/storageService';
 import { onPushNotification, PushNotificationPayload } from '../services/firebaseService';
 import { resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { SEOHead } from '../components/SEOHead';
 import { 
   CalendarCheck, 
   Building2, 
@@ -273,6 +274,11 @@ export const MyReservationsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20 pt-4 sm:pt-8" dir="rtl">
+      <SEOHead
+        title="حجوزاتي ومتابعة الطلبات | سكني"
+        description="متابعة حالة كافة طلبات المعاينة وحجوزات العقارات والغرف المسجلة برقمك لحظة بلحظة."
+        robots="noindex, nofollow"
+      />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Page Header */}

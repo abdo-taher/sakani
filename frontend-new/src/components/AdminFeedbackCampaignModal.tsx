@@ -168,12 +168,13 @@ export const AdminFeedbackCampaignModal: React.FC<AdminFeedbackCampaignModalProp
   if (!isOpen) return null;
 
   const filteredResponses = responses.filter(r => {
-    const matchCamp = selectedCampaignId === 'all' || r.campaign_id === selectedCampaignId;
-    const matchSearch = !searchFilter.trim() || 
-      (r.client_name?.toLowerCase().includes(searchFilter.toLowerCase())) ||
-      (r.client_phone?.includes(searchFilter)) ||
-      (r.comment?.toLowerCase().includes(searchFilter.toLowerCase())) ||
-      (r.selected_option_label?.toLowerCase().includes(searchFilter.toLowerCase()));
+    const matchCamp = selectedCampaignId === 'all' || String(r.campaign_id) === String(selectedCampaignId);
+    const s = typeof searchFilter === 'string' ? searchFilter.trim().toLowerCase() : '';
+    const matchSearch = !s || 
+      (typeof r.client_name === 'string' && r.client_name.toLowerCase().includes(s)) ||
+      (typeof r.client_phone === 'string' && r.client_phone.includes(s)) ||
+      (typeof r.comment === 'string' && r.comment.toLowerCase().includes(s)) ||
+      (typeof r.selected_option_label === 'string' && r.selected_option_label.toLowerCase().includes(s));
     return matchCamp && matchSearch;
   });
 

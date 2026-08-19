@@ -6,6 +6,7 @@ import { StorageService } from '../services/storageService';
 import { ApiService } from '../services/apiService';
 import { LocationMapPicker } from '../components/LocationMapPicker';
 import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
+import { SEOHead } from '../components/SEOHead';
 import confetti from 'canvas-confetti';
 import { 
   Upload, 
@@ -179,6 +180,11 @@ export const AddPropertyPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20 pt-6 sm:pt-10" dir="rtl">
+      <SEOHead
+        title="أضف عقارك للبيع أو الإيجار مجاناً | سكني"
+        description="اعرض شقتك، فيلتك أو محلك التجاري للبيع أو الإيجار أمام آلاف الباحثين عن عقارات في دمياط الجديدة مع تسويق احترافي وتوثيق قانوني."
+        canonical="https://sakani.site/sell"
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Breadcrumb */}
