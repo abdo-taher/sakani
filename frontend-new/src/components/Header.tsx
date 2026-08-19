@@ -203,18 +203,6 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Direct Native Install App Button - Only if not installed */}
-            {!isInstalled && (
-              <button
-                onClick={installApp}
-                className="p-2.5 rounded-xl border border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
-                title="تثبيت التطبيق مباشرة على جهازك"
-              >
-                <Smartphone className="w-4 h-4 text-blue-600" />
-                <span className="hidden lg:inline text-xs font-bold">تثبيت التطبيق</span>
-              </button>
-            )}
-
             {/* Customer Live Notifications Bell */}
             <NotificationCenter role="customer" />
 

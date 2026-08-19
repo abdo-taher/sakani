@@ -438,6 +438,57 @@ function MainApp() {
               />
             }
           />
+          <Route
+            path="rent"
+            element={
+              <ListingPage
+                properties={properties}
+                favorites={favorites}
+                districts={districts}
+                isLoading={isDataLoading}
+                initialFilters={{ operation_type: 'rent' }}
+                onToggleFavorite={handleToggleFavorite}
+                onSelectProperty={handleSelectProperty}
+                onQuickPreview={handleQuickPreview}
+                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenNeedModal={() => navigate('/need-property')}
+              />
+            }
+          />
+          <Route
+            path="buy"
+            element={
+              <ListingPage
+                properties={properties}
+                favorites={favorites}
+                districts={districts}
+                isLoading={isDataLoading}
+                initialFilters={{ operation_type: 'sale' }}
+                onToggleFavorite={handleToggleFavorite}
+                onSelectProperty={handleSelectProperty}
+                onQuickPreview={handleQuickPreview}
+                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenNeedModal={() => navigate('/need-property')}
+              />
+            }
+          />
+          <Route
+            path="rooms-for-rent"
+            element={
+              <ListingPage
+                properties={properties}
+                favorites={favorites}
+                districts={districts}
+                isLoading={isDataLoading}
+                initialFilters={{ mode: 'room', operation_type: 'rent' }}
+                onToggleFavorite={handleToggleFavorite}
+                onSelectProperty={handleSelectProperty}
+                onQuickPreview={handleQuickPreview}
+                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenNeedModal={() => navigate('/need-property')}
+              />
+            }
+          />
 
           {/* Dedicated Full Property Details Page */}
           <Route
@@ -450,10 +501,28 @@ function MainApp() {
               />
             }
           />
+          <Route
+            path="property/:id"
+            element={
+              <PropertyDetailsPage
+                favorites={favorites}
+                onToggleFavorite={handleToggleFavorite}
+                onOpenInquiry={handleOpenInquiryFromProperty}
+              />
+            }
+          />
 
           {/* Places & Districts Guide Page */}
           <Route
             path="places"
+            element={<PlacesPage districts={districts} properties={properties} />}
+          />
+          <Route
+            path="places/:districtId"
+            element={<PlacesPage districts={districts} properties={properties} />}
+          />
+          <Route
+            path="locations/:districtId"
             element={<PlacesPage districts={districts} properties={properties} />}
           />
           <Route path="locations" element={<Navigate to="/places" replace />} />
