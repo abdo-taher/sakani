@@ -5,23 +5,29 @@ User-agent: *
 Allow: /
 Allow: /properties
 Allow: /properties/*
+Allow: /property/*
 Allow: /places
 Allow: /places/*
 Allow: /rooms-for-rent
+Allow: /rooms-for-rent/*
 Allow: /rent
+Allow: /rent/*
 Allow: /buy
+Allow: /buy/*
 Allow: /sell
 Allow: /need-property
 Allow: /contact
+Allow: /assets/*
 Allow: /sitemap.xml
 
 # Disallow Private & Administration routes
 Disallow: /admin
 Disallow: /admin/*
-Disallow: /api/*
 Disallow: /my-reservations
+Disallow: /customer/*
+Disallow: /api/admin/*
+Disallow: /api/customer/*
 
-# Sitemaps
-Sitemap: https://api.sakani.site/sitemap.xml
+# Sitemap
 Sitemap: https://sakani.site/sitemap.xml
 

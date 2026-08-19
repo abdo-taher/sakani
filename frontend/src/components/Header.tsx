@@ -261,7 +261,8 @@ export const Header: React.FC<HeaderProps> = ({
 
           <div className="relative z-40 md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-1.5 shadow-2xl animate-fade-in max-h-[calc(100vh-4rem)] overflow-y-auto" dir="rtl">
             {/* الرئيسية */}
-            <button
+            <Link
+              to="/"
               onClick={() => { onSelectTab('home'); setMobileMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black text-right transition cursor-pointer ${
                 currentTab === 'home' ? 'bg-[#8D6A28]/10 text-[#8D6A28]' : 'text-slate-800 hover:bg-slate-50'
@@ -269,10 +270,11 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Building2 className="w-5 h-5 text-[#8D6A28]" />
               <span>الرئيسية</span>
-            </button>
+            </Link>
 
             {/* عقارات للبيع والإيجار */}
-            <button
+            <Link
+              to="/properties"
               onClick={() => { onSelectTab('search'); setMobileMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-right transition cursor-pointer ${
                 currentTab === 'search' ? 'bg-[#8D6A28]/10 text-[#8D6A28]' : 'text-slate-700 hover:bg-slate-50'
@@ -280,10 +282,11 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <ShoppingBag className="w-5 h-5 text-[#8D6A28]" />
               <span>عقارات للبيع والإيجار بدمياط الجديدة</span>
-            </button>
+            </Link>
 
             {/* حجوزاتي */}
-            <button
+            <Link
+              to="/my-reservations"
               onClick={() => { onSelectTab('reservations'); setMobileMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-right transition cursor-pointer ${
                 currentTab === 'reservations' ? 'bg-[#8D6A28]/10 text-[#8D6A28]' : 'text-slate-700 hover:bg-slate-50'
@@ -291,7 +294,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <CalendarCheck className="w-5 h-5 text-[#8D6A28]" />
               <span>حجوزاتي ومتابعة الطلبات</span>
-            </button>
+            </Link>
 
             {/* المفضلة */}
             <button
@@ -312,7 +315,8 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* دليل أحياء وأماكن دمياط الجديدة */}
-            <button
+            <Link
+              to="/places"
               onClick={() => { onSelectTab('places'); setMobileMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-right transition cursor-pointer ${
                 currentTab === 'places' ? 'bg-[#8D6A28]/10 text-[#8D6A28]' : 'text-slate-700 hover:bg-slate-50'
@@ -320,10 +324,11 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <MapPin className="w-5 h-5 text-[#8D6A28]" />
               <span>دليل أحياء وأماكن دمياط الجديدة</span>
-            </button>
+            </Link>
 
             {/* تواصل معنا */}
-            <button
+            <Link
+              to="/contact"
               onClick={() => { onSelectTab('contact'); setMobileMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-right transition cursor-pointer ${
                 currentTab === 'contact' ? 'bg-[#8D6A28]/10 text-[#8D6A28]' : 'text-slate-700 hover:bg-slate-50'
@@ -331,7 +336,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Phone className="w-5 h-5 text-[#8D6A28]" />
               <span>من نحن وتواصل معنا</span>
-            </button>
+            </Link>
 
             {/* تثبيت التطبيق مباشرة */}
             {!isInstalled && (

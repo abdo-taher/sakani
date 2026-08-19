@@ -47,11 +47,14 @@ class SitemapController extends Controller
         $xml .= '        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">' . "\n";
 
         // 1. Static Key Landing Pages
+        // 1. Static Key SEO Landing Pages
         $staticPages = [
             ['loc' => '/', 'priority' => '1.0', 'changefreq' => 'daily', 'lastmod' => now()->toAtomString()],
-            ['loc' => '/properties', 'priority' => '0.9', 'changefreq' => 'daily', 'lastmod' => now()->toAtomString()],
+            ['loc' => '/rent', 'priority' => '0.95', 'changefreq' => 'daily', 'lastmod' => now()->toAtomString()],
+            ['loc' => '/buy', 'priority' => '0.95', 'changefreq' => 'daily', 'lastmod' => now()->toAtomString()],
+            ['loc' => '/rooms-for-rent', 'priority' => '0.90', 'changefreq' => 'daily', 'lastmod' => now()->toAtomString()],
             ['loc' => '/places', 'priority' => '0.85', 'changefreq' => 'weekly', 'lastmod' => now()->toAtomString()],
-            ['loc' => '/rooms-for-rent', 'priority' => '0.85', 'changefreq' => 'daily', 'lastmod' => now()->toAtomString()],
+            ['loc' => '/properties', 'priority' => '0.85', 'changefreq' => 'daily', 'lastmod' => now()->toAtomString()],
             ['loc' => '/sell', 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => now()->toAtomString()],
             ['loc' => '/need-property', 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => now()->toAtomString()],
             ['loc' => '/contact', 'priority' => '0.6', 'changefreq' => 'monthly', 'lastmod' => now()->toAtomString()],
@@ -68,12 +71,10 @@ class SitemapController extends Controller
 
         // 2. Curated Search & Audience Landing Pages
         $curatedLandings = [
-            ['loc' => '/properties?operation=rent', 'priority' => '0.85', 'changefreq' => 'daily'],
-            ['loc' => '/properties?operation=sale', 'priority' => '0.85', 'changefreq' => 'daily'],
             ['loc' => '/properties?mode=room', 'priority' => '0.80', 'changefreq' => 'daily'],
             ['loc' => '/properties?audience=families', 'priority' => '0.80', 'changefreq' => 'weekly'],
             ['loc' => '/properties?audience=female_students', 'priority' => '0.80', 'changefreq' => 'weekly'],
-            ['loc' => '/properties?audience=young_men', 'priority' => '0.80', 'changefreq' => 'weekly'],
+            ['loc' => '/properties?audience=singles', 'priority' => '0.80', 'changefreq' => 'weekly'],
         ];
 
         foreach ($curatedLandings as $landing) {
@@ -85,8 +86,12 @@ class SitemapController extends Controller
             $xml .= "  </url>\n";
         }
 
-        // 3. Location Landing Pages
-        foreach ($locations as $loc) {
+        // 3. Location Landing Pages with Real Inventory/Content
+        $meaningfulLocations = Location::whereHas('properties', function($q) {
+            $q->publiclyVisible();
+        })->orWhereNotNull('image_url')->get();
+
+        foreach ($meaningfulLocations as $loc) {
             $locSlug = $loc->slug ?: $loc->id;
             $xml .= "  <url>\n";
             $xml .= "    <loc>" . htmlspecialchars("{$siteUrl}/places/{$locSlug}") . "</loc>\n";

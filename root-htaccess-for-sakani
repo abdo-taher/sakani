@@ -3,20 +3,36 @@
 
 RewriteEngine On
 
-# Force HTTPS
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# Charset Configuration
+AddDefaultCharset UTF-8
 
-# Main domain routing
-# Direct all traffic to sakani folder structure
-RewriteCond %{HTTP_HOST} ^sakani\.site$ [NC]
-RewriteCond %{REQUEST_URI} !^/sakani/
-RewriteRule ^(.*)$ /sakani/frontend/dist/$1 [L]
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|htm|php)$">
+    Header set Content-Type "text/html; charset=UTF-8"
+  </FilesMatch>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
 
-# Subdomain routing for API
+# 1. API Subdomain Routing
 RewriteCond %{HTTP_HOST} ^api\.sakani\.site$ [NC]
 RewriteCond %{REQUEST_URI} !^/sakani/
 RewriteRule ^(.*)$ /sakani/backend/public/$1 [L]
+
+# 2. Canonical www -> non-www 301 Redirect
+RewriteCond %{HTTP_HOST} ^www\.sakani\.site$ [NC]
+RewriteRule ^(.*)$ https://sakani.site/$1 [L,R=301]
+
+# 3. Force HTTPS for main domain
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} ^sakani\.site$ [NC]
+RewriteRule ^(.*)$ https://sakani.site/$1 [L,R=301]
+
+# Main domain routing to frontend dist
+RewriteCond %{HTTP_HOST} ^sakani\.site$ [NC]
+RewriteCond %{REQUEST_URI} !^/sakani/
+RewriteRule ^(.*)$ /sakani/frontend/dist/$1 [L]
 
 # Handle missing files gracefully
 ErrorDocument 404 /sakani/frontend/dist/index.html

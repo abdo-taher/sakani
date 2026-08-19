@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Property, 
   LocationDistrict, 
@@ -20,6 +20,8 @@ import { ApiService } from '../services/apiService';
 import { StorageService } from '../services/storageService';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
 import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia, resolveImageUrl } from '../utils/media';
+import { SEOHead } from '../components/SEOHead';
+import { buildOrganizationSchema } from '../utils/seo';
 import { 
   Search, 
   MapPin, 
@@ -468,6 +470,12 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="space-y-0 animate-fade-in font-['Cairo'] text-slate-900 bg-white" dir="rtl">
+      <SEOHead
+        title="سكني | عقارات وشقق للبيع والإيجار في دمياط الجديدة"
+        description="منصة سكني العقارية الرائدة للبيع والشراء والإيجار وحجز الغرف في دمياط الجديدة والمناطق المميزة مع معاينات فورية وتجربة ذكية."
+        canonical="https://sakani.site/"
+        schema={buildOrganizationSchema(settings)}
+      />
       
       {/* ----------------- 0. ANNOUNCEMENT BANNER (From CMS) ----------------- */}
       {settings.announcement_enabled && settings.announcement_text && (
@@ -548,12 +556,12 @@ export const HomePage: React.FC<HomePageProps> = ({
 
           {/* Main Title */}
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.25] text-white drop-shadow-sm">
-            {settings.hero_title || 'بيتك القادم يبدأ من هنا'}
+            {settings.hero_title || 'دور على شقة أو غرفة تناسب احتياجاتك في دمياط الجديدة'}
           </h1>
 
           {/* Subtitle */}
           <p className="text-xs sm:text-base text-slate-200 max-w-2xl mx-auto font-normal leading-relaxed drop-shadow-xs px-2">
-            {settings.hero_subtitle || 'اكتشف أفضل شقق الإيجار، سكن الطلبة والطالبات، وعقارات التملك في دمياط الجديدة مع معاينات موثقة'}
+            {settings.hero_subtitle || 'اكتشف أفضل الشقق والغرف المتاحة للإيجار والبيع في دمياط الجديدة عبر منصة سكني مع معاينات موثقة واستشارات عقارية متكاملة'}
           </p>
 
           {/* Key Value Proposition Badges */}
@@ -1103,7 +1111,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <span>تصفح سريع ومخصص</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                  بتدور على إيه؟
+                  بتدور على إيه؟ خيارات السكن المتاحة
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-normal mt-1">
                   اختار نوع السكن المناسب لاحتياجاتك وسنوصلك بالمتاح فوراً في دمياط الجديدة
@@ -1115,11 +1123,19 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="flex sm:grid overflow-x-auto sm:overflow-x-visible pb-3 sm:pb-0 gap-3 sm:gap-4 snap-x sm:snap-none scrollbar-hide grid-cols-2 md:grid-cols-3 lg:grid-cols-6 -mx-4 px-4 sm:mx-0 sm:px-0">
               {discoveryOptions.map((item) => {
                 const Icon = item.icon;
+                const qs = new URLSearchParams(item.params || {}).toString();
+                const targetUrl = qs ? `/properties?${qs}` : '/properties';
                 return (
-                  <button
+                  <Link
                     key={item.id}
-                    onClick={() => handleDiscoveryCardClick(item)}
-                    className="min-w-[160px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink w-[46vw] sm:w-auto bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs hover:border-[#8D6A28]/50 hover:shadow-xs hover:-translate-y-0.5 transition-all group cursor-pointer text-right flex flex-col justify-between focus:outline-none"
+                    to={targetUrl}
+                    onClick={(e) => {
+                      if (onSelectDiscovery) {
+                        e.preventDefault();
+                        handleDiscoveryCardClick(item);
+                      }
+                    }}
+                    className="min-w-[160px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink w-[46vw] sm:w-auto bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs hover:border-[#8D6A28]/50 hover:shadow-xs hover:-translate-y-0.5 transition-all group cursor-pointer text-right flex flex-col justify-between focus:outline-none block"
                   >
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between">
@@ -1147,14 +1163,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                       <span>استكشف</span>
                       <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
                     </div>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
           </div>
         </section>
 
-        {/* ----------------- 3. FEATURED / BEST PROPERTIES (أفضل العقارات المتاحة) ----------------- */}
+        {/* ----------------- 3. FEATURED / BEST PROPERTIES (عقارات مميزة للإيجار والبيع) ----------------- */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="space-y-6">
             
@@ -1166,23 +1182,20 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <span>عقارات مختارة بعناية</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-                  أفضل العقارات المتاحة
+                  عقارات مميزة للإيجار والبيع
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-normal mt-1">
                   أحدث وأفضل الفرص السكنية الموثقة بأعلى تقييم وأفضل الأسعار
                 </p>
               </div>
 
-              <button
-                onClick={() => {
-                  navigate('/properties');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
+              <Link
+                to="/properties"
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#8D6A28] hover:text-[#AC7F2B] transition cursor-pointer self-start md:self-auto"
               >
                 <span>عرض جميع العقارات</span>
                 <ChevronLeft className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
 
             {/* Filter Pills */}
@@ -1252,23 +1265,20 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <span>تغطية شاملة لدمياط الجديدة</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-                  استكشف السكن حسب المنطقة
+                  استكشف السكن حسب أحياء ومناطق دمياط الجديدة
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-600 font-normal mt-1">
                   تصفح الوحدات المتاحة في أرقى وأهم أحياء ومناطق دمياط الجديدة
                 </p>
               </div>
 
-              <button
-                onClick={() => {
-                  navigate('/places');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
+              <Link
+                to="/places"
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#8D6A28] hover:text-[#AC7F2B] transition cursor-pointer self-start sm:self-auto"
               >
                 <span>دليل كافة الأحياء والتفاصيل</span>
                 <ChevronLeft className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
 
             {/* Locations Grid: Equal Cards */}
@@ -1287,10 +1297,16 @@ export const HomePage: React.FC<HomePageProps> = ({
                   const count = matchingCount || district.available_count || 0;
 
                   return (
-                    <div
+                    <Link
                       key={district.id}
-                      onClick={() => onSelectDistrict(district.id)}
-                      className="min-w-[280px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink w-[80vw] sm:w-auto relative h-52 sm:h-60 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer border border-slate-200/80 bg-slate-900"
+                      to={`/places/${encodeURIComponent(district.id)}`}
+                      onClick={(e) => {
+                        if (onSelectDistrict) {
+                          e.preventDefault();
+                          onSelectDistrict(district.id);
+                        }
+                      }}
+                      className="min-w-[280px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink w-[80vw] sm:w-auto relative h-52 sm:h-60 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer border border-slate-200/80 bg-slate-900 block"
                     >
                       <img
                         src={resolveImageUrl(district.image_url)}
@@ -1321,7 +1337,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -1347,16 +1363,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </p>
                 </div>
 
-                <button
-                  onClick={() => {
-                    navigate('/properties?operation=rent&mode=room');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                <Link
+                  to="/properties?operation=rent&mode=room"
                   className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#8D6A28] hover:text-[#AC7F2B] transition cursor-pointer self-start md:self-auto"
                 >
                   <span>عرض جميع غرف السكن</span>
                   <ChevronLeft className="w-4 h-4" />
-                </button>
+                </Link>
               </div>
 
               <div className="flex sm:grid overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 gap-4 sm:gap-5 snap-x sm:snap-none scrollbar-hide sm:grid-cols-2 lg:grid-cols-4 -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -1394,16 +1407,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </p>
                 </div>
 
-                <button
-                  onClick={() => {
-                    navigate('/properties?offers=1');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                <Link
+                  to="/properties?offers=1"
                   className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#8D6A28] hover:text-[#AC7F2B] transition cursor-pointer self-start md:self-auto"
                 >
                   <span>عرض كل العروض</span>
                   <ChevronLeft className="w-4 h-4" />
-                </button>
+                </Link>
               </div>
 
               <div className="flex sm:grid overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 gap-4 sm:gap-5 snap-x sm:snap-none scrollbar-hide sm:grid-cols-2 lg:grid-cols-4 -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -1423,7 +1433,84 @@ export const HomePage: React.FC<HomePageProps> = ({
           </section>
         )}
 
-        {/* ----------------- 7. PERSONALIZED NEED PROPERTY JOURNEY (مش لاقي اللي يناسبك؟) ----------------- */}
+        {/* ----------------- 6.5 TARGET AUDIENCES (شقق وسكن مناسب للشباب والطالبات والعائلات) ----------------- */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-[#8D6A28] text-xs font-semibold mb-2 border border-amber-200/60">
+                <Users className="w-3.5 h-3.5 text-[#8D6A28]" />
+                <span>خيارات مخصصة لكل فئة</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+                شقق وسكن مناسب للشباب والطالبات والعائلات
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 font-normal mt-1">
+                صممنا منصة سكني لتلبي متطلبات الباحثين عن سكن في دمياط الجديدة بدقة مع خيارات مخصصة
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="p-5 sm:p-6 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-3 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-700 flex items-center justify-center">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-base text-slate-900">سكن الطالبات والجامعيات</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    شقق وغرف مخصصة للطالبات بالقرب من جامعة حورس وجامعة دمياط في مباني آمنة تضمن الخصوصية الكاملة ومزودة بإنترنت وأجهزة كهربائية كاملة.
+                  </p>
+                </div>
+                <Link
+                  to="/properties?operation=rent&mode=room&audience=female_students"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8D6A28] hover:text-[#AC7F2B] pt-2"
+                >
+                  <span>تصفح سكن الطالبات</span>
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <div className="p-5 sm:p-6 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-3 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-base text-slate-900">سكن الشباب والطلاب</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    غرف فردية ومزدوجة في شقق مجهزة للشباب والطلاب والموظفين بأسعار اقتصادية وبدون مصاريف سمسرة مرتفعة، مع إمكانية الدفع الشهري الميسر.
+                  </p>
+                </div>
+                <Link
+                  to="/properties?operation=rent&mode=room&audience=singles"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8D6A28] hover:text-[#AC7F2B] pt-2"
+                >
+                  <span>تصفح سكن الشباب</span>
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <div className="p-5 sm:p-6 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-3 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                    <HomeIcon className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-base text-slate-900">شقق العائلات والإيجار السنوي</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    شقق عائلية واسعة 2 و 3 و 4 غرف في أرقى المربعات السكنية بدمياط الجديدة بتشطيبات حديثة وبالقرب من المجمعات الخدمية والحدائق.
+                  </p>
+                </div>
+                <Link
+                  to="/properties?operation=rent&audience=families"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8D6A28] hover:text-[#AC7F2B] pt-2"
+                >
+                  <span>تصفح شقق العائلات</span>
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ----------------- 7. PERSONALIZED NEED PROPERTY JOURNEY (محتاج عقار بمواصفات خاصة؟) ----------------- */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-10 shadow-md border border-slate-800">
             <div className="max-w-3xl mx-auto text-center space-y-4">
@@ -1433,24 +1520,21 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
 
               <h2 className="text-xl sm:text-3xl font-bold tracking-tight text-white">
-                مش لاقي العقار المناسب لاحتياجاتك؟
+                محتاج عقار بمواصفات خاصة؟
               </h2>
 
               <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
-                قولنا مواصفات السكن اللي محتاجه (المنطقة، الميزانية، عدد الغرف، نوع السكن) وفريق سكني هيتواصل معاك مباشرة بأقرب الخيارات المتاحة فوراً بدون أي تكلفة للمعاينة.
+                لو مش لاقي العقار المناسب، قولنا مواصفات السكن اللي محتاجه (المنطقة، الميزانية، عدد الغرف، نوع السكن) وفريق سكني هيتواصل معاك مباشرة بأقرب الخيارات المتاحة فوراً بدون أي تكلفة للمعاينة.
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                <button
-                  onClick={() => {
-                    navigate('/need-property');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                <Link
+                  to="/need-property"
                   className="px-7 py-3 rounded-full gold-gradient gold-gradient-hover text-white font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span>سجل طلبك الآن مجاناً</span>
-                </button>
+                </Link>
 
                 <a
                   href={`https://wa.me/${String(settings.whatsapp || '201067725976').replace(/\D/g, '')}?text=${encodeURIComponent('السلام عليكم، محتاج مساعدة في إيجاد عقار بمواصفات معينة في دمياط الجديدة.')}`}
@@ -1485,16 +1569,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </p>
                 </div>
 
-                <button
-                  onClick={() => {
-                    navigate('/properties?sort=views_desc');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                <Link
+                  to="/properties?sort=views_desc"
                   className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#8D6A28] hover:text-[#AC7F2B] transition cursor-pointer self-start md:self-auto"
                 >
                   <span>عرض الأكثر طلباً</span>
                   <ChevronLeft className="w-4 h-4" />
-                </button>
+                </Link>
               </div>
 
               {isLoadingTopViewed ? (
@@ -1588,9 +1669,9 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="pt-6 border-t border-slate-200/60 space-y-6">
               <div className="text-center space-y-1 max-w-xl mx-auto">
                 <span className="text-xs font-semibold text-[#8D6A28] uppercase tracking-wider">مميزات وخدمات سكني</span>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900">
-                  لماذا يختار عملاؤنا منصة سكني؟
-                </h3>
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                  لماذا تختار منصة سكني العقارية؟
+                </h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
@@ -1599,7 +1680,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     <div className="w-10 h-10 rounded-xl bg-slate-100 text-[#8D6A28] flex items-center justify-center mx-auto">
                       {WHY_US_ICON_MAP[item.icon] || <ShieldCheck className="w-5 h-5 text-[#8D6A28]" />}
                     </div>
-                    <h4 className="text-sm sm:text-base font-bold text-slate-900">{item.title}</h4>
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900">{item.title}</h3>
                     <p className="text-xs text-slate-600 leading-relaxed font-normal">
                       {item.description}
                     </p>
@@ -1617,9 +1698,9 @@ export const HomePage: React.FC<HomePageProps> = ({
             
             <div className="space-y-1.5">
               <span className="text-xs font-semibold text-[#D6A94E]">فريق الدعم والاستشارات</span>
-              <h3 className="text-xl sm:text-2xl font-bold text-white">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
                 هل تحتاج إلى مساعدة أو معاينة خاصة؟
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-slate-300 max-w-xl font-normal">
                 تواصل معنا مباشرة عبر الهاتف أو واتساب وسيقوم مستشارنا العقاري بالرد عليك فوراً
               </p>

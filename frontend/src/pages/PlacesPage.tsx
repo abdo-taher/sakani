@@ -579,35 +579,6 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
                         </div>
                       </div>
 
-                      {Object.keys(district.extra.propertyTypes).length > 0 && (
-                        <div className="space-y-1.5">
-                          <div className="text-[11px] font-black text-slate-700 flex items-center gap-1">
-                            <Building2 className="w-3.5 h-3.5 text-[#8D6A28]" />
-                            <span>أنواع العقارات المتاحة ({district.totalAvailable}):</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {Object.entries(district.extra.propertyTypes).sort((a, b) => (b[1] as number) - (a[1] as number)).map(([type, count]) => (
-                              <span key={type} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200/80">
-                                {PROPERTY_TYPE_LABELS[type] || type}
-                                <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-[#8D6A28] text-white text-[9px] font-bold leading-none">
-                                  {count}
-                                </span>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="space-y-1">
-                        <div className="text-[11px] font-black text-slate-700 flex items-center gap-1">
-                          <Users className="w-3.5 h-3.5 text-[#8D6A28]" />
-                          <span>ملخص العقارات:</span>
-                        </div>
-                        <p className="text-xs text-slate-600 font-medium bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
-                          {district.extra.suitableFor}
-                        </p>
-                      </div>
-
                       {district.extra.nearbyServices.length > 0 && (
                         <div className="space-y-1.5 pt-1">
                           <div className="text-[11px] font-black text-slate-700 flex items-center gap-1">

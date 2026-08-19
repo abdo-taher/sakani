@@ -104,17 +104,27 @@ if command -v node &> /dev/null && command -v npm &> /dev/null; then
         echo "📝 Creating .htaccess for SPA routing..."
         cat > dist/.htaccess << 'HTACCESS'
 RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)/$ /$1 [L,R=301]
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^ index.html [L]
+
+AddDefaultCharset UTF-8
 <IfModule mod_headers.c>
+    <FilesMatch "\.(html|htm|php)$">
+        Header set Content-Type "text/html; charset=UTF-8"
+    </FilesMatch>
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
+
+# If static pre-rendered folder with index.html exists, serve it
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteCond %{REQUEST_FILENAME}/index.html -f
+RewriteRule ^(.*)$ $1/index.html [L]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.html [L]
+
 <IfModule mod_expires.c>
     ExpiresActive On
     ExpiresByType text/css "access plus 1 year"

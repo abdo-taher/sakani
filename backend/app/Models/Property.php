@@ -213,7 +213,12 @@ class Property extends Model
         return $query->where(function ($q) {
             $q->where('submission_status', 'approved')
               ->orWhereNull('submission_status');
-        })->whereNotIn('status', ['pending_review', 'rejected']);
+        })
+        ->whereNotIn('status', ['pending_review', 'rejected'])
+        ->where(function ($q) {
+            $q->where('is_uploading', false)
+              ->orWhereNull('is_uploading');
+        });
     }
 
     /**
