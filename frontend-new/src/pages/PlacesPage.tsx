@@ -35,93 +35,79 @@ interface DistrictExtendedInfo {
   category: 'luxury' | 'student' | 'compounds' | 'coastal' | 'central';
   avgRent: string;
   avgSale: string;
+  rentPrices: number[];
+  salePrices: number[];
   suitableFor: string;
   landmarks: string[];
   features: string[];
+  nearbyServices: string[];
+  propertyTypes: Record<string, number>;
+  finishingTypes: Record<string, number>;
+  avgArea: number;
+  avgRooms: number;
 }
 
-const DISTRICT_EXTRAS: Record<string, DistrictExtendedInfo> = {
-  'district-5': {
-    tag: 'سكن فاخر وراقي',
-    tagColor: 'bg-amber-100 text-amber-900 border-amber-200',
-    category: 'luxury',
-    avgRent: '4,500 - 9,000 ج.م / شهر',
-    avgSale: '2.5 - 5.5 مليون ج.م',
-    suitableFor: 'العائلات، الأطباء، والمهندسين والباحثين عن هدوء ورقي',
-    landmarks: ['نادي المستقبل الرياضي', 'الحديقة الدولية', 'مجمع المدارس الدولية', 'على بُعد 5 دقائق من الشاطئ'],
-    features: ['شوارع عريضة وتشجير كثيف', 'مباني حديثة ومصاعد حديثة', 'هدوء تام وخصوصية عالية', 'قرب الخدمات ومراكز التسوق']
-  },
-  'district-4': {
-    tag: 'هادئ ومثالي للعائلات',
-    tagColor: 'bg-emerald-100 text-emerald-900 border-emerald-200',
-    category: 'luxury',
-    avgRent: '4,000 - 8,000 ج.م / شهر',
-    avgSale: '2.2 - 4.8 مليون ج.م',
-    suitableFor: 'العائلات الكبيرة والأسر الباحثة عن سكن متكامل قريب من المدارس',
-    landmarks: ['مدرسة دمياط التجريبية', 'المجمع الطبي التخصصي', 'مسجد التوحيد', 'حدائق ومساحات لعب للأطفال'],
-    features: ['مساحات خضراء واسعة', 'قريب من قلب المدينة والشاطئ', 'أمان عالي ومداخل ميسرة', 'توافر كافة الخدمات اليومية']
-  },
-  'district-central': {
-    tag: 'القلب التجاري والإداري',
-    tagColor: 'bg-blue-100 text-blue-900 border-blue-200',
-    category: 'central',
-    avgRent: '3,500 - 7,500 ج.م / شهر',
-    avgSale: '2.0 - 4.5 مليون ج.م',
-    suitableFor: 'التجار، أصحاب الشركات، العيادات، والموظفين',
-    landmarks: ['جهاز تنمية مدينة دمياط الجديدة', 'مجمع البنوك والشركات', 'سيتي مول والمول التجاري', 'موقف المواصلات الرئيسي'],
-    features: ['شريان الحركة والنشاط بالمدينة', 'أعلى كثافة تجارية وحركة زبائن', 'مواصلات مباشرة لكافة الأحياء', 'بنوك ومصالح حكومية']
-  },
-  'district-distinguished': {
-    tag: 'فيلات وقصور دوبلكس',
-    tagColor: 'bg-purple-100 text-purple-900 border-purple-200',
-    category: 'luxury',
-    avgRent: '6,000 - 15,000 ج.م / شهر',
-    avgSale: '4.5 - 12.0 مليون ج.م',
-    suitableFor: 'رجال الأعمال، صفوة المجتمع، وعشاق الفخامة والاستقلالية',
-    landmarks: ['منطقة الفيلات الفاخرة', 'طريق الكورنيش الشمالي', 'نوادي خاصة', 'حدائق خاصة مستقلة'],
-    features: ['تصميمات معمارية فخمة', 'أقصى درجات الخصوصية والأمان', 'إطلالات بحرية وخضراء مفتوحة', 'مساحات أراضي واسعة']
-  },
-  'district-chalets': {
-    tag: 'شاطئي وسياحي مصيفي',
-    tagColor: 'bg-cyan-100 text-cyan-900 border-cyan-200',
-    category: 'coastal',
-    avgRent: '5,000 - 12,000 ج.م / شهر',
-    avgSale: '3.0 - 7.0 مليون ج.م',
-    suitableFor: 'المصطافين، الإيجار الموسمي، والاستثمار السياحي عالي العائد',
-    landmarks: ['شاطئ دمياط الجديدة العام والخاص', 'كورنيش البحر الأبيض المتوسط', 'مطاعم وكافيهات شاطئية', 'ممشى الدراجات الرياضي'],
-    features: ['مواجهة للبحر مباشرة', 'عائد إيجاري صيفي ممتاز', 'إطلالات بحرية خلابة', 'أجواء مصيفية راقية طوال العام']
-  },
-  'district-sakan-misr': {
-    tag: 'كمبوندات سكنية متكاملة',
-    tagColor: 'bg-orange-100 text-orange-900 border-orange-200',
-    category: 'compounds',
-    avgRent: '3,000 - 6,000 ج.م / شهر',
-    avgSale: '1.4 - 2.8 مليون ج.م',
-    suitableFor: 'الشباب المتزوجين حديثاً، طلبة جامعة دمياط وحورس، والمستثمرين',
-    landmarks: ['بوابات أمن وحراسة 24 ساعة', 'جامعة حورس الخاصة', 'جامعة دمياط الجديدة', 'مول ومسجد سكن مصر'],
-    features: ['مجمعات مسورة بحراسة أمنية', 'تشطيبات حديثة ومساحات موحدة', 'قرب فائق من الجامعات والمواصلات', 'سوق إيجار نشط جداً للطلبة']
-  },
-  'district-dar-misr': {
-    tag: 'كمبوند راقي مغلق',
-    tagColor: 'bg-rose-100 text-rose-900 border-rose-200',
-    category: 'compounds',
-    avgRent: '3,800 - 7,000 ج.م / شهر',
-    avgSale: '1.8 - 3.4 مليون ج.م',
-    suitableFor: 'العائلات والمهندسين وأساتذة الجامعات',
-    landmarks: ['موقع 1 و 2 دار مصر', 'حدائق مركزية داخل الكمبوند', 'مراكز خدمات تجارية', 'مصاعد وسياج شجري'],
-    features: ['لاندسكيب ومساحات خضراء واسعة', 'بوابات إلكترونية ومصاعد', 'خصوصية عائلية ممتازة', 'عمارات نموذجية راقية']
-  },
-  'district-university': {
-    tag: 'منطقة الجامعات وسكن الطلاب',
-    tagColor: 'bg-indigo-100 text-indigo-900 border-indigo-200',
-    category: 'student',
-    avgRent: '1,500 - 4,000 ج.م / غرفة',
-    avgSale: '1.6 - 3.2 مليون ج.م',
-    suitableFor: 'طلبة وطالبات جامعة دمياط وجامعة حورس والمغتربين',
-    landmarks: ['جامعة دمياط المجمعة', 'جامعة حورس الدولية', 'المكتبات والمطاعم الطلابية', 'محطة السرفيس الجامعي'],
-    features: ['سير على الأقدام إلى الكليات', 'شقق مقسمة لغرف مستقلة ومفروشة', 'إنترنت سريع وخدمات طلابية', 'أمان عالي ومباني مخصصة']
-  }
+// Helper: format price in Egyptian pounds
+const formatPrice = (price: number): string => {
+  if (price >= 1_000_000) return `${(price / 1_000_000).toFixed(1)} مليون ج.م`;
+  if (price >= 1_000) return `${Math.round(price / 1_000)},${String(price % 1_000).padStart(3, '0').slice(0, 3)} ج.م`;
+  return `${price.toLocaleString('ar-EG')} ج.م`;
 };
+
+// Arabic labels for property types
+const PROPERTY_TYPE_LABELS: Record<string, string> = {
+  apartment: 'شقة', villa: 'فيلا', duplex: 'دوبلكس', studio: 'ستوديو', penthouse: 'بنتهاوس', chalet: 'شاليه', office: 'مكتب', clinic: 'عيادة', shop: 'محل', warehouse: 'مستودع', land: 'أرض', townhouse: 'تاون هاوس', twin_house: 'توين هاوس', mansion: 'قصر', other: 'أخرى',
+};
+
+const FINISHING_LABELS: Record<string, string> = {
+  super_lux: 'سوبر لوكس', lux: 'لوكس', semi_finished: 'نصف تشطيب', red_brick: 'بناء أحمر', furnished: 'مفروش',
+};
+
+// Generate dynamic category & tag from property data
+function deriveCategoryAndTag(props: Property[]): { category: DistrictExtendedInfo['category']; tag: string; tagColor: string; suitableFor: string } {
+  const typeCounts: Record<string, number> = {};
+  props.forEach(p => {
+    const t = p.property_type || 'apartment';
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  });
+  const topType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'apartment';
+
+  const rentCount = props.filter(p => p.operation_type === 'rent').length;
+  const saleCount = props.filter(p => p.operation_type === 'sale').length;
+
+  let category: DistrictExtendedInfo['category'] = 'central';
+  let tag = '';
+  let tagColor = 'bg-slate-100 text-slate-800 border-slate-200';
+
+  if (topType === 'villa' || topType === 'duplex' || topType === 'penthouse' || topType === 'mansion') {
+    category = 'luxury';
+    tag = topType === 'villa' ? 'فيلات وقصور فاخرة' : topType === 'duplex' ? 'دوبلكس راقية' : 'سكن فاخر';
+    tagColor = 'bg-amber-100 text-amber-900 border-amber-200';
+  } else if (topType === 'chalet') {
+    category = 'coastal';
+    tag = 'شاطئي ومصيفي';
+    tagColor = 'bg-cyan-100 text-cyan-900 border-cyan-200';
+  } else if (rentCount > saleCount * 2) {
+    category = 'student';
+    tag = 'سكن طلابي نشط';
+    tagColor = 'bg-indigo-100 text-indigo-900 border-indigo-200';
+  } else if (topType === 'apartment' && saleCount > rentCount) {
+    category = 'compounds';
+    tag = 'كمبوندات سكنية';
+    tagColor = 'bg-orange-100 text-orange-900 border-orange-200';
+  } else {
+    category = 'central';
+    tag = 'منطقة سكنية نشطة';
+    tagColor = 'bg-blue-100 text-blue-900 border-blue-200';
+  }
+
+  const suitableParts: string[] = [];
+  if (rentCount > 0) suitableParts.push(`${rentCount} إيجار`);
+  if (saleCount > 0) suitableParts.push(`${saleCount} بيع`);
+  const suitableFor = suitableParts.length > 0 ? `${suitableParts.join(' / ')} — ${typeCounts[topType] || 0} وحدة ${PROPERTY_TYPE_LABELS[topType] || topType}` : 'بيانات ديناميكية من العقارات المتاحة';
+
+  return { category, tag, tagColor, suitableFor };
+}
 
 export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts, properties: propProperties }) => {
   const navigate = useNavigate();
@@ -288,10 +274,10 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
     fetchBest();
   }, []);
 
-  // Compute live property counts and dynamic info for each district
+  // Compute live property counts and ALL dynamic info from API data
   const enhancedDistricts = useMemo(() => {
     return districts.map((district) => {
-      // Find matching properties
+      // Find matching properties for this district
       const matchingProps = properties.filter((p) => {
         const dId = String(district.id || '').toLowerCase();
         const dName = String(district.name || '').toLowerCase();
@@ -300,26 +286,92 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
         return pLoc === dId || pDist === dName || pDist.includes(dName) || dName.includes(pDist);
       });
 
-      const rentCount = matchingProps.filter(p => p.operation_type === 'rent').length;
-      const saleCount = matchingProps.filter(p => p.operation_type === 'sale').length;
+      const rentProps = matchingProps.filter(p => p.operation_type === 'rent');
+      const saleProps = matchingProps.filter(p => p.operation_type === 'sale');
+      const rentCount = rentProps.length;
+      const saleCount = saleProps.length;
 
-      const extra = DISTRICT_EXTRAS[district.id] || {
-        tag: 'منطقة سكنية متميزة',
-        tagColor: 'bg-slate-100 text-slate-800 border-slate-200',
-        category: 'luxury' as const,
-        avgRent: '3,000 - 7,000 ج.م / شهر',
-        avgSale: '1.8 - 4.5 مليون ج.م',
-        suitableFor: 'العائلات والمستثمرين',
-        landmarks: ['شوارع رئيسية ومساحات خضراء', 'قريب من الخدمات العامة والمحلات'],
-        features: ['بيئة سكنية هادئة', 'خدمات متكاملة']
-      };
+      // Dynamic prices from actual property data
+      const rentPrices = rentProps.map(p => p.price).filter(p => p > 0).sort((a, b) => a - b);
+      const salePrices = saleProps.map(p => p.price).filter(p => p > 0).sort((a, b) => a - b);
+
+      const avgRent = rentPrices.length > 0
+        ? rentPrices.length === 1
+          ? `${formatPrice(rentPrices[0])} / شهر`
+          : `${formatPrice(rentPrices[0])} - ${formatPrice(rentPrices[rentPrices.length - 1])} / شهر`
+        : null;
+      const avgSale = salePrices.length > 0
+        ? salePrices.length === 1
+          ? formatPrice(salePrices[0])
+          : `${formatPrice(salePrices[0])} - ${formatPrice(salePrices[salePrices.length - 1])}`
+        : null;
+
+      // Property types breakdown
+      const propertyTypes: Record<string, number> = {};
+      matchingProps.forEach(p => {
+        const t = p.property_type || 'apartment';
+        propertyTypes[t] = (propertyTypes[t] || 0) + 1;
+      });
+
+      // Finishing types breakdown
+      const finishingTypes: Record<string, number> = {};
+      matchingProps.forEach(p => {
+        const f = p.finishing || 'super_lux';
+        finishingTypes[f] = (finishingTypes[f] || 0) + 1;
+      });
+
+      // Average area & rooms
+      const areas = matchingProps.map(p => p.area).filter(a => a > 0);
+      const rooms = matchingProps.map(p => p.rooms).filter(r => r > 0);
+      const avgArea = areas.length > 0 ? Math.round(areas.reduce((s, a) => s + a, 0) / areas.length) : 0;
+      const avgRooms = rooms.length > 0 ? Math.round(rooms.reduce((s, r) => s + r, 0) / rooms.length) : 0;
+
+      // Nearby services from amenities
+      const allAmenities = new Set<string>();
+      matchingProps.forEach(p => {
+        if (Array.isArray(p.amenities)) {
+          p.amenities.forEach((a: any) => {
+            const name = typeof a === 'string' ? a : (a.name || a.slug || '');
+            if (name) allAmenities.add(name);
+          });
+        }
+      });
+      const nearbyServices = Array.from(allAmenities).slice(0, 6);
+
+      // Dynamic category and tag from property data
+      const { category, tag, tagColor, suitableFor } = deriveCategoryAndTag(matchingProps);
+
+      // Features derived from data
+      const features: string[] = [];
+      if (avgArea > 0) features.push(`مساحة متوسطة ${avgArea} م²`);
+      if (avgRooms > 0) features.push(`${avgRooms} غرف في المتوسط`);
+      const topFinishing = Object.entries(finishingTypes).sort((a, b) => b[1] - a[1])[0];
+      if (topFinishing) features.push(`معظم التشطيبات: ${FINISHING_LABELS[topFinishing[0]] || topFinishing[0]}`);
+      const furnishedCount = matchingProps.filter(p => p.furnishing === 'furnished').length;
+      if (furnishedCount > 0) features.push(`${furnishedCount} وحدة مفروشة`);
 
       return {
         ...district,
         totalAvailable: matchingProps.length || district.available_count || 0,
         rentCount,
         saleCount,
-        extra
+        extra: {
+          tag,
+          tagColor,
+          category,
+          avgRent: avgRent || 'لا توجد بيانات',
+          avgSale: avgSale || 'لا توجد بيانات',
+          rentPrices,
+          salePrices,
+          suitableFor,
+          landmarks: nearbyServices.length > 0 ? nearbyServices : ['بيانات المعالمproximity من العقارات'],
+          features,
+          nearbyServices,
+          propertyTypes,
+          finishingTypes,
+          avgArea,
+          avgRooms,
+        }
       };
     });
   }, [districts, properties]);
@@ -522,43 +574,82 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
                         {district.description}
                       </p>
 
-                      {/* Estimated Price Range Box */}
+                      {/* Dynamic Price Range Box */}
                       <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 space-y-2 text-xs">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-500">متوسط الإيجار:</span>
+                          <span className="font-bold text-slate-500">اسعار الايجار ({district.rentCount}):</span>
                           <span className="font-black text-[#8D6A28]">{district.extra.avgRent}</span>
                         </div>
                         <div className="flex items-center justify-between border-t border-slate-200/50 pt-1.5">
-                          <span className="font-bold text-slate-500">متوسط سعر البيع:</span>
+                          <span className="font-bold text-slate-500">اسعار البيع ({district.saleCount}):</span>
                           <span className="font-black text-slate-900">{district.extra.avgSale}</span>
                         </div>
                       </div>
 
-                      {/* Suitable For */}
+                      {/* Dynamic Stats: Area & Rooms */}
+                      {(district.extra.avgArea > 0 || district.extra.avgRooms > 0) && (
+                        <div className="flex items-center gap-3 text-[11px] font-bold text-slate-600">
+                          {district.extra.avgArea > 0 && <span className="px-2 py-1 rounded-lg bg-blue-50 text-blue-700">مساحة متوسطة {district.extra.avgArea} م²</span>}
+                          {district.extra.avgRooms > 0 && <span className="px-2 py-1 rounded-lg bg-green-50 text-green-700">{district.extra.avgRooms} غرف</span>}
+                        </div>
+                      )}
+
+                      {/* Property Types Breakdown */}
+                      {Object.keys(district.extra.propertyTypes).length > 0 && (
+                        <div className="space-y-1.5">
+                          <div className="text-[11px] font-black text-slate-700 flex items-center gap-1">
+                            <Building2 className="w-3.5 h-3.5 text-[#8D6A28]" />
+                            <span>أنواع العقارات المتاحة ({district.totalAvailable}):</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {Object.entries(district.extra.propertyTypes).sort((a, b) => (b[1] as number) - (a[1] as number)).map(([type, count]) => (
+                              <span key={type} className="px-2.5 py-1 rounded-lg bg-[#8D6A28]/10 text-[#8D6A28] text-[11px] font-bold">
+                                {PROPERTY_TYPE_LABELS[type] || type} ({count})
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Suitable For (dynamic) */}
                       <div className="space-y-1">
                         <div className="text-[11px] font-black text-slate-700 flex items-center gap-1">
                           <Users className="w-3.5 h-3.5 text-[#8D6A28]" />
-                          <span>الفئة الأكثر ملائمة:</span>
+                          <span>ملخص العقارات:</span>
                         </div>
                         <p className="text-xs text-slate-600 font-medium bg-amber-50/60 text-amber-950 p-2.5 rounded-xl border border-amber-200/50">
                           {district.extra.suitableFor}
                         </p>
                       </div>
 
-                      {/* Key Landmarks */}
-                      {district.extra.landmarks.length > 0 && (
+                      {/* Nearby Services from Amenities */}
+                      {district.extra.nearbyServices.length > 0 && (
                         <div className="space-y-1.5 pt-1">
                           <div className="text-[11px] font-black text-slate-700 flex items-center gap-1">
                             <Landmark className="w-3.5 h-3.5 text-[#8D6A28]" />
-                            <span>أهم المعالم والخدمات القريبة:</span>
+                            <span>المرافق والخدمات القريبة:</span>
                           </div>
                           <div className="flex flex-wrap gap-1.5">
-                            {district.extra.landmarks.map((landmark, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-bold"
-                              >
-                                • {landmark}
+                            {district.extra.nearbyServices.map((service, idx) => (
+                              <span key={idx} className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-100">
+                                • {service}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Features from data */}
+                      {district.extra.features.length > 0 && (
+                        <div className="space-y-1.5 pt-1">
+                          <div className="text-[11px] font-black text-slate-700 flex items-center gap-1">
+                            <Sparkles className="w-3.5 h-3.5 text-[#8D6A28]" />
+                            <span>المميزات والتفاصيل:</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {district.extra.features.map((feat, idx) => (
+                              <span key={idx} className="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-[11px] font-bold border border-purple-100">
+                                • {feat}
                               </span>
                             ))}
                           </div>
