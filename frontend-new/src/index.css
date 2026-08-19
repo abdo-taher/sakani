@@ -93,6 +93,107 @@
   backdrop-filter: blur(12px);
 }
 
+/* Enterprise Luxury Animations */
+@keyframes enterpriseGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.96);
+    filter: drop-shadow(0 0 16px rgba(212, 175, 55, 0.3));
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 32px rgba(212, 175, 55, 0.65));
+  }
+}
+
+@keyframes enterpriseOrbit {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes enterpriseOrbitReverse {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes enterpriseShimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(30%);
+  }
+  100% {
+    transform: translateX(180%);
+  }
+}
+
+@keyframes enterprisePulseFast {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes strokeDraw {
+  0% {
+    stroke-dashoffset: 180;
+  }
+  50% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -180;
+  }
+}
+
+.animate-enterprise-glow {
+  animation: enterpriseGlow 3s ease-in-out infinite;
+}
+
+.animate-enterprise-orbit {
+  animation: enterpriseOrbit 7s linear infinite;
+}
+
+.animate-enterprise-orbit-reverse {
+  animation: enterpriseOrbitReverse 10s linear infinite;
+}
+
+.animate-enterprise-shimmer {
+  animation: enterpriseShimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-float-gentle {
+  animation: floatGentle 2.5s ease-in-out infinite;
+}
+
+.animate-stroke-draw {
+  stroke-dasharray: 180;
+  animation: strokeDraw 3.2s ease-in-out infinite;
+}
+
 /* Performance optimizations */
 .cv-auto {
   content-visibility: auto;

@@ -20,6 +20,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { ModernStateFeedback, LocationSectionSkeleton, PropertyGridSkeleton } from '../components/Skeletons';
+import { PageLoader } from '../components/PageLoader';
 import { PropertyCard } from '../components/PropertyCard';
 import { resolveImageUrl, FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia } from '../utils/media';
 import { ApiService } from '../services/apiService';
@@ -410,12 +411,17 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50/70 pb-20 pt-4" dir="rtl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <LocationSectionSkeleton />
-          <div className="flex flex-col items-center justify-center gap-4 mt-8">
-            <Loader2 className="w-8 h-8 text-[#8D6A28] animate-spin" />
-            <p className="text-sm font-bold text-slate-500">جاري تحميل بيانات الأحياء والعقارات...</p>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <PageLoader 
+            fullScreen={false}
+            message="جاري تحميل دليل أحياء دمياط الجديدة..." 
+            subMessage="نستعرض لك أفضل المناطق والفرص السكنية والاستثمارية 🏙️"
+            stages={[
+              'جاري الاتصال بقاعدة بيانات الأحياء والمناطق...',
+              'جاري استخراج متوسط الأسعار وأحدث العقارات المتاحة...',
+              'جاري تحضير الخرائط التفاعلية ومعاينات الأحياء...'
+            ]}
+          />
         </div>
       </div>
     );
