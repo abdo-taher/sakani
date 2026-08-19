@@ -18,12 +18,18 @@ class FeedbackCampaign extends Model
         'question',
         'options',
         'target_page',
+        'start_date',
+        'end_date',
+        'delay_seconds',
         'is_active',
     ];
 
     protected $casts = [
-        'options'   => 'array',
-        'is_active' => 'boolean',
+        'options'       => 'array',
+        'is_active'     => 'boolean',
+        'start_date'    => 'datetime',
+        'end_date'      => 'datetime',
+        'delay_seconds' => 'integer',
     ];
 
     public function responses()

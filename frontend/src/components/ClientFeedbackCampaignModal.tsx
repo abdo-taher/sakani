@@ -46,26 +46,51 @@ export const ClientFeedbackCampaignModal: React.FC = () => {
       }
     }
 
-    // Respect admin-configured feedback delay time (e.g. 1m = 60s, 10m = 600s)
-    const delaySeconds = settings?.feedback_delay_seconds ?? 60;
-    const delayMs = Math.max(3000, delaySeconds * 1000);
+    let isMounted = true;
+    let timer: any = null;
 
-    const timer = setTimeout(() => {
-      if (StorageService.isAdminLoggedIn()) return;
-      if (window.location.hash.startsWith('#/admin') || window.location.pathname.startsWith('/admin')) return;
+    const initCampaign = async () => {
+      try {
+        const page = window.location.pathname.replace(/^\//, '') || 'home';
+        let camp = await ApiService.getActiveFeedbackCampaign(page);
+        if (!camp) {
+          camp = StorageService.getActiveFeedbackCampaign(page);
+        }
 
-      const camp = StorageService.getActiveFeedbackCampaign();
-      if (camp) {
-        // Also auto-fill saved client phone if available
-        const savedPhone = StorageService.getClientPhone();
-        if (savedPhone) setClientPhone(savedPhone);
+        if (!camp || !isMounted) return;
 
-        setActiveCampaign(camp);
-        setIsOpen(true);
+        // Check if already answered or dismissed
+        if (StorageService.hasClientAnsweredCampaign(camp.id)) {
+          return;
+        }
+
+        // Use campaign-specific delay or fallback to settings
+        const delaySeconds = camp.delay_seconds || settings?.feedback_delay_seconds || 60;
+        const delayMs = Math.max(3000, delaySeconds * 1000);
+
+        timer = setTimeout(() => {
+          if (!isMounted) return;
+          if (StorageService.isAdminLoggedIn()) return;
+          if (window.location.hash.startsWith('#/admin') || window.location.pathname.startsWith('/admin')) return;
+
+          // Auto-fill saved client phone if available
+          const savedPhone = StorageService.getClientPhone();
+          if (savedPhone) setClientPhone(savedPhone);
+
+          setActiveCampaign(camp);
+          setIsOpen(true);
+        }, delayMs);
+      } catch (err) {
+        console.warn('Feedback campaign init error:', err);
       }
-    }, delayMs);
+    };
 
-    return () => clearTimeout(timer);
+    initCampaign();
+
+    return () => {
+      isMounted = false;
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const handleDismiss = () => {
@@ -142,11 +167,16 @@ export const ClientFeedbackCampaignModal: React.FC = () => {
         {/* Top Decorative Header */}
         <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#8D6A28] p-5 sm:p-6 text-white relative">
           <button
-            onClick={handleDismiss}
-            className="absolute top-4 left-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDismiss();
+            }}
+            className="absolute top-4 left-4 z-50 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer active:scale-95 shadow-md backdrop-blur-sm"
             aria-label="إغلاق"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-3">

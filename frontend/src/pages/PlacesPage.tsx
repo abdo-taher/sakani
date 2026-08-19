@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { LocationDistrict, Property } from '../types';
+import { SEOHead } from '../components/SEOHead';
+import { buildLocationSchema, buildBreadcrumbsSchema, SITE_BASE_URL } from '../utils/seo';
 import { 
   MapPin, 
   Search, 

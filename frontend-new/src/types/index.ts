@@ -337,6 +337,9 @@ export interface FeedbackCampaign {
   question: string;
   options?: FeedbackCampaignOption[];
   target_page?: 'all' | 'home' | 'properties' | 'reservations';
+  start_date?: string | null;
+  end_date?: string | null;
+  delay_seconds?: number;
   is_active: boolean;
   created_at: string;
   responses_count?: number;

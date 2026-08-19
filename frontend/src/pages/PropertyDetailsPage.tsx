@@ -11,6 +11,16 @@ import { PropertyVideoThumbnail } from '../components/PropertyVideoThumbnail';
 import { PropertyDetailSkeleton, ModernStateFeedback } from '../components/Skeletons';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
 import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia, resolveImageUrl } from '../utils/media';
+import { SEOHead } from '../components/SEOHead';
+import { 
+  generatePropertyTitle, 
+  generatePropertyDescription, 
+  generatePropertyCanonicalUrl, 
+  generatePropertyAltText, 
+  buildRealEstateListingSchema, 
+  buildBreadcrumbsSchema, 
+  buildVideoSchema 
+} from '../utils/seo';
 import { 
   MapPin, 
   BedDouble, 
@@ -411,24 +421,50 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const statusBadge = getStatusBadge();
   const isReservable = property.status === 'available';
 
+  // Structured Data & Breadcrumb schemas for SEO
+  const breadcrumbItems = [
+    { name: 'الرئيسية', url: '/' },
+    { name: property.operation_type === 'rent' ? 'شقق للإيجار' : 'عقارات للبيع', url: `/properties?operation=${property.operation_type}` },
+    { name: property.district_name || 'دمياط الجديدة', url: `/places/${property.location_id}` },
+    { name: property.title, url: generatePropertyCanonicalUrl(property) },
+  ];
+
+  const propertySchemas = [
+    buildRealEstateListingSchema(property),
+    buildBreadcrumbsSchema(breadcrumbItems),
+    buildVideoSchema(property),
+  ].filter(Boolean);
+
   return (
     <div className="min-h-screen bg-slate-50/60 pb-28 sm:pb-16" dir="rtl">
+      <SEOHead
+        title={generatePropertyTitle(property)}
+        description={generatePropertyDescription(property)}
+        canonical={generatePropertyCanonicalUrl(property)}
+        image={property.images?.[0] ? resolveImageUrl(property.images[0]) : undefined}
+        type="article"
+        schema={propertySchemas}
+      />
       
       {/* Breadcrumb Navigation Bar */}
       <div className="bg-white border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2 text-slate-500 overflow-x-auto">
+          <nav aria-label="مسار التنقل" className="flex items-center gap-2 text-slate-500 overflow-x-auto">
             <Link to="/" className="hover:text-[#8D6A28] flex items-center gap-1 shrink-0 transition">
               <Home className="w-3.5 h-3.5" />
               <span>الرئيسية</span>
             </Link>
             <span>/</span>
-            <Link to="/properties" className="hover:text-[#8D6A28] shrink-0 transition">
-              العقارات
+            <Link to={`/properties?operation=${property.operation_type}`} className="hover:text-[#8D6A28] shrink-0 transition">
+              {property.operation_type === 'rent' ? 'شقق للإيجار' : 'عقارات للبيع'}
             </Link>
             <span>/</span>
-            <span className="text-slate-900 font-bold truncate max-w-xs">{property.title}</span>
-          </div>
+            <Link to={`/places/${property.location_id}`} className="hover:text-[#8D6A28] shrink-0 transition">
+              {property.district_name || 'دمياط الجديدة'}
+            </Link>
+            <span>/</span>
+            <span className="text-slate-900 font-bold truncate max-w-xs" aria-current="page">{property.title}</span>
+          </nav>
 
           <div className="flex items-center gap-2 shrink-0">
             <button
@@ -521,8 +557,11 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 >
                   <img
                     src={resolveImageUrl(images[currentImageIndex])}
-                    alt={property.title}
+                    alt={generatePropertyAltText(property, undefined, currentImageIndex)}
+                    width={1200}
+                    height={675}
                     className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
+                    loading={currentImageIndex === 0 ? 'eager' : 'lazy'}
                     onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                   />
 

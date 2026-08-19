@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { SakaniLogo } from './SakaniLogo';
 import { ActiveTab } from './BottomNav';
 import { NotificationCenter } from './NotificationCenter';
@@ -152,19 +153,20 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between h-16 sm:h-20">
           
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => onSelectTab('home')}>
+          <Link to="/" className="flex items-center gap-3 cursor-pointer">
             <SakaniLogo size="md" />
-          </div>
+          </Link>
 
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-1 lg:gap-2">
             {navLinks.map((link) => {
               const isActive = currentTab === link.id;
               const Icon = link.icon;
+              const linkPath = link.id === 'home' ? '/' : (link.id === 'search' ? '/properties' : (link.id === 'places' ? '/places' : (link.id === 'reservations' ? '/my-reservations' : '/contact')));
               return (
-                <button
+                <Link
                   key={link.id}
-                  onClick={() => onSelectTab(link.id)}
+                  to={linkPath}
                   className={`px-3.5 lg:px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                     isActive
                       ? 'bg-[#8D6A28]/10 text-[#8D6A28]'
@@ -173,17 +175,17 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Icon className="w-4 h-4 text-[#8D6A28]" />
                   <span>{link.label}</span>
-                </button>
+                </Link>
               );
             })}
 
-            <button
-              onClick={onOpenNeedModal}
+            <Link
+              to="/need-property"
               className="px-3.5 py-2 text-sm font-bold text-slate-600 hover:text-[#8D6A28] rounded-xl hover:bg-slate-50 transition flex items-center gap-1.5 cursor-pointer"
             >
               <HelpCircle className="w-4 h-4 text-[#8D6A28]" />
               طلب عقار
-            </button>
+            </Link>
           </nav>
 
           {/* Right Actions / Buttons */}

@@ -20,6 +20,8 @@ import { ApiService } from '../services/apiService';
 import { StorageService } from '../services/storageService';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
 import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia, resolveImageUrl } from '../utils/media';
+import { SEOHead } from '../components/SEOHead';
+import { buildOrganizationSchema } from '../utils/seo';
 import { 
   Search, 
   MapPin, 
@@ -468,6 +470,12 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="space-y-0 animate-fade-in font-['Cairo'] text-slate-900 bg-white" dir="rtl">
+      <SEOHead
+        title="سكني | عقارات وشقق للبيع والإيجار في دمياط الجديدة"
+        description="منصة سكني العقارية الرائدة للبيع والشراء والإيجار وحجز الغرف في دمياط الجديدة والمناطق المميزة مع معاينات فورية وتجربة ذكية."
+        canonical="https://sakani.site/"
+        schema={buildOrganizationSchema(settings)}
+      />
       
       {/* ----------------- 0. ANNOUNCEMENT BANNER (From CMS) ----------------- */}
       {settings.announcement_enabled && settings.announcement_text && (

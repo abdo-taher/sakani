@@ -98,7 +98,7 @@ export const AdminStatisticsPage: React.FC = () => {
   const loadStats = async () => {
     setLoading(true);
     try {
-      const res = await ApiService.getDashboardData();
+      const res = await ApiService.getDashboardData(dateRange);
       if (res && res.counts) {
         setStatsData({
           counts: res.counts || {},

@@ -54,20 +54,43 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
     loadData();
   }, []);
 
-  const loadData = () => {
-    const props = StorageService.getProperties();
-    const inqs = StorageService.getInquiries();
-    setProperties(props);
-    setInquiries(inqs);
+  const loadData = async () => {
+    // 1. Instant local render
+    setProperties(StorageService.getProperties());
+    setInquiries(StorageService.getInquiries());
     setDistricts(StorageService.getDistricts());
     setVisitorStats(StorageService.getVisitorStats());
     setActivityLogs(StorageService.getActivityLogs());
     setMonthlyStats(StorageService.getMonthlyStats());
     setReferralStats(StorageService.getReferralStats());
 
-    // Try fetching live data from backend if available
-    ApiService.getDashboardData().then((res) => {
-      if (res) {
+    // 2. Fetch fresh live records from backend database
+    try {
+      const [dbProps, dbInqs, dbDistricts, dashRes, refRes] = await Promise.allSettled([
+        ApiService.getProperties(),
+        ApiService.getReservations(),
+        ApiService.getLocations(),
+        ApiService.getDashboardData(),
+        ApiService.getReferralStats(),
+      ]);
+
+      if (dbProps.status === 'fulfilled' && Array.isArray(dbProps.value)) {
+        setProperties(dbProps.value);
+        StorageService.saveProperties(dbProps.value);
+      }
+
+      if (dbInqs.status === 'fulfilled' && Array.isArray(dbInqs.value)) {
+        setInquiries(dbInqs.value);
+        StorageService.saveInquiries(dbInqs.value);
+      }
+
+      if (dbDistricts.status === 'fulfilled' && Array.isArray(dbDistricts.value)) {
+        setDistricts(dbDistricts.value);
+        StorageService.saveDistricts(dbDistricts.value);
+      }
+
+      if (dashRes.status === 'fulfilled' && dashRes.value) {
+        const res = dashRes.value;
         if (res.visitor_stats) {
           setVisitorStats((prev) => ({
             ...prev,
@@ -75,26 +98,29 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
             month_visitors: res.visitor_stats.month ?? prev.month_visitors,
             all_time_unique: res.visitor_stats.all_time ?? prev.all_time_unique,
             total_page_views: res.visitor_stats.total_visits ?? prev.total_page_views,
+            daily_breakdown: res.visitor_stats.daily_breakdown ?? prev.daily_breakdown,
           }));
+        }
+        if (res.monthly_stats && Array.isArray(res.monthly_stats)) {
+          setMonthlyStats(res.monthly_stats);
         }
         if (res.referral_stats) {
           setReferralStats(res.referral_stats);
         }
       }
-    }).catch(() => {});
 
-    // Also fetch dedicated referral stats to be doubly sure
-    ApiService.getReferralStats().then((res) => {
-      if (res && res.success) {
+      if (refRes.status === 'fulfilled' && refRes.value && refRes.value.success) {
         setReferralStats({
-          total_responses: res.total_responses || 0,
-          top_channel: res.top_channel,
-          channel_breakdown: res.channel_breakdown || [],
-          device_breakdown: res.device_breakdown || [],
-          recent_feedbacks: res.recent_feedbacks || [],
+          total_responses: refRes.value.total_responses || 0,
+          top_channel: refRes.value.top_channel,
+          channel_breakdown: refRes.value.channel_breakdown || [],
+          device_breakdown: refRes.value.device_breakdown || [],
+          recent_feedbacks: refRes.value.recent_feedbacks || [],
         });
       }
-    }).catch(() => {});
+    } catch (e) {
+      console.warn('Dashboard live load error:', e);
+    }
   };
 
   const availablePropertiesCount = properties.filter((p) => p.status === 'available').length;

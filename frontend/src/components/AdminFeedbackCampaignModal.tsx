@@ -48,6 +48,9 @@ export const AdminFeedbackCampaignModal: React.FC<AdminFeedbackCampaignModalProp
   const [type, setType] = useState<FeedbackCampaignType>('rating');
   const [question, setQuestion] = useState('');
   const [targetPage, setTargetPage] = useState<'all' | 'home' | 'properties' | 'reservations'>('all');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [delaySeconds, setDelaySeconds] = useState<number>(60);
   const [options, setOptions] = useState<Array<{ id: string; label: string }>>([
     { id: 'opt-1', label: 'ممتازة جداً وسريعة 🌟' },
     { id: 'opt-2', label: 'جيدة ومفيدة 👍' },
@@ -129,6 +132,9 @@ export const AdminFeedbackCampaignModal: React.FC<AdminFeedbackCampaignModalProp
       type,
       question: question.trim(),
       target_page: targetPage,
+      start_date: startDate.trim() || null,
+      end_date: endDate.trim() || null,
+      delay_seconds: delaySeconds || 60,
       is_active: true,
       options: type === 'choice' ? options.filter(o => o.label.trim().length > 0) : undefined,
     };
@@ -140,13 +146,16 @@ export const AdminFeedbackCampaignModal: React.FC<AdminFeedbackCampaignModalProp
     }
 
     setIsSubmitting(false);
-    showToast('تم إطلاق حملة الاستطلاع الجديدة بنجاح! ستظهر للعملاء الآن.');
+    showToast('تم إطلاق وجدولة حملة الاستطلاع بنجاح!');
 
     // Reset Form
     setTitle('');
     setDescription('');
     setQuestion('');
     setType('rating');
+    setStartDate('');
+    setEndDate('');
+    setDelaySeconds(60);
     setOptions([
       { id: 'opt-1', label: 'ممتازة جداً وسريعة 🌟' },
       { id: 'opt-2', label: 'جيدة ومفيدة 👍' },
@@ -312,15 +321,27 @@ export const AdminFeedbackCampaignModal: React.FC<AdminFeedbackCampaignModalProp
                           <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
                             {camp.title}
                           </h4>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            camp.is_active 
-                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
-                              : 'bg-slate-100 text-slate-600'
-                          }`}>
-                            {camp.is_active ? '🟢 نشط ويظهر للعملاء' : '⚪ متوقف'}
-                          </span>
+                          {(() => {
+                            const now = new Date();
+                            const isScheduledFuture = camp.start_date && new Date(camp.start_date) > now;
+                            const isExpired = camp.end_date && new Date(camp.end_date) < now;
+
+                            if (!camp.is_active) {
+                              return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">⚪ متوقف مؤقتاً</span>;
+                            }
+                            if (isExpired) {
+                              return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">🔴 منتهية الصلاحية</span>;
+                            }
+                            if (isScheduledFuture) {
+                              return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">⏳ مجدولة للمستقبل</span>;
+                            }
+                            return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">🟢 نشطة الآن للعملاء</span>;
+                          })()}
                           <span className="px-2 py-0.5 rounded-md bg-amber-50 text-[#8D6A28] text-[10px] font-bold">
                             {camp.type === 'rating' ? '⭐ تقييم نجوم' : camp.type === 'choice' ? '🔘 اختيار متعدد' : '📝 نص حر'}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 text-[10px] font-bold">
+                            ⏱️ ظهور بعد: {camp.delay_seconds ? (camp.delay_seconds >= 60 ? `${camp.delay_seconds / 60} دقيقة` : `${camp.delay_seconds} ثانية`) : 'دقيقة'}
                           </span>
                         </div>
                         {camp.description && (
@@ -329,6 +350,12 @@ export const AdminFeedbackCampaignModal: React.FC<AdminFeedbackCampaignModalProp
                         <p className="text-xs font-bold text-slate-700 bg-slate-50 p-2 rounded-xl border border-slate-100 mt-1">
                           ❓ السؤال: {camp.question}
                         </p>
+                        {(camp.start_date || camp.end_date) && (
+                          <div className="flex items-center gap-3 text-[11px] text-slate-500 font-mono bg-slate-50/70 p-1.5 px-2.5 rounded-lg border border-slate-100">
+                            {camp.start_date && <span>📅 البدء: {new Date(camp.start_date).toLocaleString('ar-EG')}</span>}
+                            {camp.end_date && <span>🏁 الانتهاء: {new Date(camp.end_date).toLocaleString('ar-EG')}</span>}
+                          </div>
+                        )}
                       </div>
 
                       {/* Stats & Actions */}
@@ -369,7 +396,7 @@ export const AdminFeedbackCampaignModal: React.FC<AdminFeedbackCampaignModalProp
                         )}
                       </div>
                       <span className="text-[11px] font-mono" dir="ltr">
-                        تاريخ الإطلاق: {new Date(camp.created_at).toLocaleDateString('ar-EG')}
+                        تاريخ الإنشاء: {new Date(camp.created_at).toLocaleDateString('ar-EG')}
                       </span>
                     </div>
                   </div>
@@ -494,6 +521,70 @@ export const AdminFeedbackCampaignModal: React.FC<AdminFeedbackCampaignModalProp
                 </div>
               )}
 
+              {/* Timing, Schedule & Target Page Settings */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <h5 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-[#8D6A28]" />
+                  <span>جدولة وتوقيت ظهور الاستطلاع (خاص بهذه الحملة):</span>
+                </h5>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Trigger Delay */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-700">تأخير الظهور بعد الدخول:</label>
+                    <select
+                      value={delaySeconds}
+                      onChange={(e) => setDelaySeconds(Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-white"
+                    >
+                      <option value={10}>بعد 10 ثوانٍ (فوري)</option>
+                      <option value={30}>بعد 30 ثانية</option>
+                      <option value={60}>بعد دقيقة واحدة (موصى به)</option>
+                      <option value={180}>بعد 3 دقائق</option>
+                      <option value={300}>بعد 5 دقائق</option>
+                      <option value={600}>بعد 10 دقائق</option>
+                    </select>
+                  </div>
+
+                  {/* Start Date */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-700">تاريخ بدء الظهور (اختياري):</label>
+                    <input
+                      type="datetime-local"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+
+                  {/* End Date */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-700">تاريخ انتهاء الظهور (اختياري):</label>
+                    <input
+                      type="datetime-local"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Target Page */}
+                <div className="space-y-1 pt-1">
+                  <label className="text-[11px] font-bold text-slate-700">الصفحة المستهدفة للظهور:</label>
+                  <select
+                    value={targetPage}
+                    onChange={(e) => setTargetPage(e.target.value as any)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-white"
+                  >
+                    <option value="all">كافة صفحات المنصة (عام)</option>
+                    <option value="home">الصفحة الرئيسية فقط</option>
+                    <option value="properties">صفحة تصفح وقائمة العقارات</option>
+                    <option value="reservations">صفحة طلبات الحجز والمعاينات</option>
+                  </select>
+                </div>
+              </div>
+
               {/* Submit */}
               <div className="pt-3">
                 <button
@@ -502,7 +593,7 @@ export const AdminFeedbackCampaignModal: React.FC<AdminFeedbackCampaignModalProp
                   className="w-full py-3.5 px-4 rounded-2xl bg-[#8D6A28] hover:bg-[#73541D] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
-                  <span>{isSubmitting ? 'جاري الإطلاق...' : 'إطلاق الحملة الآن للعملاء'}</span>
+                  <span>{isSubmitting ? 'جاري الإطلاق...' : 'إطلاق وجدولة الحملة الآن للعملاء'}</span>
                 </button>
               </div>
             </form>

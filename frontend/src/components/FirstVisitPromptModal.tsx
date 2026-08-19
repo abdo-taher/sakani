@@ -210,9 +210,14 @@ export const FirstVisitPromptModal: React.FC = () => {
 
           {/* Close button */}
           <button 
-            onClick={() => handleDismiss(false)}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDismiss(false);
+            }}
             aria-label="إغلاق"
-            className="absolute top-4 left-4 p-2 text-slate-400 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm"
+            className="absolute top-4 left-4 z-50 p-2.5 text-slate-300 hover:text-white rounded-full bg-white/10 hover:bg-white/25 transition-all backdrop-blur-md cursor-pointer active:scale-90 shadow-md"
           >
             <X className="w-5 h-5" />
           </button>

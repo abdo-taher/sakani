@@ -4,6 +4,8 @@ import { Property, LocationDistrict, OperationType, PropertyType, PropertyFilter
 import { PropertyCard } from '../components/PropertyCard';
 import { PropertyGridSkeleton } from '../components/Skeletons';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
+import { SEOHead } from '../components/SEOHead';
+import { SITE_BASE_URL } from '../utils/seo';
 import { 
   Search, 
   Filter, 
@@ -427,10 +429,47 @@ export const ListingPage: React.FC<ListingPageProps> = ({
       actionText: 'عرض كافة العقارات',
       actionTab: 'all' as ActiveListingTab,
     };
-  }, [activeListingTab]);
+  }, [activeListingTab, offersOnly]);
+
+  // Pagination Logic (12 properties per page for fast LCP & crawlable pagination)
+  const PAGE_SIZE = 12;
+  const pageParam = parseInt(searchParams.get('page') || '1', 10);
+  const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
+  const totalPages = Math.max(1, Math.ceil(filteredProperties.length / PAGE_SIZE));
+  const paginatedProperties = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredProperties.slice(start, start + PAGE_SIZE);
+  }, [filteredProperties, currentPage]);
+
+  const handlePageChange = (newPage: number) => {
+    updateUrlParams({ page: newPage > 1 ? String(newPage) : null });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Clean Canonical URL computation (strips volatile sort/price parameters)
+  const canonicalUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (urlOperation && urlOperation !== 'all') params.set('operation', urlOperation);
+    if (urlMode && urlMode !== 'all') params.set('mode', urlMode);
+    if (urlFurnishing && urlFurnishing !== 'all') params.set('furnishing', urlFurnishing);
+    if (urlDistrict && urlDistrict !== 'all') params.set('district', urlDistrict);
+    if (urlType && urlType !== 'all') params.set('type', urlType);
+    if (urlAudience && urlAudience !== 'all') params.set('audience', urlAudience);
+    if (urlOffers) params.set('offers', '1');
+    const qs = params.toString();
+    return qs ? `${SITE_BASE_URL}/properties?${qs}` : `${SITE_BASE_URL}/properties`;
+  }, [urlOperation, urlMode, urlFurnishing, urlDistrict, urlType, urlAudience, urlOffers]);
+
+  const isInternalSearch = Boolean(searchQuery && searchQuery.trim().length > 0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6" dir="rtl">
+      <SEOHead
+        title={`${headerContent.title} | سكني`}
+        description={`${headerContent.subtitle} بمدينة دمياط الجديدة مع معاينات موثقة وتفاصيل الأسعار والحجز المباشر عبر منصة سكني.`}
+        canonical={canonicalUrl}
+        robots={isInternalSearch ? 'noindex, follow' : 'index, follow'}
+      />
       
       {/* Page Title & Search Header */}
       <div className="space-y-4">
@@ -825,18 +864,67 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties.map((property) => (
-            <PropertyCard
-              key={property.id}
-              property={property}
-              isFavorite={favorites.includes(property.id)}
-              onToggleFavorite={onToggleFavorite}
-              onSelectProperty={onSelectProperty}
-              onQuickPreview={onQuickPreview}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedProperties.map((property) => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+                isFavorite={favorites.includes(property.id)}
+                onToggleFavorite={onToggleFavorite}
+                onSelectProperty={onSelectProperty}
+                onQuickPreview={onQuickPreview}
+              />
+            ))}
+          </div>
+
+          {/* Crawlable Pagination Bar */}
+          {totalPages > 1 && (
+            <div className="pt-8 pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200" aria-label="ترقيم الصفحات">
+              <div className="text-xs text-slate-500 font-medium">
+                عرض {((currentPage - 1) * PAGE_SIZE) + 1} إلى {Math.min(currentPage * PAGE_SIZE, filteredProperties.length)} من إجمالي {filteredProperties.length} عقار
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 transition"
+                  aria-label="الصفحة السابقة"
+                >
+                  السابق
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-9 h-9 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer ${
+                      pageNum === currentPage
+                        ? 'bg-[#0F172A] text-white shadow-xs'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                    aria-current={pageNum === currentPage ? 'page' : undefined}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 transition"
+                  aria-label="الصفحة التالية"
+                >
+                  التالي
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
     </div>

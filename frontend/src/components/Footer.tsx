@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { SakaniLogo } from './SakaniLogo';
 import { ActiveTab } from './BottomNav';
 import { StorageService } from '../services/storageService';
@@ -109,34 +110,46 @@ export const Footer: React.FC<FooterProps> = ({
             </h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-300">
               <li>
-                <button onClick={() => onSelectTab('home')} className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
+                <Link to="/" className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
                   <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
                   الرئيسية
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => onSelectTab('search')} className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
+                <Link to="/buy" className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
                   <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
                   عقارات للبيع في دمياط الجديدة
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => onSelectTab('search')} className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
+                <Link to="/rent" className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
                   <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
                   شقق للإيجار وسكن مفروش
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => onSelectTab('sell')} className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
+                <Link to="/rooms-for-rent" className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
+                  <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
+                  غرف للإيجار وسكن طلاب
+                </Link>
+              </li>
+              <li>
+                <Link to="/places" className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
+                  <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
+                  أحياء ومناطق دمياط الجديدة
+                </Link>
+              </li>
+              <li>
+                <Link to="/sell" className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
                   <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
                   أضف عقارك للبيع أو الإيجار
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={onOpenNeedModal} className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
+                <Link to="/need-property" className="hover:text-[#8D6A28] transition flex items-center gap-1.5 cursor-pointer">
                   <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
                   طلب عقار بمواصفات خاصة
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
@@ -197,9 +210,9 @@ export const Footer: React.FC<FooterProps> = ({
             جميع الحقوق محفوظة © {settings.site_name || 'سكني'} {new Date().getFullYear()}
           </p>
           <div className="flex items-center gap-4 text-slate-400 text-xs">
-            <button onClick={() => onSelectTab('contact')} className="hover:text-white transition cursor-pointer">عن سكني</button>
+            <Link to="/contact" className="hover:text-white transition cursor-pointer">عن سكني</Link>
             <span>•</span>
-            <button onClick={() => onSelectTab('contact')} className="hover:text-white transition cursor-pointer">الشروط والأحكام</button>
+            <Link to="/contact" className="hover:text-white transition cursor-pointer">الشروط والأحكام</Link>
           </div>
         </div>
 

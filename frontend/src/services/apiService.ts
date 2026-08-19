@@ -563,18 +563,18 @@ export const ApiService = {
   },
 
   // ---------------- Analytics & Dashboard ----------------
-  async getDashboard() {
+  async getDashboard(range: string = 'all') {
     if (!getAuthToken()) return null;
     try {
-      const res = await apiRequest('/dashboard');
+      const res = await apiRequest(`/dashboard?range=${encodeURIComponent(range)}`);
       return normalizeData(res);
     } catch {
       return null;
     }
   },
 
-  async getDashboardData() {
-    return this.getDashboard();
+  async getDashboardData(range: string = 'all') {
+    return this.getDashboard(range);
   },
 
   async getStatistics() {

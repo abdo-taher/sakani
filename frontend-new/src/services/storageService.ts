@@ -983,7 +983,14 @@ export const StorageService = {
 
   getActiveFeedbackCampaign(targetPage: string = 'all'): FeedbackCampaign | null {
     const campaigns = this.getFeedbackCampaigns();
-    const active = campaigns.filter(c => c.is_active && (c.target_page === 'all' || c.target_page === targetPage));
+    const now = Date.now();
+    const active = campaigns.filter(c => {
+      if (!c.is_active) return false;
+      if (c.target_page && c.target_page !== 'all' && c.target_page !== targetPage) return false;
+      if (c.start_date && new Date(c.start_date).getTime() > now) return false;
+      if (c.end_date && new Date(c.end_date).getTime() < now) return false;
+      return true;
+    });
     
     // Find the first active campaign that the user has NOT answered or dismissed
     for (const camp of active) {

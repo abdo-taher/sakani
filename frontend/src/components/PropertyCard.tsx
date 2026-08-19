@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Property } from '../types';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
 import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
+import { generatePropertySlug, generatePropertyAltText } from '../utils/seo';
 import { 
   MapPin, 
   BedDouble, 
@@ -110,14 +111,17 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
 
   const opBadge = getOperationBadge();
   const statusBadge = getStatusBadge();
+  const propertySlug = generatePropertySlug(property) || property.id;
+  const propertyUrl = `/properties/${propertySlug}`;
 
   const handleWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
     const priceText = offerInfo.isActive 
       ? `بسعر العرض الخاص ${formatPrice(offerInfo.offerPrice)} ج.م (بدلاً من ${formatPrice(offerInfo.originalPrice)} ج.م)` 
       : `بسعر ${formatPrice(property.price)} ج.م`;
+    const fullUrl = `${window.location.origin}${propertyUrl}`;
     const message = encodeURIComponent(
-      `مرحباً، أود الاستفسار عن العقار: "${property.title}" (كود: ${property.ref_id}) ${priceText} في ${property.district_name}. رابط العقار: ${window.location.origin}/#/properties/${property.id}`
+      `مرحباً، أود الاستفسار عن العقار: "${property.title}" (كود: ${property.ref_id}) ${priceText} في ${property.district_name}. رابط العقار: ${fullUrl}`
     );
     window.open(`https://wa.me/201067725976?text=${message}`, '_blank');
   };
@@ -127,7 +131,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
     if (onSelectProperty) {
       onSelectProperty(property);
     } else {
-      navigate(`/properties/${property.id}`);
+      navigate(propertyUrl);
     }
   };
 
@@ -135,7 +139,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
 
   return (
     <div 
-      onClick={() => onQuickPreview ? onQuickPreview(property) : (onSelectProperty ? onSelectProperty(property) : navigate(`/properties/${property.id}`))}
+      onClick={() => onQuickPreview ? onQuickPreview(property) : (onSelectProperty ? onSelectProperty(property) : navigate(propertyUrl))}
       className={`group bg-white rounded-2xl sm:rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col relative ${
         isUploading 
           ? 'opacity-70 grayscale-[15%] border-dashed border-amber-300 bg-amber-50/20 shadow-none' 
@@ -156,7 +160,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
       <div className={`relative aspect-[16/10] sm:aspect-[4/3] w-full overflow-hidden bg-slate-100 ${isUploading ? 'pt-6' : ''}`}>
         <img
           src={resolveImageUrl(images[currentImageIndex])}
-          alt={property.title}
+          alt={generatePropertyAltText(property, undefined, currentImageIndex)}
+          width={400}
+          height={250}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
           onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
@@ -369,7 +375,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
 
           {/* Property Title */}
           <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-1 group-hover:text-[#8D6A28] transition-colors mb-1">
-            {property.title}
+            <Link to={propertyUrl} onClick={(e) => e.stopPropagation()} className="hover:text-[#8D6A28] transition-colors">
+              {property.title}
+            </Link>
           </h3>
 
           {/* District & Location & Proximity Distance */}
@@ -414,13 +422,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             <MessageCircle className="w-4 h-4" />
           </button>
 
-          <button
-            onClick={handleDetailsButtonClick}
-            className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-[#8D6A28] text-white font-semibold text-xs sm:text-sm transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+          <Link
+            to={propertyUrl}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-[#8D6A28] text-white font-semibold text-xs sm:text-sm transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
           >
             <span>التفاصيل الكاملة</span>
             <ChevronLeft className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
       </div>
     </div>

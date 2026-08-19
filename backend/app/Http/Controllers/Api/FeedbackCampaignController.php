@@ -28,6 +28,9 @@ class FeedbackCampaignController extends Controller
                 'question'        => $camp->question,
                 'options'         => $camp->options,
                 'target_page'     => $camp->target_page,
+                'start_date'      => $camp->start_date ? $camp->start_date->format('Y-m-d\TH:i') : null,
+                'end_date'        => $camp->end_date ? $camp->end_date->format('Y-m-d\TH:i') : null,
+                'delay_seconds'   => $camp->delay_seconds ?? 60,
                 'is_active'       => (bool)$camp->is_active,
                 'created_at'      => $camp->created_at ? $camp->created_at->toISOString() : now()->toISOString(),
                 'responses_count' => $responses->count(),
@@ -47,8 +50,15 @@ class FeedbackCampaignController extends Controller
     public function active(Request $request)
     {
         $page = $request->query('page', 'all');
+        $now = now();
         
         $campaign = FeedbackCampaign::where('is_active', true)
+            ->where(function ($q) use ($now) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', $now);
+            })
+            ->where(function ($q) use ($now) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', $now);
+            })
             ->where(function ($q) use ($page) {
                 $q->where('target_page', 'all');
                 if ($page && $page !== 'all') {
@@ -61,15 +71,18 @@ class FeedbackCampaignController extends Controller
         return response()->json([
             'success'  => true,
             'campaign' => $campaign ? [
-                'id'          => (string)$campaign->id,
-                'title'       => $campaign->title,
-                'description' => $campaign->description,
-                'type'        => $campaign->type,
-                'question'    => $campaign->question,
-                'options'     => $campaign->options,
-                'target_page' => $campaign->target_page,
-                'is_active'   => (bool)$campaign->is_active,
-                'created_at'  => $campaign->created_at ? $campaign->created_at->toISOString() : now()->toISOString(),
+                'id'            => (string)$campaign->id,
+                'title'         => $campaign->title,
+                'description'   => $campaign->description,
+                'type'          => $campaign->type,
+                'question'      => $campaign->question,
+                'options'       => $campaign->options,
+                'target_page'   => $campaign->target_page,
+                'start_date'    => $campaign->start_date ? $campaign->start_date->format('Y-m-d\TH:i') : null,
+                'end_date'      => $campaign->end_date ? $campaign->end_date->format('Y-m-d\TH:i') : null,
+                'delay_seconds' => $campaign->delay_seconds ?? 60,
+                'is_active'     => (bool)$campaign->is_active,
+                'created_at'    => $campaign->created_at ? $campaign->created_at->toISOString() : now()->toISOString(),
             ] : null,
         ]);
     }
@@ -80,23 +93,29 @@ class FeedbackCampaignController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'description' => 'nullable|string|max:500',
-            'type'        => 'required|string|in:rating,choice,text,net_promoter',
-            'question'    => 'required|string|max:500',
-            'options'     => 'nullable|array',
-            'target_page' => 'nullable|string|max:50',
-            'is_active'   => 'nullable|boolean',
+            'title'         => 'required|string|max:255',
+            'description'   => 'nullable|string|max:500',
+            'type'          => 'required|string|in:rating,choice,text,net_promoter',
+            'question'      => 'required|string|max:500',
+            'options'       => 'nullable|array',
+            'target_page'   => 'nullable|string|max:50',
+            'start_date'    => 'nullable|date',
+            'end_date'      => 'nullable|date|after_or_equal:start_date',
+            'delay_seconds' => 'nullable|integer|min:5|max:3600',
+            'is_active'     => 'nullable|boolean',
         ]);
 
         $campaign = FeedbackCampaign::create([
-            'title'       => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'type'        => $validated['type'],
-            'question'    => $validated['question'],
-            'options'     => $validated['options'] ?? null,
-            'target_page' => $validated['target_page'] ?? 'all',
-            'is_active'   => $validated['is_active'] ?? true,
+            'title'         => $validated['title'],
+            'description'   => $validated['description'] ?? null,
+            'type'          => $validated['type'],
+            'question'      => $validated['question'],
+            'options'       => $validated['options'] ?? null,
+            'target_page'   => $validated['target_page'] ?? 'all',
+            'start_date'    => $validated['start_date'] ?? null,
+            'end_date'      => $validated['end_date'] ?? null,
+            'delay_seconds' => $validated['delay_seconds'] ?? 60,
+            'is_active'     => $validated['is_active'] ?? true,
         ]);
 
         return response()->json([
@@ -120,6 +139,9 @@ class FeedbackCampaignController extends Controller
             'question',
             'options',
             'target_page',
+            'start_date',
+            'end_date',
+            'delay_seconds',
             'is_active',
         ]));
 
