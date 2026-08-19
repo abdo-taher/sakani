@@ -586,14 +586,6 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
                         </div>
                       </div>
 
-                      {/* Dynamic Stats: Area & Rooms */}
-                      {(district.extra.avgArea > 0 || district.extra.avgRooms > 0) && (
-                        <div className="flex items-center gap-3 text-[11px] font-bold text-slate-600">
-                          {district.extra.avgArea > 0 && <span className="px-2 py-1 rounded-lg bg-blue-50 text-blue-700">مساحة متوسطة {district.extra.avgArea} م²</span>}
-                          {district.extra.avgRooms > 0 && <span className="px-2 py-1 rounded-lg bg-green-50 text-green-700">{district.extra.avgRooms} غرف</span>}
-                        </div>
-                      )}
-
                       {/* Property Types Breakdown */}
                       {Object.keys(district.extra.propertyTypes).length > 0 && (
                         <div className="space-y-1.5">
