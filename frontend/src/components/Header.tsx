@@ -16,11 +16,9 @@ import {
   ShoppingBag,
   CalendarCheck,
   MapPin,
-  QrCode,
-  Smartphone,
-  Download
+  Smartphone
 } from 'lucide-react';
-import { QRCodeShareModal } from './QRCodeShareModal';
+import { usePWAInstall } from '../utils/pwaInstall';
 
 interface HeaderProps {
   currentTab: ActiveTab;
@@ -42,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNeedModal,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const { isInstalled, installApp } = usePWAInstall();
   const [liveFavoritesCount, setLiveFavoritesCount] = useState<number>(() => {
     try {
       return StorageService.getFavorites().length;
@@ -121,15 +119,17 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             <div className="flex items-center gap-4 text-slate-300">
-              <button
-                type="button"
-                onClick={() => setIsQrModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/10 hover:bg-[#8D6A28] text-amber-300 hover:text-white transition font-bold text-[11px] cursor-pointer"
-                title="تثبيت التطبيق على الجوال ومسح كود QR"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>تثبيت التطبيق ورمز QR 📲</span>
-              </button>
+              {!isInstalled && (
+                <button
+                  type="button"
+                  onClick={installApp}
+                  className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/10 hover:bg-[#8D6A28] text-amber-300 hover:text-white transition font-bold text-[11px] cursor-pointer"
+                  title="تثبيت التطبيق مباشرة"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>تثبيت التطبيق 📲</span>
+                </button>
+              )}
 
               <a href={`tel:${phone}`} className="flex items-center gap-1.5 hover:text-white transition">
                 <Phone className="w-3.5 h-3.5 text-[#8D6A28]" />
@@ -203,15 +203,17 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Install App / QR Code Quick Action */}
-            <button
-              onClick={() => setIsQrModalOpen(true)}
-              className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-[#8D6A28] hover:border-[#8D6A28]/40 hover:bg-slate-50 transition-all cursor-pointer flex items-center gap-1.5"
-              title="تثبيت التطبيق ومشاركة رمز QR"
-            >
-              <Smartphone className="w-4 h-4 text-blue-600" />
-              <span className="hidden lg:inline text-xs font-bold text-slate-700">تثبيت التطبيق</span>
-            </button>
+            {/* Direct Native Install App Button - Only if not installed */}
+            {!isInstalled && (
+              <button
+                onClick={installApp}
+                className="p-2.5 rounded-xl border border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                title="تثبيت التطبيق مباشرة على جهازك"
+              >
+                <Smartphone className="w-4 h-4 text-blue-600" />
+                <span className="hidden lg:inline text-xs font-bold">تثبيت التطبيق</span>
+              </button>
+            )}
 
             {/* Customer Live Notifications Bell */}
             <NotificationCenter role="customer" />
@@ -341,17 +343,19 @@ export const Header: React.FC<HeaderProps> = ({
               <span>من نحن وتواصل معنا</span>
             </button>
 
-            {/* تثبيت التطبيق ورمز QR */}
-            <button
-              onClick={() => { setIsQrModalOpen(true); setMobileMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-right transition cursor-pointer bg-blue-50/70 text-blue-800 border border-blue-100 hover:bg-blue-100/70"
-            >
-              <Smartphone className="w-5 h-5 text-blue-600" />
-              <div>
-                <span className="block leading-tight">تثبيت التطبيق على الجوال 📲</span>
-                <span className="text-[10px] text-blue-600 font-medium">تصفح فوري وسهل مع رمز QR</span>
-              </div>
-            </button>
+            {/* تثبيت التطبيق مباشرة */}
+            {!isInstalled && (
+              <button
+                onClick={() => { installApp(); setMobileMenuOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-right transition cursor-pointer bg-blue-50/70 text-blue-800 border border-blue-100 hover:bg-blue-100/70"
+              >
+                <Smartphone className="w-5 h-5 text-blue-600" />
+                <div>
+                  <span className="block leading-tight">تثبيت التطبيق على الجوال 📲</span>
+                  <span className="text-[10px] text-blue-600 font-medium">تثبيت فوري ومباشر على الشاشة الرئيسية</span>
+                </div>
+              </button>
+            )}
 
             <div className="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-2">
               <a href={`tel:${phone}`} className="flex items-center gap-1.5 font-bold text-slate-700">
@@ -363,13 +367,6 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </>
       )}
-
-      {/* QR Code & App Install Modal */}
-      <QRCodeShareModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-        initialMode="install_app"
-      />
     </header>
   );
 };

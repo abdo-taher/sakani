@@ -31,9 +31,10 @@ use App\Http\Controllers\Api\MediaUploadController;
 use App\Http\Controllers\Api\ReferralFeedbackController;
 use App\Http\Controllers\Api\FeedbackCampaignController;
 
-// Health check and configuration - No auth required
+// Health check, sitemap, and configuration - No auth required
 Route::get('/health', [ConfigController::class, 'health']);
 Route::get('/config', [ConfigController::class, 'getConfig']);
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index']);
 Route::post('/media/upload', [MediaUploadController::class, 'upload']);
 Route::delete('/media/delete', [MediaUploadController::class, 'destroy']);
 

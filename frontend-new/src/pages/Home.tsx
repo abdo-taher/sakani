@@ -16,7 +16,6 @@ import {
   StatsCardsSkeleton,
   RoomCardSkeleton
 } from '../components/Skeletons';
-import { QRCodeShareModal } from '../components/QRCodeShareModal';
 import { ApiService } from '../services/apiService';
 import { StorageService } from '../services/storageService';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
@@ -112,7 +111,6 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [searchAudience, setSearchAudience] = useState<string>('all');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState<boolean>(false);
   const [isMobileFilterPopupOpen, setIsMobileFilterPopupOpen] = useState<boolean>(false);
-  const [isQrModalOpen, setIsQrModalOpen] = useState<boolean>(false);
 
   // Video states
   const [isVideoMuted, setIsVideoMuted] = useState(true);
@@ -1651,13 +1649,6 @@ export const HomePage: React.FC<HomePageProps> = ({
         </section>
 
       </div>
-
-      {/* QR Code & Mobile App Install Modal */}
-      <QRCodeShareModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-        initialMode="install_app"
-      />
 
     </div>
   );

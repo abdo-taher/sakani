@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Property, LocationDistrict, OperationType, PropertyType, DetailedRoom, PropertyFilterState, SystemSettings } from './types';
 import { StorageService } from './services/storageService';
 import { ApiService } from './services/apiService';
@@ -91,6 +91,17 @@ function MainApp() {
     loadData();
     initializeFirebase();
   }, []);
+
+  // Handle legacy hash route backward compatibility (e.g. /#/properties/1 -> /properties/1)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash;
+      if (hash.startsWith('#/')) {
+        const cleanPath = hash.substring(1);
+        navigate(cleanPath, { replace: true });
+      }
+    }
+  }, [navigate]);
 
   // Global scroll to top on page navigation
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { SakaniLogo } from './SakaniLogo';
 import { ActiveTab } from './BottomNav';
 import { StorageService } from '../services/storageService';
@@ -13,10 +13,9 @@ import {
   MessageCircle,
   Facebook,
   Instagram,
-  Smartphone,
-  QrCode
+  Smartphone
 } from 'lucide-react';
-import { QRCodeShareModal } from './QRCodeShareModal';
+import { usePWAInstall } from '../utils/pwaInstall';
 
 interface FooterProps {
   onSelectTab: (tab: ActiveTab) => void;
@@ -27,7 +26,7 @@ export const Footer: React.FC<FooterProps> = ({
   onSelectTab,
   onOpenNeedModal,
 }) => {
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const { isInstalled, installApp } = usePWAInstall();
   const settings = StorageService.getSettings();
   const phone = settings.phone || settings.company_phone || '01067725976';
   const rawWhatsapp = settings.whatsapp || settings.company_whatsapp || '201067725976';
@@ -167,26 +166,28 @@ export const Footer: React.FC<FooterProps> = ({
             </ul>
           </div>
 
-          {/* Col 4: Smartphone App & QR Code */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-extrabold text-[#8D6A28] tracking-wider uppercase flex items-center gap-1.5">
-              <Smartphone className="w-4 h-4" />
-              <span>تطبيق سكني الذكي</span>
-            </h4>
-            <p className="text-xs text-slate-400 leading-relaxed font-medium">
-              ثبّت التطبيق على هاتفك لتصفح سريع بدون متجر مع تنبيهات فورية بأحدث العروض.
-            </p>
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={() => setIsQrModalOpen(true)}
-                className="w-full py-2.5 px-4 rounded-2xl gold-gradient gold-gradient-hover text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer hover:scale-[1.02] active:scale-95"
-              >
-                <QrCode className="w-4 h-4" />
-                <span>تثبيت التطبيق ومسح QR 📲</span>
-              </button>
+          {/* Col 4: Smartphone App */}
+          {!isInstalled && (
+            <div className="space-y-3">
+              <h4 className="text-sm font-extrabold text-[#8D6A28] tracking-wider uppercase flex items-center gap-1.5">
+                <Smartphone className="w-4 h-4" />
+                <span>تطبيق سكني الذكي</span>
+              </h4>
+              <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                ثبّت التطبيق على هاتفك لتصفح سريع بدون متجر مع تنبيهات فورية بأحدث العروض.
+              </p>
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={installApp}
+                  className="w-full py-2.5 px-4 rounded-2xl gold-gradient gold-gradient-hover text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer hover:scale-[1.02] active:scale-95"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span>تثبيت التطبيق الآن 📲</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
         </div>
 
@@ -203,13 +204,6 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
       </div>
-
-      {/* QR Code & App Install Modal */}
-      <QRCodeShareModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-        initialMode="install_app"
-      />
     </footer>
   );
 };
