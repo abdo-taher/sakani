@@ -771,6 +771,15 @@ class PropertyController extends Controller
                 'video_driver' => $request->video_driver ?? $property->video_driver ?? 'r2',
                 'video_file_path' => $request->video_file_path ?? $request->video_url,
             ]);
+        } elseif ($request->has('video_url') && empty($request->video_url)) {
+            $updateData = array_merge($updateData, [
+                'video_url' => null,
+                'video_public_id' => null,
+                'video_thumbnail_url' => null,
+                'video_thumbnail_public_id' => null,
+                'video_driver' => null,
+                'video_file_path' => null,
+            ]);
         }
 
         $property->update($updateData);

@@ -37,6 +37,20 @@ export const NeedPropertyPage: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [settings, setSettings] = useState(() => StorageService.getSettings());
+
+  useEffect(() => {
+    const handleSettingsUpdate = (e: any) => {
+      if (e?.detail) setSettings(e.detail);
+      else setSettings(StorageService.getSettings());
+    };
+    window.addEventListener('sakani_settings_updated', handleSettingsUpdate);
+    window.addEventListener('storage', handleSettingsUpdate);
+    return () => {
+      window.removeEventListener('sakani_settings_updated', handleSettingsUpdate);
+      window.removeEventListener('storage', handleSettingsUpdate);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +140,7 @@ export const NeedPropertyPage: React.FC = () => {
             </div>
 
             <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 text-xs text-amber-900 font-bold max-w-md mx-auto">
-              عمولة سكني مخفضة 35% فقط • بدون أي رسوم معاينة مسبقة
+              {settings.commission_text || `عمولة سكني مخفضة ${settings.commission_percentage !== undefined ? settings.commission_percentage : 2.5}% فقط • بدون أي رسوم معاينة مسبقة`}
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">

@@ -213,7 +213,9 @@ function MainApp() {
       }
 
       if (backendSettings.status === 'fulfilled' && backendSettings.value && typeof backendSettings.value === 'object') {
-        setSettings((prev) => ({ ...prev, ...backendSettings.value }));
+        const merged = { ...StorageService.getSettings(), ...backendSettings.value };
+        StorageService.saveSettings(merged);
+        setSettings(merged);
       }
     } catch (err) {
       // Local fallback active

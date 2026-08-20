@@ -67,8 +67,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
     'elevator', 'natural_gas', 'super_lux', 'security'
   ]);
   const [images, setImages] = useState<string[]>([
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1000&q=80'
+    '/hero-poster.jpg',
+    '/hero-poster.jpg'
   ]);
   const [newImageUrl, setNewImageUrl] = useState('');
 
@@ -81,7 +81,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
       price: 2500,
       area: 20,
       status: 'available',
-      imageUrl: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/hero-poster.jpg',
     },
     {
       id: 'room-2',
@@ -90,7 +90,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
       price: 1800,
       area: 16,
       status: 'available',
-      imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/hero-poster.jpg',
     }
   ]);
 
@@ -120,7 +120,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
       setVideoUrl(initialProperty.video_url || '');
       setSelectedAmenities(initialProperty.amenities || ['elevator', 'natural_gas']);
       setImages(initialProperty.images && initialProperty.images.length > 0 ? initialProperty.images : [
-        'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=80'
+        '/hero-poster.jpg'
       ]);
       if (initialProperty.detailed_rooms && initialProperty.detailed_rooms.length > 0) {
         setDetailedRooms(initialProperty.detailed_rooms);
@@ -164,7 +164,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
       price: Math.round(Number(price) / (nextNum || 1)) || 1500,
       area: 16,
       status: 'available',
-      imageUrl: images[0] || 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80',
+      imageUrl: images[0] || '/hero-poster.jpg',
     };
     setDetailedRooms(prev => [...prev, newRoom]);
   };

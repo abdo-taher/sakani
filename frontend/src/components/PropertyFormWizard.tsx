@@ -541,9 +541,9 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       featured,
       rent_duration: operationType === 'rent' ? rentDuration : undefined,
       has_detailed_rooms: operationType === 'rent' && rentalMode === 'rooms',
-      video_url: videoUrl || undefined,
-      video_public_id: videoUrl || undefined,
-      video_thumbnail_url: videoThumbnailUrl || undefined,
+      video_url: videoUrl ? videoUrl.trim() : undefined,
+      video_public_id: videoUrl ? videoUrl.trim() : undefined,
+      video_thumbnail_url: (videoUrl && videoThumbnailUrl) ? videoThumbnailUrl.trim() : undefined,
       replace_images: true,
       replace_rooms: true,
       images: (() => {

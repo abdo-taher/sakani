@@ -28,7 +28,7 @@ import {
 export const AboutContactPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const highlightedMsgId = searchParams.get('msg_id');
-  const [settings] = useState(() => StorageService.getSettings());
+  const [settings, setSettings] = useState(() => StorageService.getSettings());
   const [clientMessages, setClientMessages] = useState<ContactMessage[]>([]);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -41,8 +41,18 @@ export const AboutContactPage: React.FC = () => {
   useEffect(() => {
     loadClientMessages();
     const handleUpdate = () => loadClientMessages();
+    const handleSettingsUpdate = (e: any) => {
+      if (e?.detail) setSettings(e.detail);
+      else setSettings(StorageService.getSettings());
+    };
     window.addEventListener('sakani_contact_messages_updated', handleUpdate);
-    return () => window.removeEventListener('sakani_contact_messages_updated', handleUpdate);
+    window.addEventListener('sakani_settings_updated', handleSettingsUpdate);
+    window.addEventListener('storage', handleSettingsUpdate);
+    return () => {
+      window.removeEventListener('sakani_contact_messages_updated', handleUpdate);
+      window.removeEventListener('sakani_settings_updated', handleSettingsUpdate);
+      window.removeEventListener('storage', handleSettingsUpdate);
+    };
   }, []);
 
   const loadClientMessages = () => {
@@ -159,7 +169,7 @@ export const AboutContactPage: React.FC = () => {
             </div>
             <h3 className="text-xl font-extrabold text-slate-900">خدمة متكاملة</h3>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-              {settings.commission_text || 'من البحث والمعاينة وتنسيق المقابلات وحتى إتمام العقد واستلام المفاتيح بعمولة مخفضة 35% فقط.'}
+              {settings.commission_text || `من البحث والمعاينة وتنسيق المقابلات وحتى إتمام العقد واستلام المفاتيح بعمولة مخفضة ${settings.commission_percentage !== undefined ? settings.commission_percentage : 2.5}% فقط.`}
             </p>
           </div>
 

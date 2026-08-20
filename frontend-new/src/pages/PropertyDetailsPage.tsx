@@ -699,7 +699,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                       }`}
                     >
                       <img 
-                        src={img} 
+                        src={resolveImageUrl(img)} 
                         alt="" 
                         className="w-full h-full object-cover" 
                         onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
@@ -1357,7 +1357,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{StorageService.getSettings().commission_text || 'عمولة وساطة 2.5% تدفع عند التعاقد فقط، والمعاينة مجانية'}</span>
+                  <span>{StorageService.getSettings().commission_text || `عمولة وساطة ${StorageService.getSettings().commission_percentage !== undefined ? StorageService.getSettings().commission_percentage : 2.5}% تدفع عند التعاقد فقط، والمعاينة مجانية`}</span>
                 </div>
               </div>
 

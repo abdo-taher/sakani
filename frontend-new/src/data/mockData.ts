@@ -20,7 +20,7 @@ export const DISTRICTS_LIST: LocationDistrict[] = [
     id: 'district-5',
     name: 'الحي الخامس',
     available_count: 34,
-    image_url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
+    image_url: '/hero-poster.jpg',
     description: 'أرقى أحياء دمياط الجديدة وقريب من الشاطئ والنوادي والخدمات المتكاملة',
     coordinates: { lat: 31.4391, lng: 31.6742 }
   },
@@ -28,7 +28,7 @@ export const DISTRICTS_LIST: LocationDistrict[] = [
     id: 'district-4',
     name: 'الحي الرابع',
     available_count: 28,
-    image_url: 'https://images.unsplash.com/photo-1574362848149-11496d93a7c7?auto=format&fit=crop&w=1000&q=80',
+    image_url: '/hero-poster.jpg',
     description: 'منطقة هادئة ذات مساحات خضراء شاسعة وقريبة من المراكز التعليمية',
     coordinates: { lat: 31.4350, lng: 31.6680 }
   },
@@ -36,7 +36,7 @@ export const DISTRICTS_LIST: LocationDistrict[] = [
     id: 'district-central',
     name: 'المركزية',
     available_count: 12,
-    image_url: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=1000&q=80',
+    image_url: '/hero-poster.jpg',
     description: 'قلب دمياط الجديدة التجاري والإداري، شريان الحياة والأعمال',
     coordinates: { lat: 31.4320, lng: 31.6610 }
   },
@@ -44,7 +44,7 @@ export const DISTRICTS_LIST: LocationDistrict[] = [
     id: 'district-distinguished',
     name: 'حي المتميز',
     available_count: 22,
-    image_url: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1000&q=80',
+    image_url: '/hero-poster.jpg',
     description: 'فيلات ودوبلكس فاخرة بخصوصية مطلقة وإطلالات مميزة',
     coordinates: { lat: 31.4420, lng: 31.6800 }
   },
@@ -52,7 +52,7 @@ export const DISTRICTS_LIST: LocationDistrict[] = [
     id: 'district-chalets',
     name: 'الشاليهات والمصيف',
     available_count: 16,
-    image_url: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=80',
+    image_url: '/hero-poster.jpg',
     description: 'على مسافة خطوات من شاطئ البحر الأبيض المتوسط مباشرة',
     coordinates: { lat: 31.4480, lng: 31.6850 }
   },
@@ -60,7 +60,7 @@ export const DISTRICTS_LIST: LocationDistrict[] = [
     id: 'district-sakan-misr',
     name: 'سكن مصر ١ و ٢',
     available_count: 19,
-    image_url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1000&q=80',
+    image_url: '/hero-poster.jpg',
     description: 'كمبوندات سكنية متكاملة بأسعار مناسبة وتشطيبات حديثة',
     coordinates: { lat: 31.4280, lng: 31.6500 }
   }
@@ -97,13 +97,13 @@ export const INITIAL_PROPERTIES: Property[] = [
     featured: true,
     views: 1420,
     images: [
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1600573472591-ee6981cf35b6?auto=format&fit=crop&w=1200&q=80'
+      '/hero-poster.jpg',
+      '/hero-poster.jpg',
+      '/hero-poster.jpg',
+      '/hero-poster.jpg'
     ],
     video_url: '/hero.mp4',
-    video_thumbnail_url: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=80',
+    video_thumbnail_url: '/hero-poster.jpg',
     videos: [
       {
         url: '/hero.mp4',
@@ -144,12 +144,12 @@ export const INITIAL_PROPERTIES: Property[] = [
     featured: true,
     views: 980,
     images: [
-      'https://images.unsplash.com/photo-1600585155526-990dced4db0d?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1200&q=80'
+      '/hero-poster.jpg',
+      '/hero-poster.jpg',
+      '/hero-poster.jpg'
     ],
     video_url: '/hero.mp4',
-    video_thumbnail_url: 'https://images.unsplash.com/photo-1600585155526-990dced4db0d?auto=format&fit=crop&w=600&q=80',
+    video_thumbnail_url: '/hero-poster.jpg',
     amenities: ['garden', 'natural_gas', 'super_lux', 'security', 'parking', 'ac'],
     tags: ['دور أرضي بحديقة', 'دوبلكس', 'مدخل خاص', 'مناسب للعائلات'],
     created_at: '2026-08-11T14:30:00Z',
@@ -179,12 +179,12 @@ export const INITIAL_PROPERTIES: Property[] = [
     featured: true,
     views: 2350,
     images: [
-      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80'
+      '/hero-poster.jpg',
+      '/hero-poster.jpg',
+      '/hero-poster.jpg'
     ],
     video_url: '/hero.mp4',
-    video_thumbnail_url: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80',
+    video_thumbnail_url: '/hero-poster.jpg',
     amenities: ['pool', 'garden', 'sea_view', 'security', 'parking', 'ac', 'equipped_kitchen', 'internet'],
     tags: ['فيلا مستقلة', 'حمام سباحة', 'مؤثث بالكامل', 'فيو بحر'],
     created_at: '2026-08-08T09:15:00Z',
@@ -222,9 +222,9 @@ export const INITIAL_PROPERTIES: Property[] = [
     featured: true,
     views: 890,
     images: [
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80'
+      '/hero-poster.jpg',
+      '/hero-poster.jpg',
+      '/hero-poster.jpg'
     ],
     video_url: '/hero.mp4',
     amenities: ['elevator', 'natural_gas', 'ac', 'equipped_kitchen', 'internet', 'balcony'],
@@ -256,8 +256,8 @@ export const INITIAL_PROPERTIES: Property[] = [
     featured: false,
     views: 650,
     images: [
-      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80'
+      '/hero-poster.jpg',
+      '/hero-poster.jpg'
     ],
     amenities: ['security', 'parking', 'ac'],
     tags: ['محل تجاري', 'واجهة رئيسية', 'المنطقة المركزية', 'فرصة استثمارية'],
@@ -289,8 +289,8 @@ export const INITIAL_PROPERTIES: Property[] = [
     featured: false,
     views: 1120,
     images: [
-      'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80'
+      '/hero-poster.jpg',
+      '/hero-poster.jpg'
     ],
     has_detailed_rooms: true,
     detailed_rooms: [
@@ -328,8 +328,8 @@ export const INITIAL_PROPERTIES: Property[] = [
     featured: false,
     views: 430,
     images: [
-      'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80'
+      '/hero-poster.jpg',
+      '/hero-poster.jpg'
     ],
     amenities: ['elevator', 'security', 'ac', 'internet', 'parking'],
     tags: ['مكتب إداري', 'شارع الصعيدي', 'يصلح لعيادة', 'أمن وحراسة'],
@@ -360,7 +360,7 @@ export const INITIAL_PROPERTIES: Property[] = [
     featured: false,
     views: 520,
     images: [
-      'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80'
+      '/hero-poster.jpg'
     ],
     amenities: ['parking'],
     tags: ['أرض للبيع', 'ناصية بحري', 'ترخيص بناء', 'استثمار مربح'],
@@ -526,7 +526,7 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   hero_tagline: 'منصة العقارات الأولى والموثوقة في دمياط الجديدة',
   hero_title: 'عقارك المناسب أقرب مما تتخيل',
   hero_subtitle: 'اكتشف أفضل العقارات للبيع والإيجار في دمياط الجديدة والمناطق المميزة مع خدمات المعاينة والتوثيق القانوني',
-  hero_bg_image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1800&q=80',
+  hero_bg_image: '/hero-poster.jpg',
   hero_video_url: '/hero.mp4',
   hero_use_video: true,
   hero_cta_text: 'بحث عن العقار المناسب',
@@ -564,8 +564,8 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
     },
     {
       id: 'why-3',
-      title: 'خدمة متكاملة بأقل عمولة (35%)',
-      description: 'من البحث والمعاينة المجانية حتى استلام المفتاح وتوقيع العقود مع عمولة مخفضة 35% فقط.',
+      title: 'خدمة متكاملة بأقل عمولة (2.5%)',
+      description: 'من البحث والمعاينة المجانية حتى استلام المفتاح وتوقيع العقود مع عمولة وساطة مخفضة 2.5% فقط.',
       icon: 'Award'
     }
   ]

@@ -90,13 +90,36 @@ export const Header: React.FC<HeaderProps> = ({
     };
   }, [mobileMenuOpen]);
 
-  const settings = (typeof StorageService !== 'undefined' && StorageService.getSettings)
-    ? StorageService.getSettings()
-    : { phone: '01067725976', announcement_text: 'أكبر سوق عقاري موثوق في دمياط الجديدة • معاينات مجانية واستشارات هندسية', announcement_enabled: true };
+  const [settings, setSettings] = useState<SystemSettings>(() => {
+    try {
+      return StorageService.getSettings();
+    } catch {
+      return { phone: '01067725976', announcement_text: 'أكبر سوق عقاري موثوق في دمياط الجديدة • معاينات مجانية واستشارات هندسية', announcement_enabled: true, commission_percentage: 2.5 } as any;
+    }
+  });
 
-  const phone = settings.phone || settings.company_phone || '01067725976';
+  useEffect(() => {
+    const handleSettingsUpdate = (e: any) => {
+      if (e?.detail) {
+        setSettings(e.detail);
+      } else {
+        try {
+          setSettings(StorageService.getSettings());
+        } catch {}
+      }
+    };
+    window.addEventListener('sakani_settings_updated', handleSettingsUpdate);
+    window.addEventListener('storage', handleSettingsUpdate);
+    return () => {
+      window.removeEventListener('sakani_settings_updated', handleSettingsUpdate);
+      window.removeEventListener('storage', handleSettingsUpdate);
+    };
+  }, []);
+
+  const phone = settings.phone || (settings as any).company_phone || '01067725976';
   const announcementText = settings.announcement_text || 'أكبر سوق عقاري موثوق في دمياط الجديدة • معاينات مجانية واستشارات هندسية';
   const showAnnouncement = settings.announcement_enabled !== false;
+  const commissionPercentage = settings.commission_percentage !== undefined ? settings.commission_percentage : 2.5;
 
   const navLinks = [
     { id: 'home' as ActiveTab, label: 'الرئيسية', icon: Building2 },
@@ -357,7 +380,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <Phone className="w-3.5 h-3.5 text-[#8D6A28]" />
                 <span dir="ltr">{phone}</span>
               </a>
-              <span className="text-[#8D6A28] font-bold bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">عمولة 2.5% فقط</span>
+              <span className="text-[#8D6A28] font-bold bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">عمولة {commissionPercentage}% فقط</span>
             </div>
           </div>
         </>

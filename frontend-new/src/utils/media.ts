@@ -239,8 +239,13 @@ export function resolveImageUrl(url: any): string {
     }
     return FALLBACK_PROPERTY_IMAGE;
   }
-  const trimmed = url.trim();
-  if (!trimmed) return FALLBACK_PROPERTY_IMAGE;
+  // Intercept Unsplash URLs that cause ERR_CONNECTION_CLOSED
+  if (trimmed.includes('images.unsplash.com')) {
+    if (trimmed.includes('w=1800') || trimmed.includes('1545324418')) {
+      return '/hero-poster.jpg';
+    }
+    return FALLBACK_PROPERTY_IMAGE;
+  }
 
   // If already absolute http / https or data/blob url
   if (/^(https?:|\/\/|blob:|data:)/i.test(trimmed)) {
@@ -325,11 +330,11 @@ export function getVideoThumbnailUrl(
   fallbackImage?: string | null | undefined
 ): string {
   if (explicitThumbnail && explicitThumbnail.trim()) {
-    return resolveVideoUrl(explicitThumbnail.trim());
+    return resolveImageUrl(explicitThumbnail.trim());
   }
 
   if (!videoUrl) {
-    return fallbackImage || '';
+    return fallbackImage ? resolveImageUrl(fallbackImage) : '';
   }
 
   const resolved = resolveVideoUrl(videoUrl);
@@ -348,7 +353,7 @@ export function getVideoThumbnailUrl(
 
   // 3. Fallback to image or direct video frame query
   if (fallbackImage && fallbackImage.trim()) {
-    return fallbackImage;
+    return resolveImageUrl(fallbackImage.trim());
   }
 
   return resolved ? `${resolved}#t=0.5` : FALLBACK_PROPERTY_IMAGE;

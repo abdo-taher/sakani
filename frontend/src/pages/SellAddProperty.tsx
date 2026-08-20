@@ -50,8 +50,8 @@ export const SellAddPropertyPage: React.FC<SellAddPropertyPageProps> = ({
     'elevator', 'natural_gas', 'super_lux', 'security'
   ]);
   const [images, setImages] = useState<string[]>([
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1000&q=80'
+    '/hero-poster.jpg',
+    '/hero-poster.jpg'
   ]);
 
   // Step 3
@@ -339,14 +339,14 @@ export const SellAddPropertyPage: React.FC<SellAddPropertyPageProps> = ({
                       <div className="mt-3 flex flex-wrap justify-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() => handleAddSampleImage('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80')}
+                          onClick={() => handleAddSampleImage('/hero-poster.jpg')}
                           className="text-[10px] px-2.5 py-1 rounded-lg bg-white border border-slate-200 font-bold hover:border-[#8D6A28] transition"
                         >
                           + صورة ريسبشن
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleAddSampleImage('https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1000&q=80')}
+                          onClick={() => handleAddSampleImage('/hero-poster.jpg')}
                           className="text-[10px] px-2.5 py-1 rounded-lg bg-white border border-slate-200 font-bold hover:border-[#8D6A28] transition"
                         >
                           + صورة واجهة

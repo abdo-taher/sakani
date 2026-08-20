@@ -1918,7 +1918,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   />
                 </div>
 
-                <div className="sm:col-span-2 lg:col-span-3">
+                <div className="sm:col-span-1">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">نسبة عمولة سكني المقدرة (%)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={settings.commission_percentage !== undefined ? settings.commission_percentage : 2.5}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const numRate = parseFloat(val) || 0;
+                        setSettings(prev => {
+                          const currentText = prev.commission_text || `عمولة الوساطة ${numRate}% تدفع عند إتمام التعاقد فقط، والمعاينة مجانية تماماً`;
+                          const updatedText = /\d+(\.\d+)?%/.test(currentText)
+                            ? currentText.replace(/\d+(\.\d+)?%/, `${numRate}%`)
+                            : `${currentText} (${numRate}%)`;
+                          return {
+                            ...prev,
+                            commission_percentage: val === '' ? ('' as any) : numRate,
+                            commission_text: updatedText
+                          };
+                        });
+                      }}
+                      placeholder="2.5"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold focus:border-[#8D6A28] outline-none"
+                    />
+                    <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">%</span>
+                  </div>
+                </div>
+
+                <div className="sm:col-span-1 lg:col-span-2">
                   <label className="block text-xs font-bold text-slate-700 mb-1">نص العمولة والتسويق العقاري</label>
                   <input
                     type="text"

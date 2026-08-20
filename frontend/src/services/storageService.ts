@@ -720,18 +720,48 @@ export const StorageService = {
   },
 
   // ---------------- System Settings & Website CMS ----------------
+  getCommissionText(customSettings?: Partial<SystemSettings>): string {
+    const s = customSettings || this.getSettings();
+    const rate = s.commission_percentage !== undefined ? s.commission_percentage : 2.5;
+    if (s.commission_text && s.commission_text.trim()) {
+      if (/\d+(\.\d+)?%/.test(s.commission_text)) {
+        return s.commission_text.replace(/\d+(\.\d+)?%/, `${rate}%`);
+      }
+      return `${s.commission_text} (${rate}%)`;
+    }
+    return `عمولة الوساطة ${rate}% تدفع عند إتمام التعاقد فقط، والمعاينة مجانية تماماً`;
+  },
+
   getSettings(): SystemSettings {
     const stored = safeGet<Partial<SystemSettings>>(KEYS.SETTINGS, {});
-    // Ensure all default CMS keys exist
-    return {
+    const merged: SystemSettings = {
       ...DEFAULT_SYSTEM_SETTINGS,
       ...stored,
       why_us_items: stored.why_us_items || DEFAULT_SYSTEM_SETTINGS.why_us_items,
     };
+    // Ensure commission_text dynamically takes from commission_percentage
+    const rate = merged.commission_percentage !== undefined ? merged.commission_percentage : 2.5;
+    if (merged.commission_text && /\d+(\.\d+)?%/.test(merged.commission_text)) {
+      merged.commission_text = merged.commission_text.replace(/\d+(\.\d+)?%/, `${rate}%`);
+    } else if (!merged.commission_text) {
+      merged.commission_text = `عمولة الوساطة ${rate}% تدفع عند إتمام التعاقد فقط، والمعاينة مجانية تماماً`;
+    }
+    return merged;
   },
 
   saveSettings(settings: SystemSettings): void {
+    const rate = settings.commission_percentage !== undefined ? settings.commission_percentage : 2.5;
+    if (settings.commission_text && /\d+(\.\d+)?%/.test(settings.commission_text)) {
+      settings.commission_text = settings.commission_text.replace(/\d+(\.\d+)?%/, `${rate}%`);
+    } else if (!settings.commission_text) {
+      settings.commission_text = `عمولة الوساطة ${rate}% تدفع عند إتمام التعاقد فقط، والمعاينة مجانية تماماً`;
+    }
     safeSet(KEYS.SETTINGS, settings);
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('sakani_settings_updated', { detail: settings }));
+      } catch {}
+    }
     this.addActivityLog({
       type: 'settings_update',
       title: 'تحديث محتوى الموقع',

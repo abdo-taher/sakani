@@ -27,13 +27,39 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenNeedModal,
 }) => {
   const { isInstalled, installApp } = usePWAInstall();
-  const settings = StorageService.getSettings();
-  const phone = settings.phone || settings.company_phone || '01067725976';
-  const rawWhatsapp = settings.whatsapp || settings.company_whatsapp || '201067725976';
+  const [settings, setSettings] = useState<SystemSettings>(() => {
+    try {
+      return StorageService.getSettings();
+    } catch {
+      return { phone: '01067725976', commission_percentage: 2.5 } as any;
+    }
+  });
+
+  useEffect(() => {
+    const handleSettingsUpdate = (e: any) => {
+      if (e?.detail) {
+        setSettings(e.detail);
+      } else {
+        try {
+          setSettings(StorageService.getSettings());
+        } catch {}
+      }
+    };
+    window.addEventListener('sakani_settings_updated', handleSettingsUpdate);
+    window.addEventListener('storage', handleSettingsUpdate);
+    return () => {
+      window.removeEventListener('sakani_settings_updated', handleSettingsUpdate);
+      window.removeEventListener('storage', handleSettingsUpdate);
+    };
+  }, []);
+
+  const phone = settings.phone || (settings as any).company_phone || '01067725976';
+  const rawWhatsapp = settings.whatsapp || (settings as any).company_whatsapp || '201067725976';
   const whatsappNum = String(rawWhatsapp).replace(/\D/g, '');
-  const email = settings.email || settings.company_email || 'info@sakani.site';
-  const address = settings.address || settings.company_address || 'دمياط الجديدة - المنطقة المركزية';
-  const commissionText = settings.commission_text || 'عمولة الوساطة 2.5% تدفع عند إتمام التعاقد فقط، والمعاينة مجانية تماماً';
+  const email = settings.email || (settings as any).company_email || 'info@sakani.site';
+  const address = settings.address || (settings as any).company_address || 'دمياط الجديدة - المنطقة المركزية';
+  const commissionPercentage = settings.commission_percentage !== undefined ? settings.commission_percentage : 2.5;
+  const commissionText = settings.commission_text || `عمولة الوساطة ${commissionPercentage}% تدفع عند إتمام التعاقد فقط، والمعاينة مجانية تماماً`;
 
   return (
     <footer className="bg-[#0F172A] text-white pt-14 pb-24 md:pb-12 border-t border-slate-800" dir="rtl">

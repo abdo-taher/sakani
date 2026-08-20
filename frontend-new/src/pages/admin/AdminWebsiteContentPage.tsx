@@ -210,7 +210,7 @@ export const AdminWebsiteContentPage: React.FC = () => {
                   type="url"
                   value={settings.hero_bg_image || ''}
                   onChange={(e) => setSettings({ ...settings, hero_bg_image: e.target.value })}
-                  placeholder="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1800&q=80"
+                  placeholder="/hero-poster.jpg"
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#8D6A28]"
                 />
               </div>

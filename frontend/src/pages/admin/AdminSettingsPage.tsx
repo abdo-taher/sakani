@@ -494,7 +494,21 @@ export const AdminSettingsPage: React.FC = () => {
                     min="0"
                     max="100"
                     value={settings.commission_percentage !== undefined ? settings.commission_percentage : 2.5}
-                    onChange={(e) => setSettings({ ...settings, commission_percentage: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const numRate = parseFloat(val) || 0;
+                      setSettings(prev => {
+                        const currentText = prev.commission_text || `عمولة الوساطة ${numRate}% تدفع عند إتمام التعاقد فقط، والمعاينة مجانية تماماً`;
+                        const updatedText = /\d+(\.\d+)?%/.test(currentText)
+                          ? currentText.replace(/\d+(\.\d+)?%/, `${numRate}%`)
+                          : `${currentText} (${numRate}%)`;
+                        return {
+                          ...prev,
+                          commission_percentage: val === '' ? ('' as any) : numRate,
+                          commission_text: updatedText
+                        };
+                      });
+                    }}
                     placeholder="2.5"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:border-[#8D6A28]"
                   />

@@ -41,7 +41,18 @@ class SettingController extends Controller
                 // Use defaults if table query fails
             }
 
-            return array_merge($defaults, $saved);
+            $finalMerged = array_merge($defaults, $saved);
+            if (isset($finalMerged['commission_percentage'])) {
+                $rate = $finalMerged['commission_percentage'];
+                if (!empty($finalMerged['commission_text'])) {
+                    if (preg_match('/\d+(\.\d+)?%/', $finalMerged['commission_text'])) {
+                        $finalMerged['commission_text'] = preg_replace('/\d+(\.\d+)?%/', "{$rate}%", $finalMerged['commission_text']);
+                    }
+                } else {
+                    $finalMerged['commission_text'] = "عمولة الوساطة {$rate}% تدفع عند إتمام التعاقد فقط، والمعاينة مجانية تماماً";
+                }
+            }
+            return $finalMerged;
         });
 
         return response()->json($merged);
@@ -58,6 +69,17 @@ class SettingController extends Controller
         // If wrapped in 'data' or 'settings' key
         if (isset($data['settings']) && is_array($data['settings'])) {
             $data = $data['settings'];
+        }
+
+        if (isset($data['commission_percentage'])) {
+            $rate = $data['commission_percentage'];
+            if (!empty($data['commission_text'])) {
+                if (preg_match('/\d+(\.\d+)?%/', $data['commission_text'])) {
+                    $data['commission_text'] = preg_replace('/\d+(\.\d+)?%/', "{$rate}%", $data['commission_text']);
+                }
+            } else {
+                $data['commission_text'] = "عمولة الوساطة {$rate}% تدفع عند إتمام التعاقد فقط، والمعاينة مجانية تماماً";
+            }
         }
 
         try {

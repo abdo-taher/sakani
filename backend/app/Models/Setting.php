@@ -23,6 +23,7 @@ class Setting extends Model
             'notifications_enabled' => true,
             'app_language' => 'ar',
             'commission_text' => 'عمولة الوساطة 2.5% تدفع عند إتمام التعاقد فقط، والمعاينة مجانية تماماً',
+            'commission_percentage' => 2.5,
             // Maintenance & Enhancement Screen
             'maintenance_mode' => false,
             'maintenance_title' => 'نعمل حالياً على تطوير وتحسين تجربتكم لنقدم لكم الأفضل',
@@ -31,7 +32,7 @@ class Setting extends Model
             'hero_tagline' => 'منصة العقارات الأولى في دمياط الجديدة',
             'hero_title' => 'عقارك المناسب أقرب مما تتخيل',
             'hero_subtitle' => 'اكتشف أفضل العقارات للبيع والإيجار في دمياط الجديدة والمناطق المميزة مع تجربة معاينة وحجز ذكية ومضمونة.',
-            'hero_bg_image' => 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1800&q=80',
+            'hero_bg_image' => '/hero-poster.jpg',
             'hero_video_url' => 'https://sakani.site/hero.mp4?v=3',
             'hero_use_video' => true,
             'hero_cta_text' => 'تصفح كافة العقارات',

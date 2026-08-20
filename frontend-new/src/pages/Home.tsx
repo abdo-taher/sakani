@@ -568,7 +568,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 pt-1 text-[11px] sm:text-xs font-medium text-slate-200">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-xs border border-white/15">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              عمولة وساطة مخفضة 2.5% فقط
+              عمولة وساطة مخفضة {settings.commission_percentage !== undefined ? settings.commission_percentage : 2.5}% فقط
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-xs border border-white/15">
               <CheckCircle2 className="w-3.5 h-3.5 text-[#D6A94E]" />

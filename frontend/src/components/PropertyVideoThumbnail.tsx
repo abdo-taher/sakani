@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Film, AlertCircle, Sparkles } from 'lucide-react';
-import { isYouTubeUrl, getYouTubeThumbnail, isCloudinaryVideoUrl, getCloudinaryVideoThumbnail, resolveVideoUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { isYouTubeUrl, getYouTubeThumbnail, isCloudinaryVideoUrl, getCloudinaryVideoThumbnail, resolveVideoUrl, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 
 interface PropertyVideoThumbnailProps {
   videoUrl: string;
@@ -39,7 +39,7 @@ export const PropertyVideoThumbnail: React.FC<PropertyVideoThumbnailProps> = ({
 
     // 1. Explicit thumbnail
     if (thumbnailUrl && thumbnailUrl.trim()) {
-      setImageSrc(resolveVideoUrl(thumbnailUrl.trim()));
+      setImageSrc(resolveImageUrl(thumbnailUrl.trim()));
       return;
     }
 
@@ -69,7 +69,7 @@ export const PropertyVideoThumbnail: React.FC<PropertyVideoThumbnailProps> = ({
 
     // 5. Fallback image
     if (fallbackImage) {
-      setImageSrc(fallbackImage);
+      setImageSrc(resolveImageUrl(fallbackImage));
     }
   }, [resolvedVideo, thumbnailUrl, fallbackImage]);
 
@@ -77,8 +77,10 @@ export const PropertyVideoThumbnail: React.FC<PropertyVideoThumbnailProps> = ({
     // If image failed to load and we have a video URL, try video element preview
     if (!useVideoElement && resolvedVideo && !isYouTubeUrl(resolvedVideo)) {
       setUseVideoElement(true);
-    } else if (fallbackImage && imageSrc !== fallbackImage) {
-      setImageSrc(fallbackImage);
+    } else if (fallbackImage && imageSrc !== resolveImageUrl(fallbackImage)) {
+      setImageSrc(resolveImageUrl(fallbackImage));
+    } else if (imageSrc !== FALLBACK_PROPERTY_IMAGE) {
+      setImageSrc(FALLBACK_PROPERTY_IMAGE);
     } else {
       setLoadError(true);
     }

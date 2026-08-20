@@ -1008,6 +1008,7 @@ export const AdminMediaManagementModal: React.FC<AdminMediaManagementModalProps>
             alt="تكبير الصورة" 
             className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
           />
         </div>
       )}
