@@ -60,8 +60,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     StorageService.ensureWelcomeNotification();
     loadNotifications();
 
-    // Auto-register admin device token in background if permission is already granted
-    if (role === 'admin' && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+    // Auto-register admin device token in background if permission is already granted and admin is authenticated
+    if (role === 'admin' && StorageService.isAdminLoggedIn() && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       requestNotificationPermission('admin').catch(() => {});
     }
 
@@ -106,7 +106,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
     // 3. Periodic real-time sync (every 15 seconds) & focus sync for Admin
     let intervalId: any = null;
-    if (role === 'admin') {
+    if (role === 'admin' && StorageService.isAdminLoggedIn()) {
       intervalId = setInterval(() => {
         loadNotifications(true);
       }, 15000);

@@ -25,6 +25,8 @@ import {
   Clock
 } from 'lucide-react';
 
+const currencyFormatter = new Intl.NumberFormat('ar-EG');
+
 interface PropertyCardProps {
   property: Property;
   isFavorite: boolean;
@@ -33,7 +35,7 @@ interface PropertyCardProps {
   onQuickPreview?: (property: Property) => void;
 }
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({
+export const PropertyCard: React.FC<PropertyCardProps> = React.memo(({
   property,
   isFavorite,
   onToggleFavorite,
@@ -58,7 +60,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ar-EG').format(price);
+    return currencyFormatter.format(price);
   };
 
   const offerInfo = evaluatePropertyOffer(property);
@@ -159,6 +161,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
           alt={property.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
+          decoding="async"
           onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
         />
 
@@ -425,5 +428,5 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
       </div>
     </div>
   );
-};
+});
 

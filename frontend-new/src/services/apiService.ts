@@ -1,7 +1,4 @@
-/**
- * Centralized API Service for Backend Communication (Laravel REST API)
- * Handles authorization interceptors, response normalization, and error handling.
- */
+import { StorageService } from './storageService';
 
 export function getApiUrl(): string {
   if (typeof window === 'undefined') {
@@ -84,11 +81,15 @@ export async function apiRequest<T = any>(
   });
 
   if (!response.ok) {
-    if (response.status === 401 && token) {
+    if (response.status === 401) {
       sessionStorage.removeItem('token');
       localStorage.removeItem('token');
       localStorage.removeItem('sakani_token');
       localStorage.removeItem('sakani_admin_session_v3');
+      localStorage.removeItem('sakani_admin_logged_in');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('sakani_admin_auth_changed', { detail: { isAdmin: false } }));
+      }
     }
     const errorData = await response.json().catch(() => ({}));
     const err = new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
@@ -448,8 +449,13 @@ export const ApiService = {
 
   // ---------------- Reservations & Inquiries ----------------
   async getReservations() {
-    const res = await apiRequest('/reservations');
-    return normalizeData(res);
+    if (!getAuthToken()) return StorageService.getInquiries();
+    try {
+      const res = await apiRequest('/reservations');
+      return normalizeData(res);
+    } catch {
+      return StorageService.getInquiries();
+    }
   },
 
   async getReservation(id: string | number) {
@@ -496,8 +502,13 @@ export const ApiService = {
 
   // ---------------- Customer Need Requests ----------------
   async getNeedRequests() {
-    const res = await apiRequest('/need-requests');
-    return normalizeData(res);
+    if (!getAuthToken()) return StorageService.getNeedRequests();
+    try {
+      const res = await apiRequest('/need-requests');
+      return normalizeData(res);
+    } catch {
+      return StorageService.getNeedRequests();
+    }
   },
 
   async createNeedRequest(data: any) {
@@ -522,8 +533,13 @@ export const ApiService = {
 
   // ---------------- Contact Messages ----------------
   async getContactMessages() {
-    const res = await apiRequest('/contact-messages');
-    return normalizeData(res);
+    if (!getAuthToken()) return StorageService.getContactMessages();
+    try {
+      const res = await apiRequest('/contact-messages');
+      return normalizeData(res);
+    } catch {
+      return StorageService.getContactMessages();
+    }
   },
 
   async createContactMessage(data: { name: string; phone: string; email?: string; message: string; subject?: string }) {
@@ -598,12 +614,12 @@ export const ApiService = {
 
   // ---------------- Notifications & Push FCM ----------------
   async getNotifications() {
-    if (!getAuthToken()) return { notifications: [] };
+    if (!getAuthToken()) return { data: [], unread_count: 0, notifications: [] };
     try {
       const res = await apiRequest('/notifications');
       return res;
     } catch {
-      return { notifications: [] };
+      return { data: [], unread_count: 0, notifications: [] };
     }
   },
 
@@ -674,10 +690,15 @@ export const ApiService = {
   },
 
   async registerAdminDeviceToken(token: string) {
-    return apiRequest('/admin/device-tokens', {
-      method: 'POST',
-      body: JSON.stringify({ token, device_type: 'web' }),
-    });
+    if (!getAuthToken()) return false;
+    try {
+      return await apiRequest('/admin/device-tokens', {
+        method: 'POST',
+        body: JSON.stringify({ token, device_type: 'web' }),
+      });
+    } catch {
+      return false;
+    }
   },
 
   async unregisterDeviceToken(token: string) {
@@ -689,8 +710,13 @@ export const ApiService = {
 
   // ---------------- Admin Manual Notifications Composer ----------------
   async getActiveRecipientsCount() {
-    const res = await apiRequest('/admin/notifications/active-recipients-count');
-    return normalizeData(res);
+    if (!getAuthToken()) return { count: 0, active_devices: 0 };
+    try {
+      const res = await apiRequest('/admin/notifications/active-recipients-count');
+      return normalizeData(res);
+    } catch {
+      return { count: 0, active_devices: 0 };
+    }
   },
 
   async sendManualNotification(data: {

@@ -859,14 +859,25 @@ export const StorageService = {
 
   // ---------------- Admin Authentication Session ----------------
   isAdminLoggedIn(): boolean {
-    return localStorage.getItem(KEYS.ADMIN_LOGGED_IN) === 'true';
+    const hasFlag = typeof window !== 'undefined' && localStorage.getItem(KEYS.ADMIN_LOGGED_IN) === 'true';
+    const hasToken = typeof window !== 'undefined' && Boolean(
+      sessionStorage.getItem('token') ||
+      localStorage.getItem('token') ||
+      localStorage.getItem('sakani_token')
+    );
+    return hasFlag && hasToken;
   },
 
   setAdminLoggedIn(status: boolean): void {
+    if (typeof window === 'undefined') return;
     if (status) {
       localStorage.setItem(KEYS.ADMIN_LOGGED_IN, 'true');
     } else {
       localStorage.removeItem(KEYS.ADMIN_LOGGED_IN);
+      localStorage.removeItem('token');
+      localStorage.removeItem('sakani_token');
+      localStorage.removeItem('sakani_admin_session_v3');
+      sessionStorage.removeItem('token');
     }
   },
 

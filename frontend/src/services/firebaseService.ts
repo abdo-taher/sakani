@@ -4,7 +4,7 @@
  * and service worker synchronization.
  */
 
-import { apiRequest } from './apiService';
+import { apiRequest, getAuthToken } from './apiService';
 import { playAdminNotificationSound, playCustomerNotificationSound } from '../utils/sound';
 
 export interface FirebaseConfig {
@@ -192,6 +192,10 @@ export async function registerTokenWithBackend(
 ): Promise<boolean> {
   try {
     if (role === 'admin') {
+      const authToken = getAuthToken();
+      if (!authToken) {
+        return false;
+      }
       await apiRequest('/admin/device-tokens', {
         method: 'POST',
         body: JSON.stringify({ token, device_type: 'web' }),

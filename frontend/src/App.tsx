@@ -57,6 +57,7 @@ import { EgyptianWelcomeFeedbackModal } from './components/EgyptianWelcomeFeedba
 import { ClientFeedbackCampaignModal } from './components/ClientFeedbackCampaignModal';
 import { TopLoadingBar } from './components/TopLoadingBar';
 import { PageLoader } from './components/PageLoader';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { ActiveTab } from './components/BottomNav';
 
 function MainApp() {
@@ -102,6 +103,19 @@ function MainApp() {
       }
     }
   }, [navigate]);
+
+  // Listen to admin authentication state changes
+  useEffect(() => {
+    const handleAuthChange = (e: any) => {
+      const isAuth = e?.detail?.isAdmin !== undefined ? e.detail.isAdmin : StorageService.isAdminLoggedIn();
+      setIsAdmin(isAuth);
+    };
+
+    window.addEventListener('sakani_admin_auth_changed', handleAuthChange);
+    return () => {
+      window.removeEventListener('sakani_admin_auth_changed', handleAuthChange);
+    };
+  }, []);
 
   // Global scroll to top on page navigation
   useEffect(() => {
@@ -272,6 +286,7 @@ function MainApp() {
   };
 
   const handleLogoutAdmin = () => {
+    ApiService.logout().catch(() => {});
     StorageService.setAdminLoggedIn(false);
     setIsAdmin(false);
     navigate('/');
@@ -649,9 +664,11 @@ function MainApp() {
 
 export function App() {
   return (
-    <BrowserRouter>
-      <MainApp />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <MainApp />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

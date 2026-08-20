@@ -1690,7 +1690,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                   <span className="text-slate-400">›</span>
                   <span className="text-slate-600">properties</span>
                   <span className="text-slate-400">›</span>
-                  <span className="text-slate-500 truncate">{generatePropertySlug({ id: propertyToEdit?.id || 'new', title }) || 'property-slug'}</span>
+                  <span className="text-slate-500 truncate">{generatePropertySlug({ id: initialPropertyId || 'new', title } as any) || 'property-slug'}</span>
                 </div>
 
                 {/* Google Title (Blue Link) */}
