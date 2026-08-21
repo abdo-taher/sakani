@@ -325,6 +325,9 @@ export function resolveImageUrl(url: any): string {
     }
     return FALLBACK_PROPERTY_IMAGE;
   }
+  const trimmed = url.trim();
+  if (!trimmed) return FALLBACK_PROPERTY_IMAGE;
+
   // Intercept Unsplash URLs that cause ERR_CONNECTION_CLOSED
   if (trimmed.includes('images.unsplash.com')) {
     if (trimmed.includes('w=1800') || trimmed.includes('1545324418')) {
