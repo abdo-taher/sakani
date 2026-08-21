@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Video, Play, Pause, ExternalLink, Sparkles, Film, AlertCircle, Maximize, Volume2, VolumeX } from 'lucide-react';
 import { PropertyVideo } from '../types';
-import { isYouTubeUrl, getYouTubeEmbedUrl, getVideoThumbnailUrl, resolveVideoUrl } from '../utils/media';
+import { isYouTubeUrl, getYouTubeEmbedUrl, getVideoThumbnailUrl, resolveVideoUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 
 export interface PropertyMultiVideoPlayerProps {
   videos?: PropertyVideo[];
@@ -71,7 +71,20 @@ export const PropertyMultiVideoPlayer: React.FC<PropertyMultiVideoPlayerProps> =
   const currentVideo = videoList[activeIndex] || videoList[0];
   const isYouTube = currentVideo ? isYouTubeUrl(currentVideo.url) : false;
   const embedUrl = isYouTube && currentVideo ? getYouTubeEmbedUrl(currentVideo.url, isPlaying) : null;
-  const poster = currentVideo?.thumbnail_url || videoThumbnailUrl || fallbackPoster;
+  const requestedPoster = currentVideo?.thumbnail_url || videoThumbnailUrl || fallbackPoster || FALLBACK_PROPERTY_IMAGE;
+  const [safePoster, setSafePoster] = useState<string>(requestedPoster);
+
+  useEffect(() => {
+    setSafePoster(requestedPoster);
+    if (!requestedPoster || requestedPoster === FALLBACK_PROPERTY_IMAGE) return;
+
+    const image = new Image();
+    image.onerror = () => setSafePoster(FALLBACK_PROPERTY_IMAGE);
+    image.src = requestedPoster;
+    return () => {
+      image.onerror = null;
+    };
+  }, [requestedPoster]);
 
   const handleIndexSelect = useCallback((idx: number) => {
     if (onVideoIndexChange) {
@@ -217,7 +230,7 @@ export const PropertyMultiVideoPlayer: React.FC<PropertyMultiVideoPlayerProps> =
             <video
               ref={videoRef}
               src={currentVideo.url}
-              poster={poster}
+              poster={safePoster}
               controls={isPlaying}
               preload="metadata"
               playsInline
@@ -412,7 +425,7 @@ export const PropertyMultiVideoPlayer: React.FC<PropertyMultiVideoPlayerProps> =
             <video
               ref={videoRef}
               src={currentVideo.url}
-              poster={poster}
+              poster={safePoster}
               controls={isPlaying}
               preload="metadata"
               playsInline

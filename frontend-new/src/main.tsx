@@ -2,6 +2,9 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import {installGlobalImageFallback} from './utils/imageFallback';
+
+installGlobalImageFallback();
 
 // Shield application from unhandled third-party browser extension script errors
 if (typeof window !== 'undefined') {

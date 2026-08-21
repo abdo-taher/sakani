@@ -924,7 +924,7 @@ export const AdminMediaManagementModal: React.FC<AdminMediaManagementModalProps>
                           <video 
                             key={previewVideo.url}
                             src={previewVideo.url} 
-                            poster={previewVideo.thumbnail_url || mediaImages[0]?.url}
+                            poster={previewVideo.thumbnail_url || mediaImages[0]?.url || FALLBACK_PROPERTY_IMAGE}
                             controls 
                             playsInline
                             className="w-full h-full object-cover" 

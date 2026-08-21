@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use App\Models\PropertyImage;
+use App\Models\Room;
+use App\Models\RoomImage;
 use App\Models\Category;
 use App\Models\PropertyType;
 use App\Services\VideoUploadService;
@@ -319,6 +321,12 @@ class PropertyController extends Controller
             'rooms_data.*.description' => 'nullable|string',
             'rooms_data.*.price' => 'required|numeric|min:0',
             'rooms_data.*.area' => 'nullable|integer|min:1',
+            'rooms_data.*.status' => 'nullable|in:available,reserved,rented',
+            'rooms_data.*.media' => 'sometimes|array|max:20',
+            'rooms_data.*.media.*.image_url' => 'required|string|max:2048',
+            'rooms_data.*.media.*.image_public_id' => 'nullable|string|max:2048',
+            'rooms_data.*.media.*.media_type' => 'required|in:image,video',
+            'rooms_data.*.media.*.is_primary' => 'sometimes|boolean',
             'amenities' => 'sometimes|array',
             'tags' => 'sometimes|array',
             
@@ -451,14 +459,15 @@ class PropertyController extends Controller
             // Create rooms inline if provided
             if ($request->filled('rooms_data') && $request->has_detailed_rooms) {
                 foreach ($request->rooms_data as $roomData) {
-                    $property->detailedRooms()->create([
+                    $room = $property->detailedRooms()->create([
                         'name' => $roomData['name'],
                         'description' => $roomData['description'] ?? null,
                         'price' => $roomData['price'],
                         'area' => $roomData['area'] ?? null,
-                        'status' => 'available',
-                        'is_uploading' => true,
+                        'status' => $roomData['status'] ?? 'available',
+                        'is_uploading' => false,
                     ]);
+                    $this->syncRoomMedia($room, $roomData['media'] ?? []);
                 }
             }
 
@@ -754,6 +763,12 @@ class PropertyController extends Controller
             'rooms_data.*.description' => 'nullable|string',
             'rooms_data.*.price' => 'required|numeric|min:0',
             'rooms_data.*.area' => 'nullable|integer|min:1',
+            'rooms_data.*.status' => 'nullable|in:available,reserved,rented',
+            'rooms_data.*.media' => 'sometimes|array|max:20',
+            'rooms_data.*.media.*.image_url' => 'required|string|max:2048',
+            'rooms_data.*.media.*.image_public_id' => 'nullable|string|max:2048',
+            'rooms_data.*.media.*.media_type' => 'required|in:image,video',
+            'rooms_data.*.media.*.is_primary' => 'sometimes|boolean',
         ]);
 
         $updateData = $request->only([
@@ -984,12 +999,21 @@ class PropertyController extends Controller
 
             foreach ($incomingRooms as $roomData) {
                 if (!empty($roomData['id']) && is_numeric($roomData['id'])) {
-                    $property->detailedRooms()->where('id', $roomData['id'])->update([
+                    $room = $property->detailedRooms()->where('id', $roomData['id'])->first();
+                    if (!$room) {
+                        continue;
+                    }
+                    $room->update([
                         'name' => $roomData['name'],
                         'description' => $roomData['description'] ?? null,
                         'price' => $roomData['price'],
                         'area' => $roomData['area'] ?? null,
+                        'status' => $roomData['status'] ?? 'available',
+                        'is_uploading' => false,
                     ]);
+                    if (array_key_exists('media', $roomData)) {
+                        $this->syncRoomMedia($room, $roomData['media'] ?? []);
+                    }
                 } else {
                     // Check if room with same name exists to avoid duplicate insertions
                     $existingRoom = $property->detailedRooms()->where('name', $roomData['name'])->first();
@@ -998,16 +1022,22 @@ class PropertyController extends Controller
                             'description' => $roomData['description'] ?? null,
                             'price' => $roomData['price'],
                             'area' => $roomData['area'] ?? null,
+                            'status' => $roomData['status'] ?? 'available',
+                            'is_uploading' => false,
                         ]);
+                        if (array_key_exists('media', $roomData)) {
+                            $this->syncRoomMedia($existingRoom, $roomData['media'] ?? []);
+                        }
                     } else {
-                        $property->detailedRooms()->create([
+                        $room = $property->detailedRooms()->create([
                             'name' => $roomData['name'],
                             'description' => $roomData['description'] ?? null,
                             'price' => $roomData['price'],
                             'area' => $roomData['area'] ?? null,
-                            'status' => 'available',
+                            'status' => $roomData['status'] ?? 'available',
                             'is_uploading' => false,
                         ]);
+                        $this->syncRoomMedia($room, $roomData['media'] ?? []);
                     }
                 }
             }
@@ -1473,6 +1503,30 @@ class PropertyController extends Controller
         }
 
         return $property;
+    }
+
+    /** Replace a room's persisted image/video records with the submitted media list. */
+    protected function syncRoomMedia(Room $room, array $media): void
+    {
+        $room->roomImages()->delete();
+        $hasPrimaryImage = collect($media)->contains(
+            fn ($item) => ($item['media_type'] ?? 'image') === 'image' && !empty($item['is_primary'])
+        );
+
+        foreach ($media as $index => $item) {
+            $url = $item['image_url'] ?? null;
+            if (!$url) continue;
+            $type = ($item['media_type'] ?? 'image') === 'video' ? 'video' : 'image';
+
+            RoomImage::create([
+                'room_id' => $room->id,
+                'image_url' => $url,
+                'image_public_id' => $item['image_public_id'] ?? $this->r2MediaService->extractKeyFromUrl($url),
+                'media_type' => $type,
+                'sort_order' => $index,
+                'is_primary' => $type === 'image' && (!empty($item['is_primary']) || (!$hasPrimaryImage && $index === 0)),
+            ]);
+        }
     }
 
     /**
