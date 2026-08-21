@@ -4,6 +4,7 @@ import { Property, PropertyVideo } from '../types';
 import { StorageService } from '../services/storageService';
 import { ApiService } from '../services/apiService';
 import { generateAndUploadVideoThumbnail, isYouTubeUrl, getYouTubeEmbedUrl, getVideoThumbnailUrl, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { compressImageFile } from '../utils/mediaCompressor';
 import { PropertyVideoThumbnail } from './PropertyVideoThumbnail';
 import { 
   X, 
@@ -144,37 +145,61 @@ export const AdminMediaManagementModal: React.FC<AdminMediaManagementModalProps>
     setUploadProgress({ current: 0, total: fileList.length });
     setErrorMsg(null);
 
-    const newUploaded: MediaImageItem[] = [];
+    try {
+      const compressedFiles = await Promise.all(
+        fileList.map(async (file) => {
+          try {
+            return await compressImageFile(file);
+          } catch {
+            return file;
+          }
+        })
+      );
 
-    for (let i = 0; i < fileList.length; i++) {
-      const file = fileList[i];
-      try {
-        const res = await ApiService.uploadMedia(file, 'sakani/properties/images');
-        if (res?.url) {
-          newUploaded.push({
-            url: res.url,
-            public_id: res.key || res.public_id || res.url,
-            is_primary: mediaImages.length === 0 && newUploaded.length === 0,
-            image_type: 'property',
-          });
+      const newUploaded: MediaImageItem[] = [];
+      let completed = 0;
+
+      // Parallel pool with concurrency 4
+      const pool = [...compressedFiles];
+      const concurrency = Math.min(4, pool.length);
+      const workers = Array(concurrency).fill(null).map(async () => {
+        while (pool.length > 0) {
+          const file = pool.shift();
+          if (!file) break;
+          try {
+            const res = await ApiService.uploadMedia(file, 'sakani/properties/images');
+            if (res?.url) {
+              newUploaded.push({
+                url: res.url,
+                public_id: res.key || res.public_id || res.url,
+                is_primary: mediaImages.length === 0 && newUploaded.length === 0,
+                image_type: 'property',
+              });
+            }
+          } catch (err: any) {
+            console.error('Image upload failed:', err);
+          } finally {
+            completed++;
+            setUploadProgress({ current: completed, total: fileList.length });
+          }
         }
-      } catch (err: any) {
-        console.error('Image upload failed:', err);
-      } finally {
-        setUploadProgress({ current: i + 1, total: fileList.length });
+      });
+
+      await Promise.all(workers);
+
+      if (newUploaded.length > 0) {
+        setMediaImages(prev => [...prev, ...newUploaded]);
+        setSuccessMsg(`تم رفع ${newUploaded.length} صور بنجاح وسرعة فائقة!`);
+        setTimeout(() => setSuccessMsg(null), 3000);
+      } else {
+        setErrorMsg('فشل رفع الصور المحددة. تأكد من اتصال الإنترنت.');
       }
+    } catch (err: any) {
+      setErrorMsg('حدث خطأ أثناء معالجة الصور: ' + err.message);
+    } finally {
+      setUploadingImages(false);
+      if (imageFileInputRef.current) imageFileInputRef.current.value = '';
     }
-
-    if (newUploaded.length > 0) {
-      setMediaImages(prev => [...prev, ...newUploaded]);
-      setSuccessMsg(`تم رفع ${newUploaded.length} صور بنجاح!`);
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } else {
-      setErrorMsg('فشل رفع بعض أو كل الصور المحددة. تأكد من حجم الملفات واتصال الإنترنت.');
-    }
-
-    setUploadingImages(false);
-    if (imageFileInputRef.current) imageFileInputRef.current.value = '';
   };
 
   // 2. Add Direct Image URL

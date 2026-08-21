@@ -223,9 +223,6 @@ class R2MediaService
 
             if ($targetDisk === 'r2') {
                 $key = self::normalizeKey($storedPath);
-                if (!$storage->exists($key)) {
-                    throw new Exception("Uploaded object could not be verified on {$targetDisk}: {$key}");
-                }
                 $url = $this->publicUrl($key);
             } else {
                 $key = self::normalizeKey($storedPath);

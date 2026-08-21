@@ -293,7 +293,7 @@ class PropertyController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'rent_duration' => 'nullable|in:monthly,3_months,6_months,yearly',
-            'area' => 'nullable|integer',
+            'area' => 'nullable|numeric|min:0',
             'rooms' => 'required|integer',
             'bathrooms' => 'required|integer',
             'floor' => 'nullable|integer',
@@ -420,7 +420,7 @@ class PropertyController extends Controller
                 'address' => $request->input('address_detail', $request->address),
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
-                'area' => $request->filled('area') ? (int)$request->area : null,
+                'area' => $request->filled('area') && (float)$request->area > 0 ? (int)$request->area : null,
                 'rooms' => $roomsCount,
                 'bathrooms' => (int) ($request->bathrooms ?? 1),
                 'floor' => $request->filled('floor') ? (int)$request->floor : null,
@@ -714,7 +714,7 @@ class PropertyController extends Controller
             'latitude' => 'sometimes|nullable|numeric|between:-90,90',
             'longitude' => 'sometimes|nullable|numeric|between:-180,180',
             'rent_duration' => 'sometimes|nullable|in:monthly,3_months,6_months,yearly',
-            'area' => 'sometimes|nullable|integer|min:1',
+            'area' => 'sometimes|nullable|numeric|min:0',
             'rooms' => 'sometimes|required|integer|min:0',
             'bathrooms' => 'sometimes|required|integer|min:0',
             'floor' => 'sometimes|nullable|integer|min:0',
@@ -803,7 +803,7 @@ class PropertyController extends Controller
             $updateData['furnishing'] = $this->normalizeFurnishingValue($request->furnishing);
         }
         if ($request->has('area')) {
-            $updateData['area'] = $request->filled('area') ? (int)$request->area : null;
+            $updateData['area'] = $request->filled('area') && (float)$request->area > 0 ? (int)$request->area : null;
         }
         if ($request->boolean('has_detailed_rooms') && $request->filled('rooms_data') && is_array($request->rooms_data)) {
             $updateData['rooms'] = max((int)($request->rooms ?? 0), count($request->rooms_data));

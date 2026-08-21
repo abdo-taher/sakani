@@ -6,6 +6,7 @@ import { StorageService } from '../services/storageService';
 import { ApiService } from '../services/apiService';
 import { LocationMapPicker } from '../components/LocationMapPicker';
 import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
+import { SEOHead } from '../components/SEOHead';
 import confetti from 'canvas-confetti';
 import { 
   Upload, 
@@ -96,10 +97,6 @@ export const AddPropertyPage: React.FC = () => {
         alert('يرجى تحديد السعر المطلوب');
         return;
       }
-      if (!area || Number(area) <= 0) {
-        alert('يرجى تحديد المساحة بالمتر المربع');
-        return;
-      }
     }
     setStep(prev => prev + 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -114,8 +111,8 @@ export const AddPropertyPage: React.FC = () => {
 
     setIsSubmitting(true);
     const selectedDist = DISTRICTS_LIST.find(d => d.id === districtId);
-    const generatedTitle = title.trim() || `${propertyType === 'apartment' ? 'شقة' : 'عقار'} بمساحة ${area} م² في ${selectedDist?.name || 'دمياط الجديدة'}`;
-    const generatedDesc = description.trim() || `عقار معروض ${operationType === 'sale' ? 'للبيع' : 'للإيجار'} في ${selectedDist?.name || 'دمياط الجديدة'} بمساحة ${area} م²، موقع مميز وتشطيب عالي الجودة.`;
+    const generatedTitle = title.trim() || `${propertyType === 'apartment' ? 'شقة' : 'عقار'} ${area ? `بمساحة ${area} م²` : ''} في ${selectedDist?.name || 'دمياط الجديدة'}`.trim();
+    const generatedDesc = description.trim() || `عقار معروض ${operationType === 'sale' ? 'للبيع' : 'للإيجار'} في ${selectedDist?.name || 'دمياط الجديدة'} ${area ? `بمساحة ${area} م²،` : ''} موقع مميز وتشطيب عالي الجودة.`;
 
     const payload = {
       title: generatedTitle,
@@ -129,7 +126,7 @@ export const AddPropertyPage: React.FC = () => {
       location_id: 1,
       latitude: coords.lat,
       longitude: coords.lng,
-      area: Number(area),
+      area: (area && Number(area) > 0) ? Number(area) : null,
       rooms: Number(rooms),
       bathrooms: Number(bathrooms),
       floor: Number(floor) || 1,
@@ -179,6 +176,11 @@ export const AddPropertyPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20 pt-6 sm:pt-10" dir="rtl">
+      <SEOHead
+        title="أضف عقارك للبيع أو الإيجار مجاناً | سكني"
+        description="اعرض شقتك، فيلتك أو محلك التجاري للبيع أو الإيجار أمام آلاف الباحثين عن عقارات في دمياط الجديدة مع تسويق احترافي وتوثيق قانوني."
+        canonical="https://sakani.site/sell"
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Breadcrumb */}

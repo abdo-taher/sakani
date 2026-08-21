@@ -18,8 +18,10 @@ import { LocationMapPicker } from './LocationMapPicker';
 import { PropertyVideoThumbnail } from './PropertyVideoThumbnail';
 import { PropertyMultiVideoPlayer } from './PropertyMultiVideoPlayer';
 import { generateAndUploadVideoThumbnail, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { uploadMediaBatch, compressImageFile } from '../utils/mediaCompressor';
 import { PropertyFormSkeleton } from './Skeletons';
 import { evaluatePropertyOffer, getTodayDateString } from '../utils/offerUtils';
+import { generatePropertySlug, SITE_BASE_URL } from '../utils/seo';
 import confetti from 'canvas-confetti';
 import {
   Building2,
@@ -450,24 +452,20 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 3. Image Upload to Cloudflare R2
+  // 3. Image Upload to Cloudflare R2 with Fast Client Compression & Concurrency
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const files = Array.from(e.target.files) as File[];
     setUploadingImage(true);
 
     try {
-      const newUrls: string[] = [];
-      for (const file of files) {
-        const res = await ApiService.uploadMedia(file, 'sakani/properties/images');
-        if (res?.url) {
-          newUrls.push(res.url);
-        }
+      const newUrls = await uploadMediaBatch(files, 'sakani/properties/images', 4);
+      if (newUrls.length > 0) {
+        setImages((prev) => [...prev, ...newUrls]);
       }
-      setImages((prev) => [...prev, ...newUrls]);
     } catch (err: any) {
       console.error('Image upload failed:', err);
-      alert('فشل رفع بعض الصور إلى السحابة: ' + (err.message || ''));
+      alert('فشل رفع بعض الصور: ' + (err.message || ''));
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -521,9 +519,12 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
   };
 
   const handleRemoveImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-    if (primaryImageIndex >= index && primaryImageIndex > 0) {
-      setPrimaryImageIndex((prev) => prev - 1);
+    const updated = images.filter((_, i) => i !== index);
+    setImages(updated);
+    if (primaryImageIndex === index) {
+      setPrimaryImageIndex(0);
+    } else if (primaryImageIndex > index) {
+      setPrimaryImageIndex((prev) => Math.max(0, prev - 1));
     }
   };
 
@@ -545,7 +546,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
     const newRoom: DetailedRoom = {
       id: `room-${Date.now()}`,
       name: `غرفة ${detailedRooms.length + 1}`,
-      price: Number(price) ? Math.round(Number(price) / Math.max(detailedRooms.length + 1, 1)) : 1500,
+      price: Math.round(Number(price) / Math.max(Number(rooms) || 1, detailedRooms.length + 1)) || 1500,
       area: 20,
       description: 'غرفة مفروشة ومكيفة',
       status: 'available',
@@ -574,8 +575,14 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
         if (isVideo && file.size > 100 * 1024 * 1024) {
           throw new Error('حجم فيديو الغرفة أكبر من 100 ميجابايت');
         }
+        
+        let fileToUpload = file;
+        if (!isVideo && file.type.startsWith('image/')) {
+          fileToUpload = await compressImageFile(file);
+        }
+
         const uploaded = await ApiService.uploadMedia(
-          file,
+          fileToUpload,
           isVideo ? 'sakani/rooms/videos' : 'sakani/rooms/images'
         );
         if (uploaded?.url) {
@@ -667,7 +674,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       address_detail: addressDetail.trim() || null,
       latitude: Number(latitude) || 31.4385,
       longitude: Number(longitude) || 31.6705,
-      area: Number(area) || 0,
+      area: (area && Number(area) > 0) ? Number(area) : null,
       rooms: finalRooms,
       bathrooms: Number(bathrooms) || 0,
       floor: Number(floor) || 0,
@@ -1070,15 +1077,14 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
               {/* Area */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  المساحة الإجمالية (م²) <span className="text-rose-500">*</span>
+                  المساحة الإجمالية (م²) <span className="text-slate-400 font-normal">(اختياري)</span>
                 </label>
                 <input
                   type="number"
-                  min="1"
-                  required
+                  min="0"
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
-                  placeholder="120"
+                  placeholder="مثال: 120"
                   className={`w-full px-4 py-3 bg-slate-50 border rounded-2xl text-xs sm:text-sm font-bold text-slate-900 outline-none focus:border-[#8D6A28] ${
                     errors.area ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200'
                   }`}
@@ -1849,8 +1855,8 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
               <p className="text-xs text-slate-500 mt-0.5">راجع ملخص العقار قبل الحفظ النهائي والنشر في المنصة</p>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Recap Box */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Box 1 */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">البيانات الأساسية</h4>
@@ -1898,6 +1904,41 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
               <div>
                 <span className="text-slate-400 block">التشطيب:</span>
                 <span className="font-black text-slate-900">{FINISHING_LABELS[finishing] || finishing}</span>
+              </div>
+            </div>
+
+            {/* Google Search Result Preview Widget (SEO Live Snippet) */}
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>معاينة ظهور العقار في محرك بحث جوجل (Google Search Preview)</span>
+                </h4>
+                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                  Rich Snippet Ready ⚡
+                </span>
+              </div>
+
+              {/* Google Search Card Simulator */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1 font-sans text-right" dir="rtl">
+                {/* URL Breadcrumb */}
+                <div className="flex items-center gap-1.5 text-xs text-slate-600 truncate font-mono">
+                  <span className="font-bold text-slate-800">sakani.site</span>
+                  <span className="text-slate-400">›</span>
+                  <span className="text-slate-600">properties</span>
+                  <span className="text-slate-400">›</span>
+                  <span className="text-slate-500 truncate">{generatePropertySlug({ id: initialPropertyId || 'new', title } as any) || 'property-slug'}</span>
+                </div>
+
+                {/* Google Title (Blue Link) */}
+                <h3 className="text-base font-medium text-blue-800 hover:underline leading-snug cursor-pointer line-clamp-1">
+                  {title || 'عنوان العقار'} | عقارات {operationType === 'sale' ? 'للبيع' : 'للإيجار'} دمياط الجديدة - سكني
+                </h3>
+
+                {/* Google Description */}
+                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                  {description.trim() ? description.trim().slice(0, 150) + '...' : `عقار مميز ${operationType === 'sale' ? 'للبيع' : 'للإيجار'} في ${districtsList.find(d => d.id === locationId)?.name || 'دمياط الجديدة'} بمساحة ${area || '0'} م² بسعر ${Number(price).toLocaleString('ar-EG')} ج.م مع معاينات موثقة.`}
+                </p>
               </div>
             </div>
 

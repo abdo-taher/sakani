@@ -31,7 +31,7 @@ class RoomController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'area' => 'nullable|integer|min:1',
+            'area' => 'nullable|numeric|min:0',
             'status' => 'nullable|in:available,reserved,rented',
         ]);
 
@@ -40,7 +40,7 @@ class RoomController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'price' => $request->price,
-            'area' => $request->area,
+            'area' => $request->filled('area') && (float)$request->area > 0 ? (int)$request->area : null,
             'status' => $request->status ?? 'available',
             'is_uploading' => false,
         ]);
@@ -65,11 +65,16 @@ class RoomController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
             'price' => 'sometimes|required|numeric|min:0',
-            'area' => 'sometimes|nullable|integer|min:1',
+            'area' => 'sometimes|nullable|numeric|min:0',
             'status' => 'sometimes|nullable|in:available,reserved,rented',
         ]);
 
-        $room->update($request->only(['name', 'description', 'price', 'area', 'status']));
+        $updateData = $request->only(['name', 'description', 'price', 'status']);
+        if ($request->has('area')) {
+            $updateData['area'] = $request->filled('area') && (float)$request->area > 0 ? (int)$request->area : null;
+        }
+
+        $room->update($updateData);
 
         return response()->json([
             'success' => true,

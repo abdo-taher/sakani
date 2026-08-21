@@ -97,10 +97,6 @@ export const AddPropertyPage: React.FC = () => {
         alert('يرجى تحديد السعر المطلوب');
         return;
       }
-      if (!area || Number(area) <= 0) {
-        alert('يرجى تحديد المساحة بالمتر المربع');
-        return;
-      }
     }
     setStep(prev => prev + 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -115,8 +111,8 @@ export const AddPropertyPage: React.FC = () => {
 
     setIsSubmitting(true);
     const selectedDist = DISTRICTS_LIST.find(d => d.id === districtId);
-    const generatedTitle = title.trim() || `${propertyType === 'apartment' ? 'شقة' : 'عقار'} بمساحة ${area} م² في ${selectedDist?.name || 'دمياط الجديدة'}`;
-    const generatedDesc = description.trim() || `عقار معروض ${operationType === 'sale' ? 'للبيع' : 'للإيجار'} في ${selectedDist?.name || 'دمياط الجديدة'} بمساحة ${area} م²، موقع مميز وتشطيب عالي الجودة.`;
+    const generatedTitle = title.trim() || `${propertyType === 'apartment' ? 'شقة' : 'عقار'} ${area ? `بمساحة ${area} م²` : ''} في ${selectedDist?.name || 'دمياط الجديدة'}`.trim();
+    const generatedDesc = description.trim() || `عقار معروض ${operationType === 'sale' ? 'للبيع' : 'للإيجار'} في ${selectedDist?.name || 'دمياط الجديدة'} ${area ? `بمساحة ${area} م²،` : ''} موقع مميز وتشطيب عالي الجودة.`;
 
     const payload = {
       title: generatedTitle,
@@ -130,7 +126,7 @@ export const AddPropertyPage: React.FC = () => {
       location_id: 1,
       latitude: coords.lat,
       longitude: coords.lng,
-      area: Number(area),
+      area: (area && Number(area) > 0) ? Number(area) : null,
       rooms: Number(rooms),
       bathrooms: Number(bathrooms),
       floor: Number(floor) || 1,

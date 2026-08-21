@@ -18,6 +18,7 @@ import { LocationMapPicker } from './LocationMapPicker';
 import { PropertyVideoThumbnail } from './PropertyVideoThumbnail';
 import { PropertyMultiVideoPlayer } from './PropertyMultiVideoPlayer';
 import { generateAndUploadVideoThumbnail, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { uploadMediaBatch, compressImageFile } from '../utils/mediaCompressor';
 import { PropertyFormSkeleton } from './Skeletons';
 import { evaluatePropertyOffer, getTodayDateString } from '../utils/offerUtils';
 import { generatePropertySlug, SITE_BASE_URL } from '../utils/seo';
@@ -451,24 +452,20 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 3. Image Upload to Cloudflare R2
+  // 3. Image Upload to Cloudflare R2 with Fast Client Compression & Concurrency
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const files = Array.from(e.target.files) as File[];
     setUploadingImage(true);
 
     try {
-      const newUrls: string[] = [];
-      for (const file of files) {
-        const res = await ApiService.uploadMedia(file, 'sakani/properties/images');
-        if (res?.url) {
-          newUrls.push(res.url);
-        }
+      const newUrls = await uploadMediaBatch(files, 'sakani/properties/images', 4);
+      if (newUrls.length > 0) {
+        setImages((prev) => [...prev, ...newUrls]);
       }
-      setImages((prev) => [...prev, ...newUrls]);
     } catch (err: any) {
       console.error('Image upload failed:', err);
-      alert('فشل رفع بعض الصور إلى السحابة: ' + (err.message || ''));
+      alert('فشل رفع بعض الصور: ' + (err.message || ''));
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -522,9 +519,12 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
   };
 
   const handleRemoveImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-    if (primaryImageIndex >= index && primaryImageIndex > 0) {
-      setPrimaryImageIndex((prev) => prev - 1);
+    const updated = images.filter((_, i) => i !== index);
+    setImages(updated);
+    if (primaryImageIndex === index) {
+      setPrimaryImageIndex(0);
+    } else if (primaryImageIndex > index) {
+      setPrimaryImageIndex((prev) => Math.max(0, prev - 1));
     }
   };
 
@@ -546,7 +546,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
     const newRoom: DetailedRoom = {
       id: `room-${Date.now()}`,
       name: `غرفة ${detailedRooms.length + 1}`,
-      price: Number(price) ? Math.round(Number(price) / Math.max(detailedRooms.length + 1, 1)) : 1500,
+      price: Math.round(Number(price) / Math.max(Number(rooms) || 1, detailedRooms.length + 1)) || 1500,
       area: 20,
       description: 'غرفة مفروشة ومكيفة',
       status: 'available',
@@ -575,8 +575,14 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
         if (isVideo && file.size > 100 * 1024 * 1024) {
           throw new Error('حجم فيديو الغرفة أكبر من 100 ميجابايت');
         }
+        
+        let fileToUpload = file;
+        if (!isVideo && file.type.startsWith('image/')) {
+          fileToUpload = await compressImageFile(file);
+        }
+
         const uploaded = await ApiService.uploadMedia(
-          file,
+          fileToUpload,
           isVideo ? 'sakani/rooms/videos' : 'sakani/rooms/images'
         );
         if (uploaded?.url) {
@@ -668,7 +674,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       address_detail: addressDetail.trim() || null,
       latitude: Number(latitude) || 31.4385,
       longitude: Number(longitude) || 31.6705,
-      area: Number(area) || 0,
+      area: (area && Number(area) > 0) ? Number(area) : null,
       rooms: finalRooms,
       bathrooms: Number(bathrooms) || 0,
       floor: Number(floor) || 0,
@@ -1071,15 +1077,14 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
               {/* Area */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  المساحة الإجمالية (م²) <span className="text-rose-500">*</span>
+                  المساحة الإجمالية (م²) <span className="text-slate-400 font-normal">(اختياري)</span>
                 </label>
                 <input
                   type="number"
-                  min="1"
-                  required
+                  min="0"
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
-                  placeholder="120"
+                  placeholder="مثال: 120"
                   className={`w-full px-4 py-3 bg-slate-50 border rounded-2xl text-xs sm:text-sm font-bold text-slate-900 outline-none focus:border-[#8D6A28] ${
                     errors.area ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200'
                   }`}
