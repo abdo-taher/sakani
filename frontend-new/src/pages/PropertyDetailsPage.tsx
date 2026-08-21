@@ -8,9 +8,20 @@ import { getAmenityDisplay } from '../utils/amenities';
 import { PropertyLocationMap } from '../components/PropertyLocationMap';
 import { PropertyMultiVideoPlayer } from '../components/PropertyMultiVideoPlayer';
 import { PropertyVideoThumbnail } from '../components/PropertyVideoThumbnail';
+import { ClientRoomDetailsModal } from '../components/ClientRoomDetailsModal';
 import { PropertyDetailSkeleton, ModernStateFeedback } from '../components/Skeletons';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
 import { FALLBACK_PROPERTY_IMAGE, sanitizePropertyMedia, resolveImageUrl } from '../utils/media';
+import { SEOHead } from '../components/SEOHead';
+import { 
+  generatePropertyTitle, 
+  generatePropertyDescription, 
+  generatePropertyCanonicalUrl, 
+  generatePropertyAltText, 
+  buildRealEstateListingSchema, 
+  buildBreadcrumbsSchema, 
+  buildVideoSchema 
+} from '../utils/seo';
 import { 
   MapPin, 
   BedDouble, 
@@ -112,6 +123,9 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const [showCalculator, setShowCalculator] = useState(false);
   const [downPaymentPercent, setDownPaymentPercent] = useState<number>(20);
   const [loanYears, setLoanYears] = useState<number>(5);
+
+  // Selected Room Details Modal State
+  const [selectedRoomDetails, setSelectedRoomDetails] = useState<DetailedRoom | null>(null);
 
   // Client reservation state tracking
   const [hasClientReservedProperty, setHasClientReservedProperty] = useState<boolean>(() => {
@@ -418,24 +432,50 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const statusBadge = getStatusBadge();
   const isReservable = property.status === 'available';
 
+  // Structured Data & Breadcrumb schemas for SEO
+  const breadcrumbItems = [
+    { name: 'الرئيسية', url: '/' },
+    { name: property.operation_type === 'rent' ? 'شقق للإيجار' : 'عقارات للبيع', url: `/properties?operation=${property.operation_type}` },
+    { name: property.district_name || 'دمياط الجديدة', url: `/places/${property.location_id}` },
+    { name: property.title, url: generatePropertyCanonicalUrl(property) },
+  ];
+
+  const propertySchemas = [
+    buildRealEstateListingSchema(property),
+    buildBreadcrumbsSchema(breadcrumbItems),
+    buildVideoSchema(property),
+  ].filter(Boolean);
+
   return (
     <div className="min-h-screen bg-slate-50/60 pb-28 sm:pb-16" dir="rtl">
+      <SEOHead
+        title={generatePropertyTitle(property)}
+        description={generatePropertyDescription(property)}
+        canonical={generatePropertyCanonicalUrl(property)}
+        image={property.images?.[0] ? resolveImageUrl(property.images[0]) : undefined}
+        type="article"
+        schema={propertySchemas}
+      />
       
       {/* Breadcrumb Navigation Bar */}
       <div className="bg-white border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2 text-slate-500 overflow-x-auto">
+          <nav aria-label="مسار التنقل" className="flex items-center gap-2 text-slate-500 overflow-x-auto">
             <Link to="/" className="hover:text-[#8D6A28] flex items-center gap-1 shrink-0 transition">
               <Home className="w-3.5 h-3.5" />
               <span>الرئيسية</span>
             </Link>
             <span>/</span>
-            <Link to="/properties" className="hover:text-[#8D6A28] shrink-0 transition">
-              العقارات
+            <Link to={`/properties?operation=${property.operation_type}`} className="hover:text-[#8D6A28] shrink-0 transition">
+              {property.operation_type === 'rent' ? 'شقق للإيجار' : 'عقارات للبيع'}
             </Link>
             <span>/</span>
-            <span className="text-slate-900 font-bold truncate max-w-xs">{property.title}</span>
-          </div>
+            <Link to={`/places/${property.location_id}`} className="hover:text-[#8D6A28] shrink-0 transition">
+              {property.district_name || 'دمياط الجديدة'}
+            </Link>
+            <span>/</span>
+            <span className="text-slate-900 font-bold truncate max-w-xs" aria-current="page">{property.title}</span>
+          </nav>
 
           <div className="flex items-center gap-2 shrink-0">
             <button
@@ -528,8 +568,11 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 >
                   <img
                     src={resolveImageUrl(images[currentImageIndex])}
-                    alt={property.title}
+                    alt={generatePropertyAltText(property, undefined, currentImageIndex)}
+                    width={1200}
+                    height={675}
                     className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
+                    loading={currentImageIndex === 0 ? 'eager' : 'lazy'}
                     onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                   />
 
@@ -1066,8 +1109,9 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                         >
                           <div className="flex items-start gap-3">
                             <div 
-                              onClick={() => setPreviewRoomImage(roomImg || FALLBACK_PROPERTY_IMAGE)}
+                              onClick={() => setSelectedRoomDetails(room)}
                               className="relative w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 cursor-pointer group"
+                              title="عرض تفاصيل وصور الغرفة"
                             >
                               <img 
                                 src={roomImg || FALLBACK_PROPERTY_IMAGE} 
@@ -1082,7 +1126,13 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
 
                             <div className="min-w-0 flex-1 space-y-1">
                               <div className="flex items-center justify-between gap-1">
-                                <h4 className="font-extrabold text-sm text-slate-900 truncate">{room.name}</h4>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedRoomDetails(room)}
+                                  className="font-extrabold text-sm text-slate-900 truncate hover:text-[#8D6A28] transition text-right cursor-pointer"
+                                >
+                                  {room.name}
+                                </button>
                                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
                                   isAvail 
                                     ? 'bg-emerald-100 text-emerald-800' 
@@ -1094,18 +1144,28 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                                 </span>
                               </div>
 
-                              {room.area && (
-                                <p className="text-[11px] text-slate-500 font-medium">المساحة: {room.area} م²</p>
-                              )}
+                              {(() => {
+                                const areaNum = typeof room.area === 'number' ? room.area : parseFloat(String(room.area || ''));
+                                return !isNaN(areaNum) && areaNum > 0 ? (
+                                  <p className="text-[11px] text-slate-500 font-medium">المساحة: {areaNum} م²</p>
+                                ) : null;
+                              })()}
 
                               <p className="text-sm font-black text-[#8D6A28] font-mono">
-                                {formatPrice(room.price)} ج.م <span className="text-[10px] font-normal text-slate-500">/ شهر</span>
+                                {(() => {
+                                  const pNum = typeof room.price === 'number' ? room.price : parseFloat(String(room.price || ''));
+                                  return !isNaN(pNum) && pNum > 0 ? `${formatPrice(pNum)} ج.م ` : '';
+                                })()}
+                                <span className="text-[10px] font-normal text-slate-500">/ شهر</span>
                               </p>
                             </div>
                           </div>
 
                           {room.description && (
-                            <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 line-clamp-2 leading-relaxed">
+                            <p 
+                              onClick={() => setSelectedRoomDetails(room)}
+                              className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 line-clamp-2 leading-relaxed cursor-pointer hover:bg-slate-100/80 transition"
+                            >
                               {room.description}
                             </p>
                           )}
@@ -1120,9 +1180,19 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                             />
                           )}
 
-                          <div className="pt-1">
+                          <div className="pt-1 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedRoomDetails(room)}
+                              className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer shrink-0"
+                              title="عرض تفاصيل وصور الغرفة"
+                            >
+                              <Maximize2 className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">تفاصيل</span>
+                            </button>
+
                             {clientReservedRoomIds.includes(String(room.id)) ? (
-                              <div className="space-y-1.5">
+                              <div className="space-y-1.5 flex-1">
                                 <button
                                   disabled
                                   className="w-full py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-black flex items-center justify-center gap-1.5 cursor-not-allowed shadow-2xs"
@@ -1145,7 +1215,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                             ) : isAvail ? (
                               <button
                                 onClick={() => onOpenInquiry(property, room)}
-                                className="w-full py-2.5 rounded-xl gold-gradient gold-gradient-hover text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                                className="flex-1 py-2.5 rounded-xl gold-gradient gold-gradient-hover text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
                               >
                                 <CalendarCheck className="w-3.5 h-3.5" />
                                 <span>احجز الغرفة</span>
@@ -1153,7 +1223,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                             ) : (
                               <button
                                 disabled
-                                className="w-full py-2.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed"
+                                className="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed"
                               >
                                 <Lock className="w-3.5 h-3.5" />
                                 <span>{isReserved ? 'محجوزة' : 'تم التأجير'}</span>
@@ -1517,6 +1587,23 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
             />
           </div>
         </div>
+      )}
+
+      {/* Client Room Details Modal */}
+      {selectedRoomDetails && (
+        <ClientRoomDetailsModal
+          room={selectedRoomDetails}
+          property={property}
+          isOpen={Boolean(selectedRoomDetails)}
+          onClose={() => setSelectedRoomDetails(null)}
+          onBookRoom={(room) => {
+            setSelectedRoomDetails(null);
+            onOpenInquiry(property, room);
+          }}
+          isAlreadyReserved={Boolean(
+            selectedRoomDetails && clientReservedRoomIds.includes(String(selectedRoomDetails.id))
+          )}
+        />
       )}
 
     </div>

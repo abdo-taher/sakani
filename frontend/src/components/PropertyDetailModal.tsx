@@ -5,6 +5,7 @@ import { StorageService } from '../services/storageService';
 import { AMENITIES_LIST } from '../data/mockData';
 import { getAmenityDisplay } from '../utils/amenities';
 import { PropertyMultiVideoPlayer } from './PropertyMultiVideoPlayer';
+import { ClientRoomDetailsModal } from './ClientRoomDetailsModal';
 import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
 import { 
   X, 
@@ -87,6 +88,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   const [autoPlayVideo, setAutoPlayVideo] = useState<boolean>(false);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [selectedRoomDetails, setSelectedRoomDetails] = useState<DetailedRoom | null>(null);
 
   // Mortgage / Installment Calculator State
   const [showCalculator, setShowCalculator] = useState(false);
@@ -640,34 +642,82 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
               </h3>
               
               <div className="grid gap-3 sm:grid-cols-2">
-                {property.detailed_rooms.map((room) => (
-                  <div 
-                    key={room.id}
-                    className="p-4 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3 hover:border-[#8D6A28] transition"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-slate-900 text-sm">{room.name}</span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                          room.status === 'available' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {room.status === 'available' ? 'متاح' : 'محجوز'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500">{room.description}</p>
-                      <p className="text-sm font-black text-[#8D6A28] mt-1.5">{formatPrice(room.price)} ج.م / شهر</p>
-                    </div>
+                {property.detailed_rooms.map((room) => {
+                  const roomImg = room.imageUrl || room.images?.[0] || (room as any).image_url || (property.images && property.images.length > 0 ? property.images[0] : FALLBACK_PROPERTY_IMAGE);
+                  const isAvail = room.status === 'available';
+                  const areaNum = typeof room.area === 'number' ? room.area : parseFloat(String(room.area || ''));
+                  const hasValidArea = !isNaN(areaNum) && areaNum > 0;
+                  const priceNum = typeof room.price === 'number' ? room.price : parseFloat(String(room.price || ''));
+                  const hasValidPrice = !isNaN(priceNum) && priceNum > 0;
 
-                    {room.status === 'available' && (
-                      <button
-                        onClick={() => onOpenInquiry(property, room)}
-                        className="px-3.5 py-2 rounded-xl bg-[#8D6A28] text-white text-xs font-bold hover:bg-[#AC7F2B] transition cursor-pointer shrink-0"
-                      >
-                        احجز الغرفة
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  return (
+                    <div 
+                      key={room.id}
+                      className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50 flex items-start justify-between gap-3 hover:border-[#8D6A28] transition group"
+                    >
+                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                        <div 
+                          onClick={() => setSelectedRoomDetails(room)}
+                          className="relative w-14 h-14 rounded-xl overflow-hidden bg-slate-200 border border-slate-300/80 shrink-0 cursor-pointer group/img"
+                          title="عرض تفاصيل وصور الغرفة"
+                        >
+                          <img
+                            src={resolveImageUrl(roomImg)}
+                            alt={room.name || 'غرفة'}
+                            className="w-full h-full object-cover group-hover/img:scale-110 transition duration-300"
+                            onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
+                          />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedRoomDetails(room)}
+                              className="font-extrabold text-slate-900 text-xs sm:text-sm hover:text-[#8D6A28] transition text-right truncate cursor-pointer"
+                            >
+                              {room.name}
+                            </button>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                              isAvail ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {isAvail ? 'متاح' : 'محجوز'}
+                            </span>
+                          </div>
+
+                          {hasValidArea && (
+                            <span className="text-[11px] text-slate-500 block">المساحة: {areaNum} م²</span>
+                          )}
+
+                          <p className="text-xs sm:text-sm font-black text-[#8D6A28] font-mono mt-0.5">
+                            {hasValidPrice ? `${formatPrice(priceNum)} ج.م` : ''} <span className="text-[10px] font-normal text-slate-500">/ شهر</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRoomDetails(room)}
+                          className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                          title="تفاصيل الغرفة"
+                        >
+                          <Maximize2 className="w-3 h-3" />
+                          <span>تفاصيل</span>
+                        </button>
+
+                        {isAvail && (
+                          <button
+                            onClick={() => onOpenInquiry(property, room)}
+                            className="px-3 py-1.5 rounded-lg bg-[#8D6A28] hover:bg-[#AC7F2B] text-white text-[11px] font-black transition cursor-pointer shrink-0"
+                          >
+                            احجز
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -832,6 +882,21 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Client Room Details Modal */}
+      {selectedRoomDetails && (
+        <ClientRoomDetailsModal
+          room={selectedRoomDetails}
+          property={property}
+          isOpen={Boolean(selectedRoomDetails)}
+          onClose={() => setSelectedRoomDetails(null)}
+          onBookRoom={(room) => {
+            setSelectedRoomDetails(null);
+            onOpenInquiry(property, room);
+          }}
+          isAlreadyReserved={false}
+        />
+      )}
     </div>,
     document.body
   );
