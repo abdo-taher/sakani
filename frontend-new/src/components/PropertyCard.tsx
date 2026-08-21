@@ -45,9 +45,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = React.memo(({
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  const videoThumbnail = property.video_thumbnail_url
+    || property.videos?.find((video) => Boolean(video?.thumbnail_url))?.thumbnail_url;
   const images = property.images && property.images.length > 0
     ? property.images
-    : [FALLBACK_PROPERTY_IMAGE];
+    : [videoThumbnail || FALLBACK_PROPERTY_IMAGE];
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
