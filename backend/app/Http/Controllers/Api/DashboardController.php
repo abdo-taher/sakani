@@ -86,9 +86,9 @@ class DashboardController extends Controller
                 if ($dateFilter) $resQuery->where('created_at', '>=', $dateFilter);
 
                 $counts['total_reservations']    = (clone $resQuery)->count();
-                $counts['pending_reservations']  = (clone $resQuery)->where('status', 'pending')->count();
-                $counts['accepted_reservations'] = (clone $resQuery)->where('status', 'accepted')->count();
-                $counts['rejected_reservations'] = (clone $resQuery)->where('status', 'rejected')->count();
+                $counts['pending_reservations']  = (clone $resQuery)->whereIn('status', ['pending', 'new'])->count();
+                $counts['accepted_reservations'] = (clone $resQuery)->whereIn('status', ['accepted', 'completed', 'confirmed'])->count();
+                $counts['rejected_reservations'] = (clone $resQuery)->whereIn('status', ['rejected', 'cancelled'])->count();
             } catch (Exception $e) { Log::warning('Dashboard res stats: ' . $e->getMessage()); }
 
             try {

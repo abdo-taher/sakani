@@ -316,9 +316,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
       if (role === 'customer') {
         StorageService.deleteAllCustomerNotifications();
+        if (cleanDigits.length >= 6) {
+          await ApiService.deleteAllNotifications(cleanDigits);
+        }
+      } else {
+        await ApiService.deleteAllNotifications();
       }
-
-      await ApiService.deleteAllNotifications(cleanDigits.length >= 7 ? cleanDigits : undefined);
 
       setNotifications([]);
       setUnreadCount(0);

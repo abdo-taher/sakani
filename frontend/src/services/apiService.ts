@@ -127,6 +127,50 @@ function normalizePropertyResult(raw: any): any {
   return Array.isArray(raw) ? raw.map(normalizeApiProperty) : normalizeApiProperty(raw);
 }
 
+/** Normalize every reservation payload ensuring unified status mapping and complete field contracts */
+export function normalizeInquiryReservation(raw: any): any {
+  if (!raw || typeof raw !== 'object') return raw;
+
+  const rawStatus = String(raw.status || '').toLowerCase().trim();
+  let normalizedStatus: 'new' | 'in_progress' | 'completed' | 'cancelled' = 'new';
+
+  if (rawStatus === 'completed' || rawStatus === 'confirmed' || rawStatus === 'accepted') {
+    normalizedStatus = 'completed';
+  } else if (rawStatus === 'in_progress' || rawStatus === 'contacted') {
+    normalizedStatus = 'in_progress';
+  } else if (rawStatus === 'cancelled' || rawStatus === 'rejected') {
+    normalizedStatus = 'cancelled';
+  } else {
+    normalizedStatus = 'new';
+  }
+
+  const propTitle = raw.property_title || raw.property?.title || 'عقار سكني';
+  const propRef = raw.property_ref || raw.property?.ref_id || (raw.property_id ? `SK-${raw.property_id}` : 'SK-0000');
+  const clientName = raw.client_name || raw.name || 'عميل سكني';
+  const clientPhone = raw.client_phone || raw.phone || '';
+  const message = raw.message || raw.client_message || '';
+  const roomName = raw.room_name || raw.room?.name || raw.room?.room_name || undefined;
+
+  return {
+    ...raw,
+    id: String(raw.id),
+    property_id: String(raw.property_id || raw.property?.id || ''),
+    property_title: propTitle,
+    property_ref: propRef,
+    room_id: raw.room_id ? String(raw.room_id) : undefined,
+    room_name: roomName,
+    client_name: clientName,
+    name: clientName,
+    client_phone: clientPhone,
+    phone: clientPhone,
+    message: message,
+    notes: raw.notes || '',
+    status: normalizedStatus,
+    raw_status: raw.status || normalizedStatus,
+    created_at: raw.created_at || new Date().toISOString(),
+  };
+}
+
 export function getAuthToken(): string | null {
   return (
     sessionStorage.getItem('token') ||
@@ -534,23 +578,9 @@ export const ApiService = {
       const res = await apiRequest('/reservations');
       const data = normalizeData(res);
       if (Array.isArray(data)) {
-        return data.map((r: any) => ({
-          ...r,
-          id: String(r.id),
-          property_id: String(r.property_id || (r.property && r.property.id) || ''),
-          property_title: r.property_title || (r.property && r.property.title) || 'عقار',
-          property_ref: r.property_ref || (r.property && r.property.ref_id) || `SK-${String(r.property_id || '').padStart(4, '0')}`,
-          room_id: r.room_id ? String(r.room_id) : undefined,
-          room_name: r.room_name || (r.room && r.room.room_name) || undefined,
-          client_name: r.client_name || r.name || 'عميل',
-          client_phone: r.client_phone || r.phone || '',
-          message: r.message || '',
-          status: r.status || 'pending',
-          notes: r.notes || '',
-          created_at: r.created_at || new Date().toISOString(),
-        }));
+        return data.map(normalizeInquiryReservation);
       }
-      return data;
+      return StorageService.getInquiries();
     } catch {
       return StorageService.getInquiries();
     }
@@ -558,7 +588,8 @@ export const ApiService = {
 
   async getReservation(id: string | number) {
     const res = await apiRequest(`/reservations/${id}`);
-    return normalizeData(res);
+    const data = normalizeData(res);
+    return normalizeInquiryReservation(data);
   },
 
   async createReservation(data: {
@@ -572,7 +603,8 @@ export const ApiService = {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    return normalizeData(res);
+    const result = normalizeData(res);
+    return result?.data ? normalizeInquiryReservation(result.data) : normalizeInquiryReservation(result);
   },
 
   async checkReservation(propertyId: string | number, phone: string, roomId?: string | number | null) {
@@ -591,7 +623,8 @@ export const ApiService = {
       method: 'PUT',
       body: JSON.stringify({ status }),
     });
-    return normalizeData(res);
+    const result = normalizeData(res);
+    return result?.data ? normalizeInquiryReservation(result.data) : normalizeInquiryReservation(result);
   },
 
   async deleteReservation(id: string | number) {
@@ -766,29 +799,54 @@ export const ApiService = {
   },
 
   async markAllNotificationsAsRead(phone?: string) {
-    return apiRequest('/notifications/read-all', {
-      method: 'POST',
-      body: JSON.stringify(phone ? { phone } : {}),
-    });
+    if (phone) {
+      const cleanDigits = phone.replace(/\D/g, '');
+      if (cleanDigits.length >= 6) {
+        return apiRequest('/customer/notifications/read-all', {
+          method: 'POST',
+          body: JSON.stringify({ phone: cleanDigits }),
+        });
+      }
+    }
+    if (getAuthToken()) {
+      return apiRequest('/notifications/read-all', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+    }
+    return { success: true };
   },
 
   async deleteNotification(id: string | number, phone?: string) {
     if (!id || (typeof id === 'string' && (id.startsWith('welcome') || id.startsWith('cnotif') || isNaN(Number(id))))) {
       return { success: true };
     }
-    const endpoint = phone ? `/customer/notifications/${id}` : `/notifications/${id}`;
-    return apiRequest(endpoint, { method: 'DELETE' });
+    if (phone) {
+      const cleanDigits = phone.replace(/\D/g, '');
+      if (cleanDigits.length >= 6) {
+        return apiRequest(`/customer/notifications/${id}?phone=${encodeURIComponent(cleanDigits)}`, { method: 'DELETE' });
+      }
+    }
+    if (getAuthToken()) {
+      return apiRequest(`/notifications/${id}`, { method: 'DELETE' });
+    }
+    return { success: true };
   },
 
   async deleteAllNotifications(phone?: string) {
     if (phone) {
       const cleanDigits = phone.replace(/\D/g, '');
-      return apiRequest('/customer/notifications', {
-        method: 'DELETE',
-        body: JSON.stringify({ phone: cleanDigits || phone }),
-      });
+      if (cleanDigits.length >= 6) {
+        return apiRequest('/customer/notifications', {
+          method: 'DELETE',
+          body: JSON.stringify({ phone: cleanDigits }),
+        });
+      }
     }
-    return apiRequest('/notifications', { method: 'DELETE' });
+    if (getAuthToken()) {
+      return apiRequest('/notifications', { method: 'DELETE' });
+    }
+    return { success: true, deleted_count: 0 };
   },
 
   // ---------------- Device Tokens for FCM ----------------

@@ -717,15 +717,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                     <div className="flex items-center gap-2 shrink-0">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                        inq.status === 'new'
+                        inq.status === 'new' || (inq as any).status === 'pending'
                           ? 'bg-rose-100 text-rose-800'
-                          : inq.status === 'in_progress'
+                          : inq.status === 'in_progress' || (inq as any).status === 'contacted'
                           ? 'bg-amber-100 text-amber-800'
-                          : inq.status === 'completed'
+                          : inq.status === 'completed' || (inq as any).status === 'confirmed' || (inq as any).status === 'accepted'
                           ? 'bg-emerald-100 text-emerald-800'
                           : 'bg-slate-100 text-slate-600'
                       }`}>
-                        {inq.status === 'new' ? 'جديد' : inq.status === 'in_progress' ? 'متابعة' : inq.status === 'completed' ? 'تم' : 'ملغي'}
+                        {inq.status === 'new' || (inq as any).status === 'pending'
+                          ? 'جديد'
+                          : inq.status === 'in_progress' || (inq as any).status === 'contacted'
+                          ? 'متابعة'
+                          : inq.status === 'completed' || (inq as any).status === 'confirmed' || (inq as any).status === 'accepted'
+                          ? 'تم'
+                          : 'ملغي'}
                       </span>
                       <a
                         href={`https://wa.me/${inq.client_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحباً ${inq.client_name}، نتواصل معك من منصة سكني بخصوص طلب معاينة العقار كود ${inq.property_ref}`)}`}

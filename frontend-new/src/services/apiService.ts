@@ -127,6 +127,50 @@ function normalizePropertyResult(raw: any): any {
   return Array.isArray(raw) ? raw.map(normalizeApiProperty) : normalizeApiProperty(raw);
 }
 
+/** Normalize every reservation payload ensuring unified status mapping and complete field contracts */
+export function normalizeInquiryReservation(raw: any): any {
+  if (!raw || typeof raw !== 'object') return raw;
+
+  const rawStatus = String(raw.status || '').toLowerCase().trim();
+  let normalizedStatus: 'new' | 'in_progress' | 'completed' | 'cancelled' = 'new';
+
+  if (rawStatus === 'completed' || rawStatus === 'confirmed' || rawStatus === 'accepted') {
+    normalizedStatus = 'completed';
+  } else if (rawStatus === 'in_progress' || rawStatus === 'contacted') {
+    normalizedStatus = 'in_progress';
+  } else if (rawStatus === 'cancelled' || rawStatus === 'rejected') {
+    normalizedStatus = 'cancelled';
+  } else {
+    normalizedStatus = 'new';
+  }
+
+  const propTitle = raw.property_title || raw.property?.title || 'عقار سكني';
+  const propRef = raw.property_ref || raw.property?.ref_id || (raw.property_id ? `SK-${raw.property_id}` : 'SK-0000');
+  const clientName = raw.client_name || raw.name || 'عميل سكني';
+  const clientPhone = raw.client_phone || raw.phone || '';
+  const message = raw.message || raw.client_message || '';
+  const roomName = raw.room_name || raw.room?.name || raw.room?.room_name || undefined;
+
+  return {
+    ...raw,
+    id: String(raw.id),
+    property_id: String(raw.property_id || raw.property?.id || ''),
+    property_title: propTitle,
+    property_ref: propRef,
+    room_id: raw.room_id ? String(raw.room_id) : undefined,
+    room_name: roomName,
+    client_name: clientName,
+    name: clientName,
+    client_phone: clientPhone,
+    phone: clientPhone,
+    message: message,
+    notes: raw.notes || '',
+    status: normalizedStatus,
+    raw_status: raw.status || normalizedStatus,
+    created_at: raw.created_at || new Date().toISOString(),
+  };
+}
+
 export function getAuthToken(): string | null {
   return (
     sessionStorage.getItem('token') ||
@@ -532,7 +576,11 @@ export const ApiService = {
     if (!getAuthToken()) return StorageService.getInquiries();
     try {
       const res = await apiRequest('/reservations');
-      return normalizeData(res);
+      const data = normalizeData(res);
+      if (Array.isArray(data)) {
+        return data.map(normalizeInquiryReservation);
+      }
+      return StorageService.getInquiries();
     } catch {
       return StorageService.getInquiries();
     }
@@ -540,7 +588,8 @@ export const ApiService = {
 
   async getReservation(id: string | number) {
     const res = await apiRequest(`/reservations/${id}`);
-    return normalizeData(res);
+    const data = normalizeData(res);
+    return normalizeInquiryReservation(data);
   },
 
   async createReservation(data: {
@@ -554,7 +603,8 @@ export const ApiService = {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    return normalizeData(res);
+    const result = normalizeData(res);
+    return result?.data ? normalizeInquiryReservation(result.data) : normalizeInquiryReservation(result);
   },
 
   async checkReservation(propertyId: string | number, phone: string, roomId?: string | number | null) {
@@ -573,7 +623,8 @@ export const ApiService = {
       method: 'PUT',
       body: JSON.stringify({ status }),
     });
-    return normalizeData(res);
+    const result = normalizeData(res);
+    return result?.data ? normalizeInquiryReservation(result.data) : normalizeInquiryReservation(result);
   },
 
   async deleteReservation(id: string | number) {

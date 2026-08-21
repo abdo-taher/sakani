@@ -125,8 +125,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
 
   const availablePropertiesCount = properties.filter((p) => p.status === 'available').length;
   const soldOrRentedCount = properties.filter((p) => p.status === 'sold' || p.status === 'rented').length;
-  const newInquiriesCount = inquiries.filter((i) => i.status === 'new').length;
-  const completedInquiriesCount = inquiries.filter((i) => i.status === 'completed').length;
+  const newInquiriesCount = inquiries.filter((i) => i.status === 'new' || (i as any).status === 'pending').length;
+  const completedInquiriesCount = inquiries.filter((i) => i.status === 'completed' || (i as any).status === 'accepted' || (i as any).status === 'confirmed').length;
   const totalViews = properties.reduce((acc, curr) => acc + (curr.views || 0), 0);
 
   const categoryCounts: Record<PropertyType, number> = {
@@ -552,15 +552,21 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
 
                   <div className="flex items-center gap-2 shrink-0">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                      inq.status === 'new'
+                      inq.status === 'new' || (inq as any).status === 'pending'
                         ? 'bg-rose-100 text-rose-800'
-                        : inq.status === 'in_progress'
+                        : inq.status === 'in_progress' || (inq as any).status === 'contacted'
                         ? 'bg-amber-100 text-amber-800'
-                        : inq.status === 'completed'
+                        : inq.status === 'completed' || (inq as any).status === 'accepted' || (inq as any).status === 'confirmed'
                         ? 'bg-emerald-100 text-emerald-800'
                         : 'bg-slate-100 text-slate-600'
                     }`}>
-                      {inq.status === 'new' ? 'جديد' : inq.status === 'in_progress' ? 'متابعة' : inq.status === 'completed' ? 'تم' : 'ملغي'}
+                      {inq.status === 'new' || (inq as any).status === 'pending'
+                        ? 'جديد'
+                        : inq.status === 'in_progress' || (inq as any).status === 'contacted'
+                        ? 'متابعة'
+                        : inq.status === 'completed' || (inq as any).status === 'accepted' || (inq as any).status === 'confirmed'
+                        ? 'تم'
+                        : 'ملغي'}
                     </span>
                     {inq.client_phone && (
                       <a

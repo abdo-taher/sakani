@@ -125,21 +125,29 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
 
   const availablePropertiesCount = properties.filter((p) => p.status === 'available').length;
   const soldOrRentedCount = properties.filter((p) => p.status === 'sold' || p.status === 'rented').length;
-  const newInquiriesCount = inquiries.filter((i) => i.status === 'new').length;
-  const completedInquiriesCount = inquiries.filter((i) => i.status === 'completed').length;
+  const newInquiriesCount = inquiries.filter((i) => i.status === 'new' || (i as any).status === 'pending').length;
+  const completedInquiriesCount = inquiries.filter((i) => i.status === 'completed' || (i as any).status === 'accepted' || (i as any).status === 'confirmed').length;
   const totalViews = properties.reduce((acc, curr) => acc + (curr.views || 0), 0);
 
+  const getPropType = (p: Property): string => {
+    if (typeof p.property_type === 'string' && p.property_type.trim()) return p.property_type;
+    if (p.property_type_record && typeof p.property_type_record === 'object') {
+      return (p.property_type_record as any).slug || (p.property_type_record as any).name || 'apartment';
+    }
+    return (p as any).propertyType?.slug || 'apartment';
+  };
+
   const categoryCounts: Record<PropertyType, number> = {
-    apartment: properties.filter((p) => p.property_type === 'apartment').length,
-    villa: properties.filter((p) => p.property_type === 'villa').length,
-    duplex: properties.filter((p) => p.property_type === 'duplex').length,
-    penthouse: properties.filter((p) => p.property_type === 'penthouse').length,
-    chalet: properties.filter((p) => p.property_type === 'chalet').length,
-    studio: properties.filter((p) => p.property_type === 'studio').length,
-    shop: properties.filter((p) => p.property_type === 'shop').length,
-    office: properties.filter((p) => p.property_type === 'office').length,
-    land: properties.filter((p) => p.property_type === 'land').length,
-    building: properties.filter((p) => p.property_type === 'building').length,
+    apartment: properties.filter((p) => getPropType(p) === 'apartment').length,
+    villa: properties.filter((p) => getPropType(p) === 'villa').length,
+    duplex: properties.filter((p) => getPropType(p) === 'duplex').length,
+    penthouse: properties.filter((p) => getPropType(p) === 'penthouse').length,
+    chalet: properties.filter((p) => getPropType(p) === 'chalet').length,
+    studio: properties.filter((p) => getPropType(p) === 'studio').length,
+    shop: properties.filter((p) => getPropType(p) === 'shop').length,
+    office: properties.filter((p) => getPropType(p) === 'office').length,
+    land: properties.filter((p) => getPropType(p) === 'land').length,
+    building: properties.filter((p) => getPropType(p) === 'building').length,
   };
 
   const categoryNames: Record<PropertyType, string> = {
@@ -554,13 +562,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                       inq.status === 'new' || inq.status === 'pending'
                         ? 'bg-rose-100 text-rose-800'
-                        : inq.status === 'in_progress' || inq.status === 'accepted' || inq.status === 'confirmed'
+                        : inq.status === 'in_progress' || (inq as any).status === 'contacted'
                         ? 'bg-amber-100 text-amber-800'
-                        : inq.status === 'completed'
+                        : inq.status === 'completed' || (inq as any).status === 'accepted' || (inq as any).status === 'confirmed'
                         ? 'bg-emerald-100 text-emerald-800'
                         : 'bg-slate-100 text-slate-600'
                     }`}>
-                      {inq.status === 'new' || inq.status === 'pending' ? 'جديد' : inq.status === 'accepted' || inq.status === 'confirmed' || inq.status === 'in_progress' ? 'متابعة' : inq.status === 'completed' ? 'تم' : 'ملغي'}
+                      {inq.status === 'new' || inq.status === 'pending'
+                        ? 'جديد'
+                        : inq.status === 'in_progress' || (inq as any).status === 'contacted'
+                        ? 'متابعة'
+                        : inq.status === 'completed' || (inq as any).status === 'accepted' || (inq as any).status === 'confirmed'
+                        ? 'تم'
+                        : 'ملغي'}
                     </span>
                     {inq.client_phone && (
                       <a

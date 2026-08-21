@@ -72,14 +72,14 @@ export const AdminReservationsPage: React.FC = () => {
       if (Array.isArray(res) && res.length > 0) {
         const mapped: InquiryReservation[] = res.map((r: any) => ({
           id: String(r.id),
-          property_id: String(r.property_id),
-          property_ref: r.property?.ref_id || `SK-${r.property_id}`,
-          property_title: r.property?.title || 'عقار سكني',
+          property_id: String(r.property_id || r.property?.id || ''),
+          property_ref: r.property_ref || r.property?.ref_id || `SK-${r.property_id}`,
+          property_title: r.property_title || r.property?.title || 'عقار سكني',
           room_id: r.room_id ? String(r.room_id) : undefined,
-          room_name: r.room?.name,
-          client_name: r.name,
-          client_phone: r.phone,
-          message: r.message || '',
+          room_name: r.room_name || r.room?.name,
+          client_name: r.client_name || r.name || 'عميل سكني',
+          client_phone: r.client_phone || r.phone || '',
+          message: r.message || r.client_message || '',
           status: (r.status === 'completed' || r.status === 'confirmed' || r.status === 'accepted') 
             ? 'completed' 
             : (r.status === 'cancelled' || r.status === 'rejected') 
