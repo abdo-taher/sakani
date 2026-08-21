@@ -407,7 +407,7 @@ class StatisticsController extends Controller
         }
 
         // 3. Audience Classification Breakdown
-        $audienceRows = Property::selectRaw('COALESCE(audience_type, "all") as aud, COUNT(*) as total')
+        $audienceRows = Property::selectRaw("COALESCE(audience_type, 'all') as aud, COUNT(*) as total")
             ->groupBy('aud')
             ->pluck('total', 'aud')
             ->toArray();
@@ -431,7 +431,7 @@ class StatisticsController extends Controller
         }
 
         // 4. By Location (Districts)
-        $byLocation = Property::selectRaw('location_id, COUNT(*) as total_properties, SUM(CASE WHEN status="available" THEN 1 ELSE 0 END) as available_properties, AVG(price) as avg_price, SUM(views) as total_views')
+        $byLocation = Property::selectRaw("location_id, COUNT(*) as total_properties, SUM(CASE WHEN status='available' THEN 1 ELSE 0 END) as available_properties, AVG(price) as avg_price, SUM(views) as total_views")
             ->whereNotNull('location_id')
             ->groupBy('location_id')
             ->orderByDesc('total_properties')
@@ -465,7 +465,7 @@ class StatisticsController extends Controller
             });
 
         // 6. Furnishing Breakdown
-        $furnishingCounts = Property::selectRaw('COALESCE(furnishing, "unfurnished") as furn, COUNT(*) as total')
+        $furnishingCounts = Property::selectRaw("COALESCE(furnishing, 'unfurnished') as furn, COUNT(*) as total")
             ->groupBy('furn')
             ->pluck('total', 'furn')
             ->toArray();
@@ -498,22 +498,34 @@ class StatisticsController extends Controller
 
     private function calculateRoomsAnalytics(): array
     {
-        $totalRooms = Room::count();
-        $availableRooms = Room::where('is_available', true)->orWhere('status', 'available')->count();
-        $occupiedRooms = max(0, $totalRooms - $availableRooms);
-        $avgPrice = Room::avg('price');
-        $propsWithRooms = Property::where('has_detailed_rooms', true)->count();
+        try {
+            $totalRooms = Room::count();
+            $availableRooms = Room::where('status', 'available')->count();
+            $occupiedRooms = max(0, $totalRooms - $availableRooms);
+            $avgPrice = Room::avg('price');
+            $propsWithRooms = Property::where('has_detailed_rooms', true)->count();
 
-        $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0;
+            $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0;
 
-        return [
-            'total_rooms'           => $totalRooms,
-            'available_rooms'       => $availableRooms,
-            'occupied_rooms'        => $occupiedRooms,
-            'occupancy_percentage'  => $occupancyRate,
-            'avg_room_price'        => $avgPrice ? round($avgPrice) : 0,
-            'properties_with_rooms' => $propsWithRooms,
-        ];
+            return [
+                'total_rooms'           => $totalRooms,
+                'available_rooms'       => $availableRooms,
+                'occupied_rooms'        => $occupiedRooms,
+                'occupancy_percentage'  => $occupancyRate,
+                'avg_room_price'        => $avgPrice ? round($avgPrice) : 0,
+                'properties_with_rooms' => $propsWithRooms,
+            ];
+        } catch (\Throwable $e) {
+            Log::warning('Rooms analytics error: ' . $e->getMessage());
+            return [
+                'total_rooms'           => 0,
+                'available_rooms'       => 0,
+                'occupied_rooms'        => 0,
+                'occupancy_percentage'  => 0,
+                'avg_room_price'        => 0,
+                'properties_with_rooms' => 0,
+            ];
+        }
     }
 
     private function calculateReservationsAnalytics($currentStart): array

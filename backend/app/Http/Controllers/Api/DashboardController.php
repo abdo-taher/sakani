@@ -78,7 +78,7 @@ class DashboardController extends Controller
 
             try {
                 $counts['total_rooms'] = Room::count();
-                $counts['available_rooms'] = Room::where('is_available', true)->count();
+                $counts['available_rooms'] = Room::where('status', 'available')->count();
             } catch (Exception $e) { Log::warning('Dashboard room stats: ' . $e->getMessage()); }
 
             try {
