@@ -15,6 +15,8 @@ class FeedbackCampaignController extends Controller
      */
     public function index()
     {
+        FeedbackCampaign::seedDefaultCampaignsIfEmpty();
+
         $campaigns = FeedbackCampaign::latest()->get()->map(function ($camp) {
             $responses = FeedbackResponse::where('campaign_id', (string)$camp->id)->get();
             $ratings = $responses->whereNotNull('rating')->pluck('rating');
@@ -49,6 +51,8 @@ class FeedbackCampaignController extends Controller
      */
     public function active(Request $request)
     {
+        FeedbackCampaign::seedDefaultCampaignsIfEmpty();
+
         $page = $request->query('page', 'all');
         $now = now();
         

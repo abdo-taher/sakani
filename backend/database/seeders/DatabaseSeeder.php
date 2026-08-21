@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             PropertyTypeSeeder::class,
             AmenitySeeder::class,
             TagSeeder::class,
+            FeedbackCampaignSeeder::class,
         ]);
     }
 }

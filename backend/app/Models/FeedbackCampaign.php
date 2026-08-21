@@ -36,4 +36,49 @@ class FeedbackCampaign extends Model
     {
         return $this->hasMany(FeedbackResponse::class, 'campaign_id');
     }
+
+    public static function seedDefaultCampaignsIfEmpty(): void
+    {
+        if (static::count() > 0) {
+            return;
+        }
+
+        static::create([
+            'title'         => 'تقييم تجربة تصفح منصة سكني',
+            'description'   => 'استطلاع رضا الزوار والمستخدمين عن سهولة البحث وتجربة الاستخدام',
+            'type'          => 'rating',
+            'question'      => 'ما هو تقييمك لتجربة تصفح منصة سكني وسهولة العثور على العقار المناسب؟',
+            'options'       => null,
+            'target_page'   => 'all',
+            'delay_seconds' => 45,
+            'is_active'     => true,
+        ]);
+
+        static::create([
+            'title'         => 'أهم معايير اختيار السكن',
+            'description'   => 'استبيان لمعرفة أولويات الطلاب والعائلات في دمياط الجديدة',
+            'type'          => 'choice',
+            'question'      => 'ما هو المعيار الأهم بالنسبة لك عند اختيار السكن؟',
+            'options'       => [
+                ['id' => 'price', 'label' => 'السعر المناسب والميزانية'],
+                ['id' => 'location', 'label' => 'القرب من الجامعة والخدمات'],
+                ['id' => 'furnishing', 'label' => 'جودة الفرش والتجهيزات'],
+                ['id' => 'quietness', 'label' => 'الهدوء والأمان في الحي'],
+            ],
+            'target_page'   => 'properties',
+            'delay_seconds' => 60,
+            'is_active'     => true,
+        ]);
+
+        static::create([
+            'title'         => 'مدى توصيتك بمنصة سكني لأصدقائك (NPS)',
+            'description'   => 'مقياس ولاء العملاء والتوصية بالخدمة',
+            'type'          => 'net_promoter',
+            'question'      => 'على مقياس من 1 إلى 10، ما مدى احتمالية أن توصي بمنصة سكني لزملائك أو معارفك؟',
+            'options'       => null,
+            'target_page'   => 'all',
+            'delay_seconds' => 90,
+            'is_active'     => false,
+        ]);
+    }
 }
