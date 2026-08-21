@@ -208,6 +208,67 @@ export const AdminPropertyDetailPage: React.FC = () => {
     }
   }, [property?.id]);
 
+  // Unified Media Items (Videos + Photos combined seamlessly) - MUST be declared at top-level before early returns
+  const mediaItems = useMemo(() => {
+    const list: Array<{
+      type: 'video' | 'image';
+      url: string;
+      thumbnail: string;
+      title: string;
+      videoIndex?: number;
+    }> = [];
+
+    // 1. Collect all Videos
+    const videosList: any[] = [];
+    if (Array.isArray(property?.videos) && property.videos.length > 0) {
+      videosList.push(...property.videos.filter((v: any) => Boolean(v && (v.url || v.video_url))));
+    }
+    if (property?.video_url && !videosList.some((v: any) => (v.url || v.video_url) === property.video_url)) {
+      videosList.unshift({
+        url: property.video_url,
+        title: 'فيديو المعاينة والجولة الرئيسية',
+        thumbnail_url: property.video_thumbnail_url,
+        is_primary: true,
+      });
+    }
+
+    const firstImage = property?.images?.[0] || FALLBACK_PROPERTY_IMAGE;
+
+    videosList.forEach((v: any, idx: number) => {
+      const vUrl = v.url || v.video_url;
+      const vThumb = getVideoThumbnailUrl(vUrl, v.thumbnail_url || property?.video_thumbnail_url, firstImage);
+      list.push({
+        type: 'video',
+        url: vUrl,
+        thumbnail: vThumb || firstImage,
+        title: v.title || `فيديو جولة ${idx + 1}`,
+        videoIndex: idx,
+      });
+    });
+
+    // 2. Collect all Photos
+    const photosList = property?.images && property.images.length > 0 
+      ? property.images 
+      : (list.length === 0 ? [FALLBACK_PROPERTY_IMAGE] : []);
+    const uniquePhotos = Array.from(new Set(photosList.filter(Boolean)));
+
+    uniquePhotos.forEach((img: string, idx: number) => {
+      list.push({
+        type: 'image',
+        url: img,
+        thumbnail: img,
+        title: `صورة ${idx + 1}`,
+      });
+    });
+
+    return list.length > 0 ? list : [{
+      type: 'image' as const,
+      url: FALLBACK_PROPERTY_IMAGE,
+      thumbnail: FALLBACK_PROPERTY_IMAGE,
+      title: 'صورة العقار',
+    }];
+  }, [property?.images, property?.video_url, property?.video_thumbnail_url, property?.videos]);
+
   const handleUpdateStatus = async (newStatus: Property['status']) => {
     if (!property) return;
     try {
@@ -380,67 +441,6 @@ export const AdminPropertyDetailPage: React.FC = () => {
     ? property.images 
     : [FALLBACK_PROPERTY_IMAGE];
   const images = Array.from(new Set(rawImgs.filter(Boolean)));
-
-  // Unified Media Items (Videos + Photos combined seamlessly)
-  const mediaItems = useMemo(() => {
-    const list: Array<{
-      type: 'video' | 'image';
-      url: string;
-      thumbnail: string;
-      title: string;
-      videoIndex?: number;
-    }> = [];
-
-    // 1. Collect all Videos
-    const videosList: any[] = [];
-    if (Array.isArray(property?.videos) && property.videos.length > 0) {
-      videosList.push(...property.videos.filter((v: any) => Boolean(v && (v.url || v.video_url))));
-    }
-    if (property?.video_url && !videosList.some((v: any) => (v.url || v.video_url) === property.video_url)) {
-      videosList.unshift({
-        url: property.video_url,
-        title: 'فيديو المعاينة والجولة الرئيسية',
-        thumbnail_url: property.video_thumbnail_url,
-        is_primary: true,
-      });
-    }
-
-    const firstImage = property?.images?.[0] || FALLBACK_PROPERTY_IMAGE;
-
-    videosList.forEach((v: any, idx: number) => {
-      const vUrl = v.url || v.video_url;
-      const vThumb = getVideoThumbnailUrl(vUrl, v.thumbnail_url || property?.video_thumbnail_url, firstImage);
-      list.push({
-        type: 'video',
-        url: vUrl,
-        thumbnail: vThumb || firstImage,
-        title: v.title || `فيديو جولة ${idx + 1}`,
-        videoIndex: idx,
-      });
-    });
-
-    // 2. Collect all Photos
-    const photosList = property?.images && property.images.length > 0 
-      ? property.images 
-      : (list.length === 0 ? [FALLBACK_PROPERTY_IMAGE] : []);
-    const uniquePhotos = Array.from(new Set(photosList.filter(Boolean)));
-
-    uniquePhotos.forEach((img: string, idx: number) => {
-      list.push({
-        type: 'image',
-        url: img,
-        thumbnail: img,
-        title: `صورة ${idx + 1}`,
-      });
-    });
-
-    return list.length > 0 ? list : [{
-      type: 'image' as const,
-      url: FALLBACK_PROPERTY_IMAGE,
-      thumbnail: FALLBACK_PROPERTY_IMAGE,
-      title: 'صورة العقار',
-    }];
-  }, [property?.images, property?.video_url, property?.video_thumbnail_url, property?.videos]);
 
   const activeMedia = mediaItems[activeMediaIndex] || mediaItems[0] || {
     type: 'image' as const,
