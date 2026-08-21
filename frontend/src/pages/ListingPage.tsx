@@ -163,8 +163,10 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     setMaxPrice(urlMaxPrice || '');
     setRoomsFilter(urlRooms || 'all');
     setStatusFilter(urlStatus || 'all');
+    setAudienceFilter((urlAudience as AudienceType) || 'all');
+    setOffersOnly(Boolean(urlOffers));
     setSortBy((urlSort as PropertySort) || 'availability');
-  }, [urlDistrict, urlType, urlQ, urlMinPrice, urlMaxPrice, urlRooms, urlStatus, urlSort]);
+  }, [urlDistrict, urlType, urlQ, urlMinPrice, urlMaxPrice, urlRooms, urlStatus, urlAudience, urlOffers, urlSort]);
 
   useEffect(() => {
     if (!showAdvancedFilters) return;
@@ -366,6 +368,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
   const resetFilters = () => {
     setSelectedDistrict('all');
     setPropertyType('all');
+    setAudienceFilter('all');
     setOffersOnly(false);
     setSearchQuery('');
     setMinPrice('');
@@ -373,8 +376,235 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     setRoomsFilter('all');
     setStatusFilter('all');
     setSortBy('availability');
+    setIsProximityActive(false);
+    setUserCoords(null);
     setSearchParams({}, { replace: true });
   };
+
+  // Human-readable active filter chips for outside the filter modal/panel
+  const activeFilterChips = useMemo(() => {
+    const chips: Array<{
+      id: string;
+      category: string;
+      label: string;
+      onRemove: () => void;
+    }> = [];
+
+    // Helper to format currency
+    const formatNumber = (num: number) => new Intl.NumberFormat('ar-EG').format(num);
+
+    // 1. Search Query
+    if (searchQuery.trim()) {
+      chips.push({
+        id: 'search',
+        category: 'بحث',
+        label: `"${searchQuery.trim()}"`,
+        onRemove: () => {
+          setSearchQuery('');
+          updateUrlParams({ q: null, search: null });
+        },
+      });
+    }
+
+    // 2. Listing Category / Operation / Mode
+    if (activeListingTab === 'offers' || offersOnly) {
+      chips.push({
+        id: 'offers',
+        category: 'التصنيف',
+        label: 'عروض وتخفيضات حصرية',
+        onRemove: () => handleTabChange('all'),
+      });
+    } else if (activeListingTab === 'sale' || urlOperation === 'sale') {
+      chips.push({
+        id: 'sale',
+        category: 'نوع العرض',
+        label: 'عقارات للبيع',
+        onRemove: () => handleTabChange('all'),
+      });
+    } else if (activeListingTab === 'rent_room' || (urlOperation === 'rent' && urlMode === 'room')) {
+      chips.push({
+        id: 'rent_room',
+        category: 'نظام الإيجار',
+        label: 'إيجار بالغرف (سكن طلاب / مغتربين)',
+        onRemove: () => handleTabChange('all'),
+      });
+    } else if (activeListingTab === 'rent_whole' || (urlOperation === 'rent' && urlMode === 'full')) {
+      chips.push({
+        id: 'rent_whole',
+        category: 'نظام الإيجار',
+        label: 'شقق للإيجار بالكامل',
+        onRemove: () => handleTabChange('all'),
+      });
+    } else if (activeListingTab === 'furnished' || urlFurnishing === 'furnished') {
+      chips.push({
+        id: 'furnished',
+        category: 'الفرش',
+        label: 'سكن مفروش بالكامل',
+        onRemove: () => handleTabChange('all'),
+      });
+    } else if (urlOperation === 'rent') {
+      chips.push({
+        id: 'rent',
+        category: 'نوع العرض',
+        label: 'عقارات للإيجار',
+        onRemove: () => handleTabChange('all'),
+      });
+    }
+
+    // 3. District / Location
+    if (selectedDistrict !== 'all') {
+      const foundDist = districts.find(
+        (d) => String(d.id).toLowerCase() === selectedDistrict.toLowerCase() || d.name.toLowerCase() === selectedDistrict.toLowerCase()
+      );
+      chips.push({
+        id: 'district',
+        category: 'المنطقة',
+        label: foundDist?.name || selectedDistrict,
+        onRemove: () => {
+          setSelectedDistrict('all');
+          updateUrlParams({ district: null, place: null, location: null });
+        },
+      });
+    }
+
+    // 4. Property Type
+    if (propertyType !== 'all') {
+      const typeLabelMap: Record<string, string> = {
+        apartment: 'شقة سكنية',
+        villa: 'فيلا مستقلة',
+        duplex: 'دوبلكس',
+        shop: 'محل تجاري',
+        office: 'مكتب إداري',
+        chalet: 'شاليه مصيفي',
+        studio: 'استوديو',
+        land: 'أرض',
+      };
+      chips.push({
+        id: 'type',
+        category: 'نوع العقار',
+        label: typeLabelMap[propertyType] || propertyType,
+        onRemove: () => {
+          setPropertyType('all');
+          updateUrlParams({ type: null, property_type: null });
+        },
+      });
+    }
+
+    // 5. Audience Classification
+    if (audienceFilter !== 'all') {
+      const audienceLabelMap: Record<string, string> = {
+        female_students: 'طالبات ومغتربات',
+        young_men: 'شباب وموظفون',
+        families: 'عائلات فقط',
+      };
+      chips.push({
+        id: 'audience',
+        category: 'الفئة',
+        label: audienceLabelMap[audienceFilter] || audienceFilter,
+        onRemove: () => {
+          setAudienceFilter('all');
+          updateUrlParams({ audience: null, audience_type: null });
+        },
+      });
+    }
+
+    // 6. Price Range Composite
+    const minP = Number(minPrice);
+    const maxP = Number(maxPrice);
+    if (!isNaN(minP) && minP > 0 && !isNaN(maxP) && maxP > 0) {
+      chips.push({
+        id: 'price_range',
+        category: 'الميزانية',
+        label: `${formatNumber(minP)} إلى ${formatNumber(maxP)} ج.م`,
+        onRemove: () => {
+          setMinPrice('');
+          setMaxPrice('');
+          updateUrlParams({ min_price: null, max_price: null });
+        },
+      });
+    } else if (!isNaN(minP) && minP > 0) {
+      chips.push({
+        id: 'min_price',
+        category: 'أقل سعر',
+        label: `من ${formatNumber(minP)} ج.م`,
+        onRemove: () => {
+          setMinPrice('');
+          updateUrlParams({ min_price: null });
+        },
+      });
+    } else if (!isNaN(maxP) && maxP > 0) {
+      chips.push({
+        id: 'max_price',
+        category: 'أقصى سعر',
+        label: `حتى ${formatNumber(maxP)} ج.م`,
+        onRemove: () => {
+          setMaxPrice('');
+          updateUrlParams({ max_price: null });
+        },
+      });
+    }
+
+    // 7. Rooms
+    if (roomsFilter !== 'all') {
+      chips.push({
+        id: 'rooms',
+        category: 'الغرف',
+        label: `${roomsFilter}+ غرف`,
+        onRemove: () => {
+          setRoomsFilter('all');
+          updateUrlParams({ rooms: null });
+        },
+      });
+    }
+
+    // 8. Status
+    if (statusFilter !== 'all') {
+      const statusLabelMap: Record<string, string> = {
+        available: 'متاح للحجز',
+        reserved: 'محجوز',
+        rented: 'تم التأجير',
+        sold: 'تم البيع',
+      };
+      chips.push({
+        id: 'status',
+        category: 'الحالة',
+        label: statusLabelMap[statusFilter] || statusFilter,
+        onRemove: () => {
+          setStatusFilter('all');
+          updateUrlParams({ status: null });
+        },
+      });
+    }
+
+    // 9. Proximity
+    if (isProximityActive) {
+      chips.push({
+        id: 'proximity',
+        category: 'الموقع',
+        label: `الأقرب لموقعي (${proximityRadius} كم)`,
+        onRemove: () => handleToggleProximity(),
+      });
+    }
+
+    return chips;
+  }, [
+    searchQuery,
+    activeListingTab,
+    offersOnly,
+    urlOperation,
+    urlMode,
+    urlFurnishing,
+    selectedDistrict,
+    districts,
+    propertyType,
+    audienceFilter,
+    minPrice,
+    maxPrice,
+    roomsFilter,
+    statusFilter,
+    isProximityActive,
+    proximityRadius,
+  ]);
 
   // Dynamic Header Title and Subtitle based on active view
   const headerContent = useMemo(() => {
@@ -828,6 +1058,50 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           </div>
         </div>
       , document.body)}
+
+      {/* Active Filter Chips Bar (Human-readable Arabic labels, removable individually, clear all) */}
+      {activeFilterChips.length > 0 && (
+        <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 space-y-2.5 transition-all shadow-2xs">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#8D6A28]" />
+              <span className="text-xs font-bold text-slate-800">الفلاتر المطبقة حالياً:</span>
+              <span className="px-1.5 py-0.5 rounded-full bg-[#8D6A28]/10 text-[#8D6A28] text-[10px] font-black">
+                {activeFilterChips.length}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1 cursor-pointer transition"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>مسح جميع الفلاتر</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {activeFilterChips.map((chip) => (
+              <span
+                key={chip.id}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-xl border border-slate-200 text-xs text-slate-800 font-semibold transition hover:border-[#8D6A28]/50 shadow-2xs"
+              >
+                <span className="text-slate-400 font-normal text-[11px]">{chip.category}:</span>
+                <span className="font-bold text-slate-900">{chip.label}</span>
+                <button
+                  type="button"
+                  onClick={chip.onRemove}
+                  className="w-4 h-4 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                  title={`إزالة فلتر ${chip.label}`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Sorting & Proximity & Results Count Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600 border-b border-slate-200 pb-3">

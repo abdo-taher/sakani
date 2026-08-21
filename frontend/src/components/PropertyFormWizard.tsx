@@ -1098,23 +1098,25 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Area */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  المساحة الإجمالية (م²) <span className="text-slate-400 font-normal">(اختياري)</span>
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  placeholder="مثال: 120"
-                  className={`w-full px-4 py-3 bg-slate-50 border rounded-2xl text-xs sm:text-sm font-bold text-slate-900 outline-none focus:border-[#8D6A28] ${
-                    errors.area ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200'
-                  }`}
-                />
-                {errors.area && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.area}</p>}
-              </div>
+              {/* Area (Only for sale properties, omitted for rentals) */}
+              {operationType !== 'rent' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    المساحة الإجمالية (م²) <span className="text-slate-400 font-normal">(اختياري)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={area}
+                    onChange={(e) => setArea(e.target.value)}
+                    placeholder="مثال: 120"
+                    className={`w-full px-4 py-3 bg-slate-50 border rounded-2xl text-xs sm:text-sm font-bold text-slate-900 outline-none focus:border-[#8D6A28] ${
+                      errors.area ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200'
+                    }`}
+                  />
+                  {errors.area && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.area}</p>}
+                </div>
+              )}
 
               {/* Rooms */}
               <div>

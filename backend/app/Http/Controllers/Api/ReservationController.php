@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\Notification;
 use App\Models\Property;
+use App\Helpers\CacheHelper;
 use App\Services\NotificationService;
 use App\Services\FirebaseNotificationService;
 use Illuminate\Http\Request;
@@ -275,6 +276,8 @@ class ReservationController extends Controller
                     );
                 } catch (\Exception $e) {}
 
+                CacheHelper::clearPropertyCaches();
+
                 return response()->json([
                     'success' => true,
                     'message' => 'تم تقديم طلب حجز الغرفة بنجاح',
@@ -392,6 +395,8 @@ class ReservationController extends Controller
                 );
             } catch (\Exception $e) {}
 
+            CacheHelper::clearPropertyCaches();
+
             return response()->json([
                 'success' => true,
                 'message' => 'تم تقديم طلب الحجز بنجاح',
@@ -478,6 +483,8 @@ class ReservationController extends Controller
                 } catch (\Throwable $e) {}
             }
 
+            CacheHelper::clearPropertyCaches();
+
             return response()->json([
                 'success' => true,
                 'message' => 'تم تحديث حالة الحجز بنجاح',
@@ -519,6 +526,8 @@ class ReservationController extends Controller
                     }
                 }
             }
+
+            CacheHelper::clearPropertyCaches();
 
             return response()->json([
                 'success' => true,

@@ -111,7 +111,7 @@ export function validatePropertyStep(step: number, data: any): { isValid: boolea
       break;
 
     case 3: // Specs
-      if (data.area !== undefined && data.area !== null && data.area !== '' && (!isValidPositiveNumber(data.area, true) || Number(data.area) < 0)) {
+      if (data.operation_type !== 'rent' && data.area !== undefined && data.area !== null && data.area !== '' && (!isValidPositiveNumber(data.area, true) || Number(data.area) < 0)) {
         errors.area = 'المساحة يجب أن تكون رقماً موجباً';
       }
       if (data.rooms !== undefined && data.rooms !== '' && !isValidInteger(data.rooms)) {

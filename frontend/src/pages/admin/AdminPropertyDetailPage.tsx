@@ -799,10 +799,12 @@ export const AdminPropertyDetailPage: React.FC = () => {
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
-                <span className="text-[11px] font-medium text-slate-500 block">المساحة</span>
-                <span className="text-sm font-bold text-slate-900 font-mono">{property.area} م²</span>
-              </div>
+              {property.operation_type !== 'rent' && property.area && Number(property.area) > 0 ? (
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                  <span className="text-[11px] font-medium text-slate-500 block">المساحة</span>
+                  <span className="text-sm font-bold text-slate-900 font-mono">{property.area} م²</span>
+                </div>
+              ) : null}
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
                 <span className="text-[11px] font-medium text-slate-500 block">عدد الغرف</span>
                 <span className="text-sm font-bold text-slate-900">{property.rooms} غرف</span>

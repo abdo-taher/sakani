@@ -144,8 +144,9 @@ export const AddPropertyPage: React.FC = () => {
 
     setIsSubmitting(true);
     const selectedDist = districts.find(d => d.id === districtId);
-    const generatedTitle = title.trim() || `${propertyType === 'apartment' ? 'شقة' : 'عقار'} ${area ? `بمساحة ${area} م²` : ''} في ${selectedDist?.name || 'دمياط الجديدة'}`.trim();
-    const generatedDesc = description.trim() || `عقار معروض ${operationType === 'sale' ? 'للبيع' : 'للإيجار'} في ${selectedDist?.name || 'دمياط الجديدة'} ${area ? `بمساحة ${area} م²،` : ''} موقع مميز وتشطيب عالي الجودة.`;
+    const hasArea = operationType !== 'rent' && area && Number(area) > 0;
+    const generatedTitle = title.trim() || `${propertyType === 'apartment' ? 'شقة' : 'عقار'} ${hasArea ? `بمساحة ${area} م²` : ''} في ${selectedDist?.name || 'دمياط الجديدة'}`.trim();
+    const generatedDesc = description.trim() || `عقار معروض ${operationType === 'sale' ? 'للبيع' : 'للإيجار'} في ${selectedDist?.name || 'دمياط الجديدة'} ${hasArea ? `بمساحة ${area} م²،` : ''} موقع مميز وتشطيب عالي الجودة.`;
 
     const payload = {
       title: generatedTitle,
@@ -392,7 +393,7 @@ export const AddPropertyPage: React.FC = () => {
                   </div>
 
                   {/* Property Type & Price Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className={`grid grid-cols-1 ${operationType === 'rent' ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-4`}>
                     <div className="space-y-1.5">
                       <label className="block text-xs font-bold text-slate-700">نوع العقار</label>
                       <select
@@ -423,17 +424,18 @@ export const AddPropertyPage: React.FC = () => {
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-slate-700">المساحة (م²) *</label>
-                      <input
-                        type="number"
-                        placeholder="المساحة بالمتر"
-                        value={area}
-                        onChange={(e) => setArea(e.target.value)}
-                        required
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold bg-slate-50 focus:bg-white focus:border-[#8D6A28] outline-none transition font-mono"
-                      />
-                    </div>
+                    {operationType !== 'rent' && (
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">المساحة (م²)</label>
+                        <input
+                          type="number"
+                          placeholder="المساحة بالمتر"
+                          value={area}
+                          onChange={(e) => setArea(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold bg-slate-50 focus:bg-white focus:border-[#8D6A28] outline-none transition font-mono"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Rooms, Baths, Floor */}

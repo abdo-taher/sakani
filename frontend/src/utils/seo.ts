@@ -59,7 +59,7 @@ export function generatePropertyDescription(property: Property): string {
     chalet: 'شاليه',
   };
   const typeName = typeMap[property.property_type] || 'عقار';
-  const areaText = property.area ? ` بمساحة ${property.area} م²` : '';
+  const areaText = property.operation_type !== 'rent' && property.area && Number(property.area) > 0 ? ` بمساحة ${property.area} م²` : '';
   const roomsText = property.rooms ? `، ${property.rooms} غرف` : '';
   const finishingText = property.finishing === 'super_lux' ? '، تشطيب سوبر لوكس' : '';
   const priceFormatted = property.price ? `${new Intl.NumberFormat('ar-EG').format(property.price)} ج.م` : 'للاستفسار';
@@ -122,11 +122,13 @@ export function buildRealEstateListingSchema(property: Property) {
       name: property.title,
       numberOfRooms: Number(property.rooms) || 1,
       numberOfBathroomsTotal: Number(property.bathrooms) || 1,
-      floorSize: {
-        '@type': 'QuantitativeValue',
-        value: Number(property.area) || 100,
-        unitCode: 'MTK',
-      },
+      ...(property.operation_type !== 'rent' && property.area && Number(property.area) > 0 ? {
+        floorSize: {
+          '@type': 'QuantitativeValue',
+          value: Number(property.area),
+          unitCode: 'MTK',
+        },
+      } : {}),
       address: {
         '@type': 'PostalAddress',
         addressLocality: locName,

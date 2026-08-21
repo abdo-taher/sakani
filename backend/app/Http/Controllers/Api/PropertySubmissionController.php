@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use App\Models\PropertyImage;
+use App\Helpers\CacheHelper;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -236,6 +237,8 @@ class PropertySubmissionController extends Controller
             );
         }
 
+        CacheHelper::clearPropertyCaches();
+
         return response()->json([
             'success' => true,
             'message' => 'تم اعتماد ونشر العقار بنجاح على المنصة.',
@@ -277,6 +280,8 @@ class PropertySubmissionController extends Controller
                 ]
             );
         }
+
+        CacheHelper::clearPropertyCaches();
 
         return response()->json([
             'success' => true,

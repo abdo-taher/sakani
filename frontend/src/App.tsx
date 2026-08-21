@@ -69,7 +69,7 @@ function MainApp() {
   const [favorites, setFavorites] = useState<string[]>(() => StorageService.getFavorites());
   const [isAdmin, setIsAdmin] = useState<boolean>(() => StorageService.isAdminLoggedIn());
   const [settings, setSettings] = useState<SystemSettings>(() => StorageService.getSettings());
-  const [isLoadingApi, setIsLoadingApi] = useState(false);
+  const [isLoadingApi, setIsLoadingApi] = useState(true);
 
   // Modal States
   const [selectedQuickPreviewProperty, setSelectedQuickPreviewProperty] = useState<Property | null>(null);
@@ -83,7 +83,7 @@ function MainApp() {
 
   // Active Filters to pass to ListingPage
   const [listingFilters, setListingFilters] = useState<Partial<PropertyFilterState>>({});
-  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
   // Initial Load & Backend API Sync
   useEffect(() => {
@@ -101,6 +101,25 @@ function MainApp() {
       }
     }
   }, [navigate]);
+
+  // Listen to property updates (from local mutations or admin creations/edits)
+  useEffect(() => {
+    const handlePropsUpdate = (e: any) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setProperties(e.detail);
+      } else {
+        const localProps = StorageService.getProperties();
+        if (localProps && localProps.length > 0) {
+          setProperties(localProps);
+        }
+      }
+    };
+
+    window.addEventListener('sakani_properties_updated', handlePropsUpdate);
+    return () => {
+      window.removeEventListener('sakani_properties_updated', handlePropsUpdate);
+    };
+  }, []);
 
   // Listen to admin authentication state changes
   useEffect(() => {
@@ -438,7 +457,7 @@ function MainApp() {
                 districts={districts}
                 favorites={favorites}
                 settings={settings}
-                isLoading={isLoadingApi}
+                isLoading={isDataLoading || isLoadingApi}
                 onToggleFavorite={handleToggleFavorite}
                 onSelectProperty={handleSelectProperty}
                 onQuickPreview={handleQuickPreview}
@@ -460,7 +479,7 @@ function MainApp() {
                 properties={properties}
                 favorites={favorites}
                 districts={districts}
-                isLoading={isDataLoading}
+                isLoading={isDataLoading || isLoadingApi}
                 initialFilters={listingFilters}
                 onToggleFavorite={handleToggleFavorite}
                 onSelectProperty={handleSelectProperty}
@@ -477,7 +496,7 @@ function MainApp() {
                 properties={properties}
                 favorites={favorites}
                 districts={districts}
-                isLoading={isDataLoading}
+                isLoading={isDataLoading || isLoadingApi}
                 initialFilters={{ operation_type: 'rent' }}
                 onToggleFavorite={handleToggleFavorite}
                 onSelectProperty={handleSelectProperty}
@@ -494,7 +513,7 @@ function MainApp() {
                 properties={properties}
                 favorites={favorites}
                 districts={districts}
-                isLoading={isDataLoading}
+                isLoading={isDataLoading || isLoadingApi}
                 initialFilters={{ operation_type: 'sale' }}
                 onToggleFavorite={handleToggleFavorite}
                 onSelectProperty={handleSelectProperty}
@@ -511,7 +530,7 @@ function MainApp() {
                 properties={properties}
                 favorites={favorites}
                 districts={districts}
-                isLoading={isDataLoading}
+                isLoading={isDataLoading || isLoadingApi}
                 initialFilters={{ mode: 'room', operation_type: 'rent' }}
                 onToggleFavorite={handleToggleFavorite}
                 onSelectProperty={handleSelectProperty}

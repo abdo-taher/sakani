@@ -362,12 +362,14 @@ export const QuickPreviewModal: React.FC<QuickPreviewModalProps> = ({
           </div>
 
           {/* Specs Grid */}
-          <div className="grid grid-cols-4 gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
-            <div>
-              <Maximize2 className="w-4 h-4 text-[#8D6A28] mx-auto mb-1" />
-              <span className="text-xs font-bold text-slate-900 block">{property.area} م²</span>
-              <span className="text-[10px] text-slate-500">المساحة</span>
-            </div>
+          <div className={`grid ${property.operation_type !== 'rent' && property.area && Number(property.area) > 0 ? 'grid-cols-4' : 'grid-cols-3'} gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center`}>
+            {property.operation_type !== 'rent' && property.area && Number(property.area) > 0 ? (
+              <div>
+                <Maximize2 className="w-4 h-4 text-[#8D6A28] mx-auto mb-1" />
+                <span className="text-xs font-bold text-slate-900 block">{property.area} م²</span>
+                <span className="text-[10px] text-slate-500">المساحة</span>
+              </div>
+            ) : null}
             <div>
               <BedDouble className="w-4 h-4 text-[#8D6A28] mx-auto mb-1" />
               <span className="text-xs font-bold text-slate-900 block">{property.rooms} غرف</span>

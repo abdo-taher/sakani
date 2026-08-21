@@ -385,13 +385,15 @@ export const PropertyCard: React.FC<PropertyCardProps> = React.memo(({
           </div>
 
           {/* Specifications Grid */}
-          <div className="grid grid-cols-3 gap-1 sm:gap-2 py-2 px-2 sm:px-3 bg-slate-50 rounded-xl border border-slate-100 text-slate-700 text-[11px] sm:text-xs font-medium">
-            <div className="flex items-center justify-center gap-1">
-              <Maximize2 className="w-3.5 h-3.5 text-[#8D6A28]" />
-              <span>{property.area} م²</span>
-            </div>
+          <div className={`grid ${property.operation_type !== 'rent' && property.area && Number(property.area) > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-1 sm:gap-2 py-2 px-2 sm:px-3 bg-slate-50 rounded-xl border border-slate-100 text-slate-700 text-[11px] sm:text-xs font-medium`}>
+            {property.operation_type !== 'rent' && property.area && Number(property.area) > 0 ? (
+              <div className="flex items-center justify-center gap-1">
+                <Maximize2 className="w-3.5 h-3.5 text-[#8D6A28]" />
+                <span>{property.area} م²</span>
+              </div>
+            ) : null}
             
-            <div className="flex items-center justify-center gap-1 border-x border-slate-200/80">
+            <div className={`flex items-center justify-center gap-1 ${property.operation_type !== 'rent' && property.area && Number(property.area) > 0 ? 'border-x border-slate-200/80' : 'border-l border-slate-200/80'}`}>
               <BedDouble className="w-3.5 h-3.5 text-[#8D6A28]" />
               <span>{property.rooms} غرف</span>
             </div>

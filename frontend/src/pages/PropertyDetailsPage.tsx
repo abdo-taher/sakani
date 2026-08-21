@@ -978,13 +978,15 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
               {/* Key Specs Grid */}
               <div>
                 <h3 className="text-xs font-bold text-slate-500 mb-3">المواصفات الرئيسية</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className={`grid grid-cols-2 ${property.operation_type !== 'rent' && property.area && Number(property.area) > 0 ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3`}>
                   
-                  <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                    <Maximize2 className="w-6 h-6 text-[#8D6A28] mb-1.5" />
-                    <span className="text-lg font-black text-slate-900">{property.area} م²</span>
-                    <span className="text-xs text-slate-500 mt-0.5">المساحة الإجمالية</span>
-                  </div>
+                  {property.operation_type !== 'rent' && property.area && Number(property.area) > 0 ? (
+                    <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                      <Maximize2 className="w-6 h-6 text-[#8D6A28] mb-1.5" />
+                      <span className="text-lg font-black text-slate-900">{property.area} م²</span>
+                      <span className="text-xs text-slate-500 mt-0.5">المساحة الإجمالية</span>
+                    </div>
+                  ) : null}
 
                   <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center">
                     <BedDouble className="w-6 h-6 text-[#8D6A28] mb-1.5" />

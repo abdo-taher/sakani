@@ -112,7 +112,7 @@ export function safeDispatchEvent(name: string, detail?: any): void {
 export const StorageService = {
   // ---------------- Properties ----------------
   getProperties(): Property[] {
-    return safeGet<Property[]>(KEYS.PROPERTIES, INITIAL_PROPERTIES);
+    return safeGet<Property[]>(KEYS.PROPERTIES, []);
   },
 
   getPropertyById(id: string): Property | undefined {
