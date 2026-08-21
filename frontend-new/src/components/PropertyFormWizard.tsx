@@ -181,6 +181,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
   const [rentalMode, setRentalMode] = useState<'full' | 'rooms'>('full');
   const [rentDuration, setRentDuration] = useState<'monthly' | '3_months' | '6_months' | 'yearly'>('monthly');
   const [detailedRooms, setDetailedRooms] = useState<DetailedRoom[]>([]);
+  const [uploadingRoomIndex, setUploadingRoomIndex] = useState<number | null>(null);
 
   // Offers & Promotions
   const [hasOffer, setHasOffer] = useState<boolean>(false);
@@ -379,14 +380,23 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
               seenKeys.add(key);
               return true;
             })
-            .map((r: any) => ({
-              id: String(r.id),
-              name: r.name,
-              price: Number(r.price),
-              area: Number(r.area) || undefined,
-              description: r.description || '',
-              status: r.status || 'available',
-            }));
+            .map((r: any) => {
+              const media = Array.isArray(r.room_images) ? r.room_images : (r.media || []);
+              const roomImages = media.filter((item: any) => (item.media_type || 'image') === 'image');
+              const roomVideos = media.filter((item: any) => item.media_type === 'video');
+              return {
+                id: String(r.id),
+                name: r.name || '',
+                price: Number(r.price) || 0,
+                area: r.area == null ? undefined : Number(r.area),
+                description: r.description || '',
+                status: r.status || 'available',
+                media,
+                imageUrl: roomImages.find((item: any) => item.is_primary)?.image_url || roomImages[0]?.image_url,
+                images: roomImages.map((item: any) => item.image_url).filter(Boolean),
+                videos: roomVideos.map((item: any) => item.image_url).filter(Boolean),
+              };
+            });
           setDetailedRooms(uniqueRooms);
         }
 
@@ -539,6 +549,9 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       area: 20,
       description: 'غرفة مفروشة ومكيفة',
       status: 'available',
+      images: [],
+      videos: [],
+      media: [],
     };
     setDetailedRooms([...detailedRooms, newRoom]);
   };
@@ -549,6 +562,78 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
 
   const handleUpdateRoom = (index: number, field: keyof DetailedRoom, value: any) => {
     setDetailedRooms(detailedRooms.map((r, i) => i === index ? { ...r, [field]: value } : r));
+  };
+
+  const handleRoomMediaUpload = async (index: number, files: FileList | null) => {
+    if (!files?.length) return;
+    setUploadingRoomIndex(index);
+    try {
+      const additions: NonNullable<DetailedRoom['media']> = [];
+      for (const file of Array.from(files)) {
+        const isVideo = file.type.startsWith('video/');
+        if (isVideo && file.size > 100 * 1024 * 1024) {
+          throw new Error('حجم فيديو الغرفة أكبر من 100 ميجابايت');
+        }
+        const uploaded = await ApiService.uploadMedia(
+          file,
+          isVideo ? 'sakani/rooms/videos' : 'sakani/rooms/images'
+        );
+        if (uploaded?.url) {
+          additions.push({
+            image_url: uploaded.url,
+            image_public_id: uploaded.public_id || uploaded.file_path || uploaded.url,
+            media_type: isVideo ? 'video' : 'image',
+          });
+        }
+        if (isVideo) {
+          try {
+            const thumbnail = await generateAndUploadVideoThumbnail(file);
+            if (thumbnail?.url) {
+              additions.push({
+                image_url: thumbnail.url,
+                image_public_id: thumbnail.public_id || thumbnail.url,
+                media_type: 'image',
+              });
+            }
+          } catch (error) {
+            console.warn('Room video thumbnail could not be generated:', error);
+          }
+        }
+      }
+      setDetailedRooms((rooms) => rooms.map((room, roomIndex) => {
+        if (roomIndex !== index) return room;
+        const media = [...(room.media || []), ...additions].map((item, mediaIndex) => ({
+          ...item,
+          is_primary: item.media_type === 'image' && mediaIndex === 0,
+        }));
+        return {
+          ...room,
+          media,
+          images: media.filter((item) => item.media_type === 'image').map((item) => item.image_url),
+          videos: media.filter((item) => item.media_type === 'video').map((item) => item.image_url),
+        };
+      }));
+    } catch (error: any) {
+      alert('فشل رفع وسائط الغرفة: ' + (error?.message || 'خطأ غير معروف'));
+    } finally {
+      setUploadingRoomIndex(null);
+    }
+  };
+
+  const handleRemoveRoomMedia = (roomIndex: number, mediaIndex: number) => {
+    setDetailedRooms((rooms) => rooms.map((room, index) => {
+      if (index !== roomIndex) return room;
+      const media = (room.media || []).filter((_, index) => index !== mediaIndex).map((item, index) => ({
+        ...item,
+        is_primary: item.media_type === 'image' && index === 0,
+      }));
+      return {
+        ...room,
+        media,
+        images: media.filter((item) => item.media_type === 'image').map((item) => item.image_url),
+        videos: media.filter((item) => item.media_type === 'video').map((item) => item.image_url),
+      };
+    }));
   };
 
   // 7. Final Submit
@@ -632,6 +717,8 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
         description: r.description,
         price: r.price,
         area: r.area,
+        status: r.status || 'available',
+        media: r.media || [],
       })) : [],
       submitter_name: ownerName ? ownerName.trim() : null,
       submitter_phone: ownerPhone ? normalizeEgyptianPhone(ownerPhone) : null,
@@ -1213,6 +1300,57 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                                 placeholder="المساحة م²"
                                 className="px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900"
                               />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <textarea
+                                value={room.description || ''}
+                                onChange={(e) => handleUpdateRoom(idx, 'description', e.target.value)}
+                                placeholder="وصف ومميزات الغرفة"
+                                rows={2}
+                                className="px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 resize-none"
+                              />
+                              <select
+                                value={room.status || 'available'}
+                                onChange={(e) => handleUpdateRoom(idx, 'status', e.target.value)}
+                                className="px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900"
+                              >
+                                <option value="available">متاحة</option>
+                                <option value="reserved">محجوزة</option>
+                                <option value="rented">تم التأجير</option>
+                              </select>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-dashed border-[#8D6A28]/50 text-[#8D6A28] text-xs font-black cursor-pointer">
+                                {uploadingRoomIndex === idx ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                                <span>{uploadingRoomIndex === idx ? 'جاري الرفع إلى R2...' : 'إضافة صور أو فيديو للغرفة'}</span>
+                                <input
+                                  type="file"
+                                  accept="image/*,video/*"
+                                  multiple
+                                  disabled={uploadingRoomIndex !== null}
+                                  onChange={(e) => {
+                                    void handleRoomMediaUpload(idx, e.target.files);
+                                    e.currentTarget.value = '';
+                                  }}
+                                  className="hidden"
+                                />
+                              </label>
+                              {(room.media || []).length > 0 && (
+                                <div className="flex gap-2 overflow-x-auto pb-1">
+                                  {(room.media || []).map((item, mediaIdx) => (
+                                    <div key={`${item.image_url}-${mediaIdx}`} className="relative shrink-0 w-20 h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-900">
+                                      {item.media_type === 'video' ? (
+                                        <video src={item.image_url} controls preload="metadata" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <img src={resolveImageUrl(item.image_url)} alt="وسائط الغرفة" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }} />
+                                      )}
+                                      <button type="button" onClick={() => handleRemoveRoomMedia(idx, mediaIdx)} className="absolute top-1 end-1 p-1 rounded-full bg-black/70 text-white" aria-label="حذف الوسائط">
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}

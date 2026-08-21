@@ -1512,11 +1512,17 @@ class PropertyController extends Controller
         $hasPrimaryImage = collect($media)->contains(
             fn ($item) => ($item['media_type'] ?? 'image') === 'image' && !empty($item['is_primary'])
         );
+        $primaryImageAssigned = false;
 
         foreach ($media as $index => $item) {
             $url = $item['image_url'] ?? null;
             if (!$url) continue;
             $type = ($item['media_type'] ?? 'image') === 'video' ? 'video' : 'image';
+
+            $isPrimary = $type === 'image' && (
+                !empty($item['is_primary']) || (!$hasPrimaryImage && !$primaryImageAssigned)
+            );
+            if ($isPrimary) $primaryImageAssigned = true;
 
             RoomImage::create([
                 'room_id' => $room->id,
@@ -1524,7 +1530,7 @@ class PropertyController extends Controller
                 'image_public_id' => $item['image_public_id'] ?? $this->r2MediaService->extractKeyFromUrl($url),
                 'media_type' => $type,
                 'sort_order' => $index,
-                'is_primary' => $type === 'image' && (!empty($item['is_primary']) || (!$hasPrimaryImage && $index === 0)),
+                'is_primary' => $isPrimary,
             ]);
         }
     }

@@ -101,15 +101,25 @@ export function normalizeApiProperty(raw: any): any {
       .filter(Boolean),
     tag_records: tagRecords,
     has_detailed_rooms: Boolean(raw.has_detailed_rooms),
-    detailed_rooms: roomRecords.map((room: any) => ({
-      ...room,
-      id: String(room.id),
-      price: Number(room.price) || 0,
-      area: room.area == null ? undefined : Number(room.area),
-      images: Array.isArray(room.room_images)
-        ? room.room_images.map((image: any) => image.image_url || image.url).filter(Boolean)
-        : (room.images || []),
-    })),
+    detailed_rooms: roomRecords.map((room: any) => {
+      const roomMedia = Array.isArray(room.room_images) ? room.room_images : (room.media || []);
+      const images = roomMedia.filter((item: any) => (item.media_type || 'image') === 'image');
+      const videos = roomMedia.filter((item: any) => item.media_type === 'video');
+      return {
+        ...room,
+        id: String(room.id),
+        name: room.name || '',
+        description: room.description || '',
+        status: room.status || 'available',
+        price: Number(room.price) || 0,
+        area: room.area == null ? undefined : Number(room.area),
+        room_images: roomMedia,
+        media: roomMedia,
+        imageUrl: (images.find((item: any) => item.is_primary) || images[0])?.image_url,
+        images: images.map((item: any) => item.image_url || item.url).filter(Boolean),
+        videos: videos.map((item: any) => item.image_url || item.url).filter(Boolean),
+      };
+    }),
   };
 }
 

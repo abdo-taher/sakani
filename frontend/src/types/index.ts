@@ -29,6 +29,14 @@ export interface DetailedRoom {
   status: 'available' | 'reserved' | 'rented';
   imageUrl?: string;
   images?: string[];
+  videos?: string[];
+  media?: Array<{
+    id?: string | number;
+    image_url: string;
+    image_public_id?: string;
+    media_type: 'image' | 'video';
+    is_primary?: boolean;
+  }>;
 }
 
 export interface PropertyVideo {

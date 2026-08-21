@@ -32,6 +32,7 @@ class RoomController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'area' => 'nullable|integer|min:1',
+            'status' => 'nullable|in:available,reserved,rented',
         ]);
 
         $room = Room::create([
@@ -40,8 +41,8 @@ class RoomController extends Controller
             'description' => $request->description,
             'price' => $request->price,
             'area' => $request->area,
-            'status' => 'available',
-            'is_uploading' => true,
+            'status' => $request->status ?? 'available',
+            'is_uploading' => false,
         ]);
 
         // Auto-enable detailed rooms on property
@@ -52,7 +53,7 @@ class RoomController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'تم إنشاء الغرفة بنجاح',
-            'data' => $room,
+            'data' => $room->load('roomImages'),
         ], 201);
     }
 
@@ -106,21 +107,20 @@ class RoomController extends Controller
             'is_primary' => 'nullable|boolean',
         ]);
 
-        $isFirst = $room->roomImages()->count() === 0;
+        $isFirstImage = !$room->roomImages()->where('media_type', 'image')->exists();
+        $mediaType = $request->media_type ?? 'image';
 
         $image = RoomImage::create([
             'room_id' => $roomId,
             'image_url' => $request->image_url,
             'image_public_id' => $request->image_public_id,
-            'media_type' => $request->media_type ?? 'image',
+            'media_type' => $mediaType,
             'sort_order' => $room->roomImages()->count(),
-            'is_primary' => $request->boolean('is_primary', $isFirst),
+            'is_primary' => $mediaType === 'image' && $request->boolean('is_primary', $isFirstImage),
         ]);
 
         // Mark upload complete if this is the first image
-        if ($isFirst) {
-            $room->update(['is_uploading' => false]);
-        }
+        $room->update(['is_uploading' => false]);
 
         return response()->json([
             'success' => true,

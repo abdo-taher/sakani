@@ -109,8 +109,12 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
               area: r.area ? Number(r.area) : undefined,
               description: r.description || '',
               status: r.status || 'available',
-              imageUrl: r.room_images?.[0]?.image_url || r.imageUrl,
-              images: r.room_images?.map((img: any) => img.image_url) || [],
+              imageUrl: r.room_images?.find((item: any) => (item.media_type || 'image') === 'image' && item.is_primary)?.image_url
+                || r.room_images?.find((item: any) => (item.media_type || 'image') === 'image')?.image_url
+                || r.imageUrl,
+              images: r.room_images?.filter((item: any) => (item.media_type || 'image') === 'image').map((item: any) => item.image_url) || [],
+              videos: r.room_images?.filter((item: any) => item.media_type === 'video').map((item: any) => item.image_url) || [],
+              media: r.room_images || [],
             }));
           setRooms(mappedRooms);
           setHasDetailedRooms(Boolean(fresh.has_detailed_rooms));
@@ -190,6 +194,8 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
       const propIdNumber = parseInt(property.id.replace(/\D/g, ''), 10) || 1;
       let finalImageUrl = existingImageUrl;
       let targetRoomId = isEditing;
+      const uploadedImageUrls: string[] = [];
+      const uploadedVideoUrls: string[] = [];
 
       if (isEditing) {
         // Update existing room in backend
@@ -211,6 +217,7 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
             price: Number(price),
             area: area ? Number(area) : null,
             description: description.trim(),
+            status,
           });
           if (createRes && createRes.id) {
             targetRoomId = String(createRes.id);
@@ -218,23 +225,27 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
         }
       }
 
-      // Upload Images if any selected
+      // Upload room images and videos to R2, then associate them with the room.
       if (selectedImages.length > 0 && targetRoomId) {
         const numRoomId = parseInt(targetRoomId.replace(/\D/g, ''), 10);
         for (let i = 0; i < selectedImages.length; i++) {
-          setSavingMsg(`جاري رفع الصور (${i + 1}/${selectedImages.length})...`);
-          const uploaded = await uploadToCloudinary(selectedImages[i], 'sakani/rooms/images');
-          finalImageUrl = uploaded.secure_url;
+          const file = selectedImages[i];
+          const isVideo = file.type.startsWith('video/');
+          setSavingMsg(`جاري رفع الوسائط (${i + 1}/${selectedImages.length})...`);
+          const uploaded = await uploadToCloudinary(file, isVideo ? 'sakani/rooms/videos' : 'sakani/rooms/images');
+          if (isVideo) uploadedVideoUrls.push(uploaded.secure_url);
+          else {
+            finalImageUrl = uploaded.secure_url;
+            uploadedImageUrls.push(uploaded.secure_url);
+          }
 
           if (numRoomId) {
-            try {
-              await ApiService.uploadRoomImage(numRoomId, {
-                image_url: uploaded.secure_url,
-                image_public_id: uploaded.public_id,
-                media_type: 'image',
-                is_primary: i === 0,
-              });
-            } catch {}
+            await ApiService.uploadRoomImage(numRoomId, {
+              image_url: uploaded.secure_url,
+              image_public_id: uploaded.public_id,
+              media_type: isVideo ? 'video' : 'image',
+              is_primary: !isVideo && !(existingImageUrl || uploadedImageUrls.length > 1),
+            });
           }
         }
 
@@ -260,6 +271,8 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
             description: description.trim(),
             status: status,
             imageUrl: finalImageUrl || r.imageUrl,
+            images: [...(r.images || []), ...uploadedImageUrls],
+            videos: [...(r.videos || []), ...uploadedVideoUrls],
           } : r
         );
       } else {
@@ -271,6 +284,8 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
           description: description.trim(),
           status: status,
           imageUrl: finalImageUrl,
+          images: uploadedImageUrls,
+          videos: uploadedVideoUrls,
         };
         updatedRoomsList = [...currentRooms, newRoomObj];
       }
@@ -495,17 +510,17 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
                 ></textarea>
               </div>
 
-              {/* Room Image Upload */}
+              {/* Room Media Upload */}
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
-                  صورة الغرفة (Cloudinary)
+                  صور أو فيديو الغرفة (R2)
                 </label>
                 <div className="border-2 border-dashed border-slate-300 hover:border-[#8D6A28] rounded-2xl p-4 text-center bg-white transition cursor-pointer">
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleImageSelect}
-                    accept="image/*"
+                    accept="image/*,video/*"
                     multiple
                     className="hidden"
                     id="room-img-upload"
@@ -514,10 +529,10 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
                     <Upload className="w-6 h-6 text-slate-400 mx-auto" />
                     <span className="text-slate-600 font-bold block text-[11px]">
                       {selectedImages.length > 0 
-                        ? `تم اختيار ${selectedImages.length} صور جديدة` 
+                        ? `تم اختيار ${selectedImages.length} ملفات وسائط`
                         : existingImageUrl 
                         ? 'انقر لتغيير الصورة الحالية' 
-                        : 'انقر لرفع صورة الغرفة'}
+                        : 'انقر لرفع صور أو فيديو للغرفة'}
                     </span>
                   </label>
                 </div>
@@ -525,12 +540,16 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
                 {/* Existing / Selected Image Preview */}
                 {(existingImageUrl || selectedImages.length > 0) && (
                   <div className="mt-2 flex items-center gap-2">
-                    <img
-                      src={selectedImages.length > 0 ? URL.createObjectURL(selectedImages[0]) : resolveImageUrl(existingImageUrl)}
-                      alt="معاينة"
-                      className="w-12 h-12 rounded-xl object-cover border border-slate-200"
-                      onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
-                    />
+                    {selectedImages[0]?.type.startsWith('video/') ? (
+                      <video src={URL.createObjectURL(selectedImages[0])} controls className="w-20 h-14 rounded-xl object-cover border border-slate-200 bg-black" />
+                    ) : (
+                      <img
+                        src={selectedImages.length > 0 ? URL.createObjectURL(selectedImages[0]) : resolveImageUrl(existingImageUrl)}
+                        alt="معاينة"
+                        className="w-12 h-12 rounded-xl object-cover border border-slate-200"
+                        onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
+                      />
+                    )}
                     <span className="text-[10px] text-slate-500 font-mono truncate max-w-xs">
                       {selectedImages.length > 0 ? selectedImages[0].name : 'الصورة الأساسية للغرفة'}
                     </span>
@@ -627,6 +646,14 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
                           className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0"
                           onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                         />
+                        {room.videos?.[0] && (
+                          <video
+                            src={room.videos[0]}
+                            controls
+                            preload="metadata"
+                            className="w-20 h-16 rounded-xl object-cover border border-slate-200 bg-black shrink-0"
+                          />
+                        )}
                         <div className="space-y-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h5 className="font-extrabold text-xs sm:text-sm text-slate-900 truncate">{room.name}</h5>

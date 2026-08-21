@@ -585,38 +585,6 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
                         </div>
                       </div>
 
-                      {district.extra.nearbyServices.length > 0 && (
-                        <div className="space-y-1.5 pt-1">
-                          <div className="text-[11px] font-black text-slate-700 flex items-center gap-1">
-                            <Landmark className="w-3.5 h-3.5 text-[#8D6A28]" />
-                            <span>المرافق والخدمات القريبة:</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {district.extra.nearbyServices.map((service, idx) => (
-                              <span key={idx} className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-100">
-                                • {service}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {district.extra.features.length > 0 && (
-                        <div className="space-y-1.5 pt-1">
-                          <div className="text-[11px] font-black text-slate-700 flex items-center gap-1">
-                            <Sparkles className="w-3.5 h-3.5 text-[#8D6A28]" />
-                            <span>المميزات والتفاصيل:</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {district.extra.features.map((feat, idx) => (
-                              <span key={idx} className="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-[11px] font-bold border border-purple-100">
-                                • {feat}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
                     </div>
                   </div>
 

@@ -65,6 +65,20 @@ class PropertyRoundTripTest extends TestCase
                 'description' => 'غرفة مكيفة',
                 'price' => 4250,
                 'area' => 20,
+                'status' => 'reserved',
+                'media' => [
+                    [
+                        'image_url' => 'https://example.com/room.jpg',
+                        'image_public_id' => 'rooms/room.jpg',
+                        'media_type' => 'image',
+                        'is_primary' => true,
+                    ],
+                    [
+                        'image_url' => 'https://example.com/room.mp4',
+                        'image_public_id' => 'rooms/room.mp4',
+                        'media_type' => 'video',
+                    ],
+                ],
             ]],
             'uploaded_images' => [[
                 'image_url' => 'https://example.com/property.jpg',
@@ -90,9 +104,63 @@ class PropertyRoundTripTest extends TestCase
             ->assertJsonCount(1, 'data.amenities')
             ->assertJsonCount(1, 'data.tags')
             ->assertJsonCount(1, 'data.images')
-            ->assertJsonCount(1, 'data.detailed_rooms');
+            ->assertJsonCount(1, 'data.detailed_rooms')
+            ->assertJsonPath('data.detailed_rooms.0.status', 'reserved')
+            ->assertJsonCount(2, 'data.detailed_rooms.0.room_images');
 
         $propertyId = $create->json('data.id');
+        $roomId = $create->json('data.detailed_rooms.0.id');
+
+        $this->assertDatabaseHas('rooms', [
+            'id' => $roomId,
+            'property_id' => $propertyId,
+            'name' => 'غرفة 1',
+            'description' => 'غرفة مكيفة',
+            'price' => 4250,
+            'area' => 20,
+            'status' => 'reserved',
+        ]);
+        $this->assertDatabaseCount('room_images', 2);
+
+        $roomUpdate = $this->putJson("/api/properties/{$propertyId}", [
+            'has_detailed_rooms' => true,
+            'replace_rooms' => true,
+            'rooms_data' => [[
+                'id' => $roomId,
+                'name' => 'غرفة ماستر محدثة',
+                'description' => 'وصف الغرفة المحدث بالكامل',
+                'price' => 5000,
+                'area' => 28,
+                'status' => 'rented',
+                'media' => [[
+                    'image_url' => 'https://example.com/room-updated.mp4',
+                    'image_public_id' => 'rooms/room-updated.mp4',
+                    'media_type' => 'video',
+                ]],
+            ]],
+        ]);
+
+        $roomUpdate->assertOk()
+            ->assertJsonCount(1, 'data.detailed_rooms')
+            ->assertJsonPath('data.detailed_rooms.0.id', $roomId)
+            ->assertJsonPath('data.detailed_rooms.0.name', 'غرفة ماستر محدثة')
+            ->assertJsonPath('data.detailed_rooms.0.description', 'وصف الغرفة المحدث بالكامل')
+            ->assertJsonPath('data.detailed_rooms.0.price', '5000.00')
+            ->assertJsonPath('data.detailed_rooms.0.area', 28)
+            ->assertJsonPath('data.detailed_rooms.0.status', 'rented')
+            ->assertJsonPath('data.detailed_rooms.0.room_images.0.media_type', 'video')
+            ->assertJsonPath('data.detailed_rooms.0.room_images.0.image_url', 'https://example.com/room-updated.mp4');
+
+        $this->assertDatabaseCount('rooms', 1);
+        $this->assertDatabaseCount('room_images', 1);
+        $this->assertDatabaseHas('rooms', [
+            'id' => $roomId,
+            'name' => 'غرفة ماستر محدثة',
+            'description' => 'وصف الغرفة المحدث بالكامل',
+            'price' => 5000,
+            'area' => 28,
+            'status' => 'rented',
+        ]);
 
         $this->getJson("/api/properties/{$propertyId}")
             ->assertOk()

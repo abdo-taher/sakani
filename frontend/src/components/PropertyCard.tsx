@@ -109,7 +109,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = React.memo(({
     if (isRoomRental && availableRoomsCount === 0 && property.detailed_rooms && property.detailed_rooms.length > 0) {
       return { text: 'لا توجد غرف متاحة', bg: 'bg-slate-700 text-white' };
     }
-    return null;
+    return { text: 'متاح', bg: 'bg-emerald-600/95 text-white border border-emerald-300/40' };
   };
 
   const opBadge = getOperationBadge();

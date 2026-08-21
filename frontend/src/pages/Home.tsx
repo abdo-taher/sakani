@@ -1100,15 +1100,6 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <option value="sold">تم البيع</option>
                 </select>
               </div>
-              <div className="space-y-1">
-                <label className="block text-[11px] font-semibold text-slate-700">ترتيب النتائج</label>
-                <select value={searchSort} onChange={(e) => setSearchSort(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none">
-                  <option value="availability">المتاح أولاً</option>
-                  <option value="newest">الأحدث أولاً</option>
-                  <option value="price_asc">الأقل سعراً</option>
-                  <option value="price_desc">الأعلى سعراً</option>
-                </select>
-              </div>
             </div>
 
             {searchOperation === 'rent' && searchRentalMode !== 'room' ? (

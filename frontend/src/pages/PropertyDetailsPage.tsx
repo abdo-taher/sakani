@@ -275,17 +275,24 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                       seen.add(key);
                       return true;
                     })
-                    .map((r: any) => ({
-                      id: String(r.id),
-                      property_id: String(liveProp.id),
-                      name: r.name,
-                      price: Number(r.price),
-                      area: Number(r.area),
-                      description: r.description || '',
-                      status: r.status || 'available',
-                      imageUrl: r.room_images?.[0]?.image_url || r.primary_image?.image_url || r.primary_image?.url || r.imageUrl,
-                      images: r.room_images?.map((img: any) => img.image_url) || [],
-                    }));
+                    .map((r: any) => {
+                      const media = Array.isArray(r.room_images) ? r.room_images : (r.media || []);
+                      const roomImages = media.filter((item: any) => (item.media_type || 'image') === 'image');
+                      const roomVideos = media.filter((item: any) => item.media_type === 'video');
+                      return {
+                        id: String(r.id),
+                        property_id: String(liveProp.id),
+                        name: r.name || '',
+                        price: Number(r.price) || 0,
+                        area: r.area == null ? undefined : Number(r.area),
+                        description: r.description || '',
+                        status: r.status || 'available',
+                        media,
+                        imageUrl: roomImages.find((item: any) => item.is_primary)?.image_url || roomImages[0]?.image_url || r.imageUrl,
+                        images: roomImages.map((item: any) => item.image_url).filter(Boolean),
+                        videos: roomVideos.map((item: any) => item.image_url).filter(Boolean),
+                      };
+                    });
                 })()
               : [],
             created_at: liveProp.created_at || new Date().toISOString(),
@@ -1140,6 +1147,16 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                             <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 line-clamp-2 leading-relaxed">
                               {room.description}
                             </p>
+                          )}
+
+                          {room.videos?.[0] && (
+                            <video
+                              src={room.videos[0]}
+                              poster={roomImg || FALLBACK_PROPERTY_IMAGE}
+                              controls
+                              preload="metadata"
+                              className="w-full max-h-56 rounded-2xl bg-black border border-slate-200"
+                            />
                           )}
 
                           <div className="pt-1">
