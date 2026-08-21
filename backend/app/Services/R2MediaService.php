@@ -177,21 +177,32 @@ class R2MediaService
      */
     public function uploadFile(UploadedFile $file, string $folder = 'sakani/properties/images'): array
     {
+        if ($this->disk === 'r2' && !$this->isConfigured()) {
+            throw new Exception('Cloudflare R2 storage is not fully configured.');
+        }
+
         $canonicalFolder = self::normalizeFolder($folder);
         $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin';
         $fileName = Str::random(24) . '.' . strtolower($extension);
-        $objectKey = $canonicalFolder . '/' . $fileName;
 
         try {
-            // Put file on R2 disk using putFileAs with normalized folder
-            $storedPath = Storage::disk('r2')->putFileAs(
+            $storage = Storage::disk($this->disk);
+            // R2 public access is provided by the bucket/domain. Do not send an
+            // S3 object ACL because Cloudflare R2 does not support object ACLs.
+            $storedPath = $storage->putFileAs(
                 $canonicalFolder,
                 $file,
-                $fileName,
-                'public'
+                $fileName
             );
 
-            $key = $storedPath ? self::normalizeKey($storedPath) : $objectKey;
+            if (!$storedPath) {
+                throw new Exception('The storage driver did not persist the uploaded file.');
+            }
+
+            $key = self::normalizeKey($storedPath);
+            if (!$storage->exists($key)) {
+                throw new Exception("Uploaded object could not be verified on {$this->disk}: {$key}");
+            }
             $url = $this->publicUrl($key);
 
             Log::info("File uploaded successfully to R2: {$key}");

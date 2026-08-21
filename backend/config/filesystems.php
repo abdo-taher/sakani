@@ -69,8 +69,8 @@ return [
             'endpoint' => env('R2_ENDPOINT', env('CLOUDFLARE_R2_ENDPOINT', env('CF_ACCOUNT_ID') ? 'https://' . env('CF_ACCOUNT_ID') . '.r2.cloudflarestorage.com' : null)),
             'url' => env('R2_PUBLIC_URL', env('CLOUDFLARE_R2_PUBLIC_URL')),
             'use_path_style_endpoint' => env('R2_USE_PATH_STYLE_ENDPOINT', true),
-            'throw' => false,
-            'report' => false,
+            'throw' => true,
+            'report' => true,
         ],
 
         'videos' => [

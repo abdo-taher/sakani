@@ -293,6 +293,17 @@ class Property extends Model
             ->ordered();
     }
 
+    /** All media rows, including videos, for complete API serialization. */
+    public function media()
+    {
+        return $this->hasMany(PropertyImage::class)->ordered();
+    }
+
+    public function videoMedia()
+    {
+        return $this->hasMany(PropertyImage::class)->where('media_type', 'video')->ordered();
+    }
+
     /**
      * Get primary image
      */

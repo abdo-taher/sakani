@@ -103,6 +103,30 @@ class PropertyRoundTripTest extends TestCase
             ->assertOk()
             ->assertJsonFragment(['id' => $propertyId]);
 
+        $this->putJson("/api/properties/{$propertyId}", [
+            'video_url' => 'https://example.com/tour-main.mp4',
+            'video_public_id' => 'properties/tour-main.mp4',
+            'video_thumbnail_url' => 'https://example.com/tour-thumb.jpg',
+            'videos' => [
+                [
+                    'url' => 'https://example.com/tour-main.mp4',
+                    'title' => 'الجولة الرئيسية',
+                    'type' => 'walkthrough',
+                    'is_primary' => true,
+                ],
+                [
+                    'url' => 'https://example.com/tour-second.mp4',
+                    'title' => 'جولة إضافية',
+                    'type' => 'walkthrough',
+                    'is_primary' => false,
+                ],
+            ],
+        ])->assertOk()
+            ->assertJsonCount(2, 'data.videos')
+            ->assertJsonPath('data.videos.0.title', 'الجولة الرئيسية');
+
+        $this->assertDatabaseCount('property_images', 3);
+
         $update = $this->putJson("/api/properties/{$propertyId}", [
             'title' => 'عقار محدث بالكامل',
             'description' => 'وصف محدث',
@@ -141,6 +165,7 @@ class PropertyRoundTripTest extends TestCase
             'replace_images' => true,
             'video_url' => null,
             'video_thumbnail_url' => null,
+            'videos' => [],
             'submitter_name' => null,
             'submitter_phone' => null,
             'admin_notes' => null,

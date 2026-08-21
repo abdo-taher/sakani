@@ -36,6 +36,7 @@ class PropertyController extends Controller
             'propertyType', 
             'location', 
             'images', 
+            'media',
             'amenities',
             'tags',
             'detailedRooms.roomImages'
@@ -50,6 +51,7 @@ class PropertyController extends Controller
                 'propertyType', 
                 'location', 
                 'images', 
+                'media',
                 'amenities',
             ]);
         }
@@ -535,6 +537,7 @@ class PropertyController extends Controller
                 'images' => function($query) {
                     $query->ordered();
                 }, 
+                'media',
                 'amenities',
                 'tags',
                 'detailedRooms.roomImages'
@@ -591,6 +594,7 @@ class PropertyController extends Controller
             'images' => function($query) {
                 $query->ordered();
             }, 
+            'media',
             'amenities',
             'tags',
             'reservations',
@@ -624,6 +628,7 @@ class PropertyController extends Controller
                     'images' => function($query) {
                         $query->ordered();
                     }, 
+                    'media',
                     'amenities',
                 ]);
                 if ($numericId) {
@@ -738,6 +743,12 @@ class PropertyController extends Controller
             'uploaded_images.*.sort_order' => 'sometimes|integer|min:0',
             'uploaded_images.*.is_primary' => 'sometimes|boolean',
             'replace_rooms' => 'sometimes|boolean',
+            'videos' => 'sometimes|array|max:20',
+            'videos.*.url' => 'required|string|url|max:1000',
+            'videos.*.title' => 'sometimes|nullable|string|max:255',
+            'videos.*.thumbnail_url' => 'sometimes|nullable|string|url|max:1000',
+            'videos.*.type' => 'sometimes|nullable|string|max:100',
+            'videos.*.is_primary' => 'sometimes|boolean',
             'rooms_data' => 'sometimes|array',
             'rooms_data.*.name' => 'required|string|max:255',
             'rooms_data.*.description' => 'nullable|string',
@@ -793,11 +804,13 @@ class PropertyController extends Controller
                 Log::warning('Failed to delete old video: ' . $e->getMessage());
             }
 
-            $property->images()->where('media_type', 'video')->delete();
+            $property->videoMedia()->delete();
 
             $updateData = array_merge($updateData, [
                 'video_url' => null,
                 'video_public_id' => null,
+                'video_thumbnail_url' => null,
+                'video_thumbnail_public_id' => null,
                 'video_driver' => null,
                 'video_file_path' => null,
             ]);
@@ -1005,7 +1018,7 @@ class PropertyController extends Controller
             $incomingVideos = $request->input('videos');
             
             // Delete existing video media
-            $property->images()->where('media_type', 'video')->delete();
+            $property->videoMedia()->delete();
 
             $primaryVideoUrl = null;
             foreach ($incomingVideos as $vIdx => $vData) {
@@ -1037,7 +1050,7 @@ class PropertyController extends Controller
             }
         }
 
-        $fresh = Property::with(['category', 'propertyType', 'location', 'images', 'amenities', 'tags', 'detailedRooms', 'detailedRooms.roomImages'])->find($property->id);
+        $fresh = Property::with(['category', 'propertyType', 'location', 'images', 'media', 'amenities', 'tags', 'detailedRooms', 'detailedRooms.roomImages'])->find($property->id);
         $fresh = $this->formatPropertyMedia($fresh, $request->user());
 
         CacheHelper::clearPropertyCaches();
@@ -1389,7 +1402,9 @@ class PropertyController extends Controller
     {
         if (!$property) return $property;
 
-        $rawImages = $property->images ?: collect();
+        $rawImages = $property->relationLoaded('media')
+            ? $property->media
+            : $property->media()->get();
         $pureImages = collect();
         $videosList = [];
 

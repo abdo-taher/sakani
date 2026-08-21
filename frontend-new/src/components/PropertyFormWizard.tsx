@@ -15,7 +15,7 @@ import { ApiService } from '../services/apiService';
 import { getAmenityDisplay } from '../utils/amenities';
 import { validatePropertyStep, normalizeEgyptianPhone } from '../utils/validation';
 import { LocationMapPicker } from './LocationMapPicker';
-import { generateAndUploadVideoThumbnail, extractFirstFrameDataUrl, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { generateAndUploadVideoThumbnail, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 import { PropertyFormSkeleton } from './Skeletons';
 import { evaluatePropertyOffer, getTodayDateString } from '../utils/offerUtils';
 import confetti from 'canvas-confetti';
@@ -472,18 +472,6 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       return;
     }
 
-    // ⚡ Instant Client-Side Extraction: Grab first frame immediately in ~100ms before upload
-    try {
-      const instantThumb = await extractFirstFrameDataUrl(file);
-      if (instantThumb) {
-        setVideoThumbnailUrl(instantThumb);
-        // If property has no images, also offer this frame as an immediate preview photo
-        setImages((prev) => prev.length === 0 ? [instantThumb] : prev);
-      }
-    } catch (instantErr) {
-      console.warn('Instant video frame extraction warning:', instantErr);
-    }
-
     setUploadingVideo(true);
 
     try {
@@ -497,6 +485,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
           const thumbRes = await generateAndUploadVideoThumbnail(file);
           if (thumbRes?.url) {
             setVideoThumbnailUrl(thumbRes.url);
+            setImages((prev) => prev.length === 0 ? [thumbRes.url] : prev);
           }
         } catch (thumbErr) {
           console.warn('Auto video thumbnail warning:', thumbErr);
@@ -566,6 +555,9 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
     const finalRooms = (operationType === 'rent' && rentalMode === 'rooms')
       ? Math.max(detailedRooms.length, Number(rooms) || 0)
       : (Number(rooms) || 0);
+    const persistedImages = Array.from(new Set(
+      images.filter((url) => /^https?:\/\//i.test(url))
+    ));
 
     const payload: any = {
       title: title.trim(),
@@ -605,7 +597,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       replace_images: true,
       replace_rooms: true,
       images: (() => {
-        const raw = Array.from(new Set(images.filter(Boolean)));
+        const raw = persistedImages;
         if (primaryImageIndex >= 0 && primaryImageIndex < raw.length) {
           const primaryImg = raw[primaryImageIndex];
           const remaining = raw.filter((_, i) => i !== primaryImageIndex);
@@ -614,7 +606,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
         return raw;
       })(),
       uploaded_images: (() => {
-        const raw = Array.from(new Set(images.filter(Boolean)));
+        const raw = persistedImages;
         let ordered = raw;
         if (primaryImageIndex >= 0 && primaryImageIndex < raw.length) {
           const primaryImg = raw[primaryImageIndex];
@@ -1637,18 +1629,10 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                 <input
                   type="url"
                   value={videoUrl}
-                  onChange={async (e) => {
+                  onChange={(e) => {
                     const newUrl = e.target.value;
                     setVideoUrl(newUrl);
-                    if (newUrl.trim()) {
-                      try {
-                        const thumb = await extractFirstFrameDataUrl(newUrl.trim());
-                        if (thumb) {
-                          setVideoThumbnailUrl(thumb);
-                          setImages(prev => prev.length === 0 ? [thumb] : prev);
-                        }
-                      } catch {}
-                    }
+                    setVideoThumbnailUrl('');
                   }}
                   placeholder="https://..."
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 outline-none focus:border-[#8D6A28]"

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Property, PropertyVideo } from '../types';
 import { StorageService } from '../services/storageService';
 import { ApiService } from '../services/apiService';
-import { generateAndUploadVideoThumbnail, extractFirstFrameDataUrl, isYouTubeUrl, getYouTubeEmbedUrl, getVideoThumbnailUrl, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
+import { generateAndUploadVideoThumbnail, isYouTubeUrl, getYouTubeEmbedUrl, getVideoThumbnailUrl, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 import { PropertyVideoThumbnail } from './PropertyVideoThumbnail';
 import { 
   X, 
@@ -248,22 +248,13 @@ export const AdminMediaManagementModal: React.FC<AdminMediaManagementModalProps>
       return;
     }
 
-    // ⚡ Instant Client-Side Extraction: Grab first frame immediately
-    let initialThumb = '';
-    try {
-      const extracted = await extractFirstFrameDataUrl(file);
-      if (extracted) initialThumb = extracted;
-    } catch (extractErr) {
-      console.warn('Instant frame extraction warning:', extractErr);
-    }
-
     setUploadingVideo(true);
     setErrorMsg(null);
 
     try {
       const res = await ApiService.uploadMedia(file, 'sakani/properties/videos');
       if (res?.url) {
-        let thumbUrl = initialThumb;
+        let thumbUrl = '';
         try {
           const thumbRes = await generateAndUploadVideoThumbnail(file);
           if (thumbRes?.url) {
@@ -276,7 +267,7 @@ export const AdminMediaManagementModal: React.FC<AdminMediaManagementModalProps>
         const newVideo: PropertyVideo = {
           url: res.url,
           title: `فيديو جولة ${mediaVideos.length + 1}`,
-          thumbnail_url: thumbUrl || initialThumb,
+          thumbnail_url: thumbUrl || undefined,
           is_primary: mediaVideos.length === 0,
           type: 'walkthrough',
         };
@@ -375,10 +366,17 @@ export const AdminMediaManagementModal: React.FC<AdminMediaManagementModalProps>
       replace_images: true,
       images: imageUrls,
       uploaded_images: uploadedImagesPayload,
-      videos: mediaVideos,
-      video_url: primaryVideoUrl || undefined,
-      video_public_id: primaryVideoUrl || undefined,
-      video_thumbnail_url: primaryVideoThumb || undefined,
+      videos: mediaVideos.map((video) => ({
+        ...video,
+        thumbnail_url: video.thumbnail_url && /^https?:\/\//i.test(video.thumbnail_url)
+          ? video.thumbnail_url
+          : undefined,
+      })),
+      video_url: primaryVideoUrl || null,
+      video_public_id: primaryVideoUrl || null,
+      video_thumbnail_url: primaryVideoThumb && /^https?:\/\//i.test(primaryVideoThumb)
+        ? primaryVideoThumb
+        : null,
     };
 
     try {
@@ -394,15 +392,8 @@ export const AdminMediaManagementModal: React.FC<AdminMediaManagementModalProps>
 
       if (isBackendId) {
         const res = await ApiService.updateProperty(property.id, payload);
-        if (res?.data) {
-          const apiData = res.data;
-          updatedProp = {
-            ...updatedProp,
-            ...apiData,
-            images: imageUrls,
-            videos: mediaVideos,
-            video_url: primaryVideoUrl,
-          };
+        if (res?.id) {
+          updatedProp = res;
         }
       }
 
