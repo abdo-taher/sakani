@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { Property, PropertyReservation } from '../../types';
@@ -11,7 +11,7 @@ import { AdminMediaManagementModal } from '../../components/AdminMediaManagement
 import { PropertyMultiVideoPlayer } from '../../components/PropertyMultiVideoPlayer';
 import { PropertyLocationMap } from '../../components/PropertyLocationMap';
 import { AdminPropertyDetailSkeleton, ModernStateFeedback } from '../../components/Skeletons';
-import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../../utils/media';
+import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl, getVideoThumbnailUrl } from '../../utils/media';
 import { getAmenityDisplay } from '../../utils/amenities';
 import { 
   Building2, 
@@ -70,7 +70,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
   const [property, setProperty] = useState<Property | null>(null);
   const [reservations, setReservations] = useState<PropertyReservation[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+  const [activeMediaIndex, setActiveMediaIndex] = useState<number>(0);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState<boolean>(false);
   const [isRoomsModalOpen, setIsRoomsModalOpen] = useState<boolean>(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState<boolean>(false);
@@ -381,6 +381,74 @@ export const AdminPropertyDetailPage: React.FC = () => {
     : [FALLBACK_PROPERTY_IMAGE];
   const images = Array.from(new Set(rawImgs.filter(Boolean)));
 
+  // Unified Media Items (Videos + Photos combined seamlessly)
+  const mediaItems = useMemo(() => {
+    const list: Array<{
+      type: 'video' | 'image';
+      url: string;
+      thumbnail: string;
+      title: string;
+      videoIndex?: number;
+    }> = [];
+
+    // 1. Collect all Videos
+    const videosList: any[] = [];
+    if (Array.isArray(property?.videos) && property.videos.length > 0) {
+      videosList.push(...property.videos.filter((v: any) => Boolean(v && (v.url || v.video_url))));
+    }
+    if (property?.video_url && !videosList.some((v: any) => (v.url || v.video_url) === property.video_url)) {
+      videosList.unshift({
+        url: property.video_url,
+        title: 'فيديو المعاينة والجولة الرئيسية',
+        thumbnail_url: property.video_thumbnail_url,
+        is_primary: true,
+      });
+    }
+
+    const firstImage = property?.images?.[0] || FALLBACK_PROPERTY_IMAGE;
+
+    videosList.forEach((v: any, idx: number) => {
+      const vUrl = v.url || v.video_url;
+      const vThumb = getVideoThumbnailUrl(vUrl, v.thumbnail_url || property?.video_thumbnail_url, firstImage);
+      list.push({
+        type: 'video',
+        url: vUrl,
+        thumbnail: vThumb || firstImage,
+        title: v.title || `فيديو جولة ${idx + 1}`,
+        videoIndex: idx,
+      });
+    });
+
+    // 2. Collect all Photos
+    const photosList = property?.images && property.images.length > 0 
+      ? property.images 
+      : (list.length === 0 ? [FALLBACK_PROPERTY_IMAGE] : []);
+    const uniquePhotos = Array.from(new Set(photosList.filter(Boolean)));
+
+    uniquePhotos.forEach((img: string, idx: number) => {
+      list.push({
+        type: 'image',
+        url: img,
+        thumbnail: img,
+        title: `صورة ${idx + 1}`,
+      });
+    });
+
+    return list.length > 0 ? list : [{
+      type: 'image' as const,
+      url: FALLBACK_PROPERTY_IMAGE,
+      thumbnail: FALLBACK_PROPERTY_IMAGE,
+      title: 'صورة العقار',
+    }];
+  }, [property?.images, property?.video_url, property?.video_thumbnail_url, property?.videos]);
+
+  const activeMedia = mediaItems[activeMediaIndex] || mediaItems[0] || {
+    type: 'image' as const,
+    url: FALLBACK_PROPERTY_IMAGE,
+    thumbnail: FALLBACK_PROPERTY_IMAGE,
+    title: 'صورة العقار',
+  };
+
   const effectivePrice = offer.isActive 
     ? (Number(offer.effectivePrice) || Number(offer.offerPrice) || Number(property.price) || 0)
     : (Number(property.price) || 0);
@@ -598,69 +666,125 @@ export const AdminPropertyDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* Image Carousel & Gallery */}
+          {/* Unified Media Carousel & Gallery (Photos + Videos) */}
           <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden p-4 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <ImageIcon className="w-4 h-4 text-[#8D6A28]" />
-                <h3 className="text-sm font-bold text-slate-900">معرض صور العقار ({images.length})</h3>
+                <h3 className="text-sm font-bold text-slate-900">
+                  معرض وسائط العقار ({mediaItems.length})
+                </h3>
+                <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+                  ({mediaItems.filter(m => m.type === 'image').length} صور
+                  {mediaItems.filter(m => m.type === 'video').length > 0 ? ` • ${mediaItems.filter(m => m.type === 'video').length} فيديو` : ''})
+                </span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMediaModalOpen(true)}
                 className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#8D6A28] border border-amber-200/80 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                title="تعديل سريع للصور وتحديد الصورة الرئيسية"
+                title="تعديل سريع للصور والفيديوهات"
               >
                 <Pencil className="w-3.5 h-3.5" />
                 <span>إدارة وتعديل الصور والفيديو</span>
               </button>
             </div>
 
-            <div className="relative h-72 sm:h-96 rounded-2xl overflow-hidden bg-slate-900">
-              <img
-                src={resolveImageUrl(images[activeImageIndex])}
-                alt={property.title}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
-              />
-              {images.length > 1 && (
+            {/* Main Media Viewport */}
+            <div className="relative h-72 sm:h-96 md:h-[420px] rounded-2xl overflow-hidden bg-slate-950">
+              {activeMedia.type === 'video' ? (
+                <div className="w-full h-full">
+                  <PropertyMultiVideoPlayer
+                    videos={property.videos}
+                    videoUrl={activeMedia.url}
+                    videoThumbnailUrl={activeMedia.thumbnail}
+                    fallbackPoster={mediaItems.find(m => m.type === 'image')?.url || FALLBACK_PROPERTY_IMAGE}
+                    embedded={true}
+                    autoPlay={false}
+                    title={activeMedia.title}
+                  />
+                </div>
+              ) : (
+                <img
+                  src={resolveImageUrl(activeMedia.url)}
+                  alt={property.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
+                />
+              )}
+
+              {/* Prev / Next Arrows */}
+              {mediaItems.length > 1 && (
                 <>
                   <button
-                    onClick={() => setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/80 text-white cursor-pointer transition"
+                    type="button"
+                    onClick={() => setActiveMediaIndex((prev) => (prev > 0 ? prev - 1 : mediaItems.length - 1))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 hover:bg-black/90 text-white cursor-pointer transition z-10 shadow-md backdrop-blur-xs"
+                    title="السابق"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => setActiveImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/80 text-white cursor-pointer transition"
+                    type="button"
+                    onClick={() => setActiveMediaIndex((prev) => (prev < mediaItems.length - 1 ? prev + 1 : 0))}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 hover:bg-black/90 text-white cursor-pointer transition z-10 shadow-md backdrop-blur-xs"
+                    title="التالي"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                 </>
               )}
-              <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xs text-white text-xs font-mono font-semibold px-3 py-1 rounded-full">
-                {activeImageIndex + 1} / {images.length}
+
+              {/* Badge for Type & Counter */}
+              <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-xs text-white text-xs font-mono font-semibold px-3 py-1 rounded-full flex items-center gap-2 z-10">
+                {activeMedia.type === 'video' ? (
+                  <span className="flex items-center gap-1 text-amber-400 font-bold">
+                    <Video className="w-3.5 h-3.5" />
+                    <span>فيديو</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-slate-300">
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>صورة</span>
+                  </span>
+                )}
+                <span>•</span>
+                <span>{activeMediaIndex + 1} / {mediaItems.length}</span>
               </div>
             </div>
 
             {/* Thumbnails */}
-            {images.length > 1 && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {images.map((img, idx) => (
+            {mediaItems.length > 1 && (
+              <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+                {mediaItems.map((item, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition cursor-pointer ${
-                      activeImageIndex === idx ? 'border-[#8D6A28] shadow-2xs' : 'border-transparent opacity-70 hover:opacity-100'
+                    type="button"
+                    onClick={() => setActiveMediaIndex(idx)}
+                    className={`relative w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition cursor-pointer group ${
+                      activeMediaIndex === idx 
+                        ? 'border-[#8D6A28] shadow-md ring-2 ring-[#8D6A28]/30' 
+                        : 'border-transparent opacity-75 hover:opacity-100 hover:border-slate-300'
                     }`}
                   >
                     <img 
-                      src={resolveImageUrl(img)} 
-                      alt={`صورة ${idx + 1}`} 
+                      src={resolveImageUrl(item.thumbnail || item.url)} 
+                      alt={item.title || `وسائط ${idx + 1}`} 
                       className="w-full h-full object-cover" 
                       onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
                     />
+                    {item.type === 'video' && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-amber-500/90 text-white flex items-center justify-center shadow-xs">
+                          <Play className="w-3 h-3 fill-white translate-x-px" />
+                        </div>
+                      </div>
+                    )}
+                    {item.type === 'video' && (
+                      <span className="absolute bottom-0.5 right-0.5 bg-black/75 text-amber-400 text-[9px] font-black px-1 rounded">
+                        فيديو
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -769,51 +893,6 @@ export const AdminPropertyDetailPage: React.FC = () => {
               {property.description || 'لا يوجد وصف متاح للعقار حالياً.'}
             </p>
           </div>
-
-          {/* Video Walkthrough (Multi-Video Supported) */}
-          {(property.video_url || (property.videos && property.videos.length > 0)) ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-bold text-slate-500">مشغل المعاينة المرئية</span>
-                <button
-                  type="button"
-                  onClick={() => setIsMediaModalOpen(true)}
-                  className="text-xs font-bold text-[#8D6A28] bg-amber-50 hover:bg-amber-100 border border-amber-200/70 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                  <span>إدارة وتعديل الفيديوهات ({property.videos?.length || 1})</span>
-                </button>
-              </div>
-
-              <PropertyMultiVideoPlayer
-                videos={property.videos}
-                videoUrl={property.video_url}
-                videoThumbnailUrl={property.video_thumbnail_url}
-                fallbackPoster={images[0]}
-                title="فيديوهات ومعاينة العقار المرئية"
-              />
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl sm:rounded-3xl border border-dashed border-slate-200 p-5 shadow-2xs flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center shrink-0">
-                  <Video className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-800">لا يوجد فيديو جولة مسجل لهذا العقار</h4>
-                  <p className="text-[11px] text-slate-500">إضافة فيديو يعزز ثقة وتفاعل العملاء مع العقار بنسبة كبيرة</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsMediaModalOpen(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#8D6A28] border border-amber-200/80 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>إضافة فيديو جولة الآن</span>
-              </button>
-            </div>
-          )}
 
           {/* Tags & Keywords */}
           {property.tags && property.tags.length > 0 && (
