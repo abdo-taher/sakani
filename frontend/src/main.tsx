@@ -6,23 +6,31 @@ import {installGlobalImageFallback} from './utils/imageFallback';
 
 installGlobalImageFallback();
 
-// Shield application from unhandled third-party browser extension script errors
+// Shield application from unhandled third-party browser extension script and XrayWrapper cross-origin errors
 if (typeof window !== 'undefined') {
+  const isIgnorableThirdPartyError = (msg: string, file: string, stack: string): boolean => {
+    const combined = `${msg} ${file} ${stack}`.toLowerCase();
+    return (
+      combined.includes('chrome-extension://') ||
+      combined.includes('moz-extension://') ||
+      combined.includes('safari-extension://') ||
+      combined.includes('content-script') ||
+      combined.includes('contentscript') ||
+      combined.includes('xraywrapper') ||
+      combined.includes('cross-origin object') ||
+      combined.includes('not allowed to define') ||
+      combined.includes('direction') ||
+      combined.includes('save-page')
+    );
+  };
+
   window.addEventListener(
     'error',
     (event) => {
       const msg = String(event.message || '');
       const file = String(event.filename || '');
       const stack = String(event.error?.stack || '');
-      if (
-        file.includes('chrome-extension://') ||
-        file.includes('moz-extension://') ||
-        file.includes('contentscript.js') ||
-        stack.includes('chrome-extension://') ||
-        stack.includes('contentscript.js') ||
-        msg.includes('direction') ||
-        msg.includes('save-page')
-      ) {
+      if (isIgnorableThirdPartyError(msg, file, stack)) {
         event.preventDefault();
         event.stopImmediatePropagation();
         return true;
@@ -34,14 +42,9 @@ if (typeof window !== 'undefined') {
   window.addEventListener(
     'unhandledrejection',
     (event) => {
-      const reasonStr = String(event.reason?.message || event.reason?.stack || event.reason || '');
-      if (
-        reasonStr.includes('chrome-extension://') ||
-        reasonStr.includes('moz-extension://') ||
-        reasonStr.includes('contentscript.js') ||
-        reasonStr.includes('save-page') ||
-        reasonStr.includes('direction')
-      ) {
+      const reason = event.reason;
+      const reasonStr = String(reason?.message || reason?.stack || reason || '');
+      if (isIgnorableThirdPartyError(reasonStr, '', reasonStr)) {
         event.preventDefault();
         event.stopImmediatePropagation();
       }
