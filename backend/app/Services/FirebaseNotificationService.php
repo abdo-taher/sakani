@@ -360,7 +360,9 @@ class FirebaseNotificationService
     {
         try {
             $tokens = DeviceToken::forAdmins()->pluck('token')->toArray();
-            return self::sendToTokens($tokens, $title, $body, $data, 'admin_alert');
+            return self::sendToTokens($tokens, $title, $body, array_merge($data, [
+                'recipient_type' => 'admin',
+            ]), 'admin_alert');
         } catch (\Throwable $e) {
             try { Log::error('Firebase sendToAdmin error: ' . $e->getMessage()); } catch (\Throwable $e) {}
             return ['status' => 'error', 'message' => $e->getMessage()];
@@ -383,7 +385,9 @@ class FirebaseNotificationService
                 ->pluck('token')
                 ->toArray();
 
-            return self::sendToTokens($tokens, $title, $body, $data, 'customer_chime');
+            return self::sendToTokens($tokens, $title, $body, array_merge($data, [
+                'recipient_type' => 'customer',
+            ]), 'customer_chime');
         } catch (\Throwable $e) {
             try { Log::error('Firebase sendToCustomer error: ' . $e->getMessage()); } catch (\Throwable $e) {}
             return ['status' => 'error', 'message' => $e->getMessage()];

@@ -60,13 +60,23 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     StorageService.ensureWelcomeNotification();
     loadNotifications();
 
-    // Auto-register admin device token in background if permission is already granted and admin is authenticated
-    if (role === 'admin' && StorageService.isAdminLoggedIn() && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      requestNotificationPermission('admin').catch(() => {});
+    // Keep the token audience aligned with the surface currently in use. This also
+    // repairs tokens left as admin when the same browser later joins as a customer.
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      if (role === 'admin' && StorageService.isAdminLoggedIn()) {
+        requestNotificationPermission('admin').catch(() => {});
+      } else if (role === 'customer') {
+        requestNotificationPermission('customer', customerPhone || StorageService.getClientPhone() || undefined).catch(() => {});
+      }
     }
 
     // 1. Subscribe to live incoming push notifications
     const unsubscribe = onPushNotification((payload: PushNotificationPayload) => {
+      const recipientType = payload.data?.recipient_type;
+      if (recipientType && recipientType !== role) {
+        return;
+      }
+
       const newItem: NotificationItem = {
         id: payload.id || `notif-${Date.now()}`,
         type: payload.type,

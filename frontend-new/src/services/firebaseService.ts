@@ -161,7 +161,9 @@ export async function requestNotificationPermission(
     const messaging = await initializeFirebase();
     if (!messaging) {
       // Mock / Offline token generation for preview
-      const localToken = `mock-token-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const existingToken = localStorage.getItem('sakani_device_token');
+      const localToken = existingToken || `mock-token-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem('sakani_device_token', localToken);
       await registerTokenWithBackend(localToken, role, phone);
       return { granted: true, token: localToken };
     }
@@ -172,6 +174,7 @@ export async function requestNotificationPermission(
     });
 
     if (token) {
+      localStorage.setItem('sakani_device_token', token);
       await registerTokenWithBackend(token, role, phone);
       return { granted: true, token };
     }

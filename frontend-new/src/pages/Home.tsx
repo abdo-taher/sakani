@@ -6,6 +6,7 @@ import {
   LocationDistrict, 
   OperationType, 
   PropertyType, 
+  PropertyStatus,
   SystemSettings 
 } from '../types';
 import { PropertyCard } from '../components/PropertyCard';
@@ -81,6 +82,16 @@ const WHY_US_ICON_MAP: Record<string, React.ReactNode> = {
   Sparkles: <Sparkles className="w-6 h-6 text-[#8D6A28]" />,
 };
 
+const availabilityRank: Record<PropertyStatus, number> = {
+  available: 0,
+  reserved: 1,
+  rented: 2,
+  sold: 3,
+};
+
+const sortAvailableFirst = (a: Property, b: Property): number =>
+  (availabilityRank[a.status] ?? 99) - (availabilityRank[b.status] ?? 99);
+
 // Default hero video URL fallback
 export const DEFAULT_HERO_VIDEO_URL = "/hero.mp4?v=3";
 
@@ -111,6 +122,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [searchRentalMode, setSearchRentalMode] = useState<string>('all');
   const [searchMaxPrice, setSearchMaxPrice] = useState<string>('');
   const [searchAudience, setSearchAudience] = useState<string>('all');
+  const [searchStatus, setSearchStatus] = useState<PropertyStatus | 'all'>('all');
+  const [searchSort, setSearchSort] = useState<string>('availability');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState<boolean>(false);
   const [isMobileFilterPopupOpen, setIsMobileFilterPopupOpen] = useState<boolean>(false);
 
@@ -119,7 +132,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [videoError, setVideoError] = useState(false);
 
   // Best Properties category filter pill
-  const [bestCategoryFilter, setBestCategoryFilter] = useState<'all' | 'rent' | 'room' | 'furnished' | 'sale'>('all');
+  const [bestCategoryFilter, setBestCategoryFilter] = useState<'all' | 'offers' | 'rent' | 'room' | 'furnished' | 'sale'>('all');
+  const [bestStatusFilter, setBestStatusFilter] = useState<PropertyStatus | 'all'>('all');
 
   // Independent API Data States (Prefilled instantly from properties cache)
   const [topViewedProperties, setTopViewedProperties] = useState<Property[]>(() => properties.slice(0, 6));
@@ -328,8 +342,8 @@ export const HomePage: React.FC<HomePageProps> = ({
     }
   };
 
-  const handleHeroSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleHeroSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
     const params = new URLSearchParams();
     if (searchKeyword.trim()) params.set('q', searchKeyword.trim());
     if (searchOperation === 'offers') {
@@ -342,6 +356,8 @@ export const HomePage: React.FC<HomePageProps> = ({
     if (searchMaxPrice) params.set('max_price', searchMaxPrice);
     if (searchRentalMode && searchRentalMode !== 'all') params.set('mode', searchRentalMode);
     if (searchAudience && searchAudience !== 'all') params.set('audience', searchAudience);
+    if (searchStatus !== 'all') params.set('status', searchStatus);
+    if (searchSort) params.set('sort', searchSort);
     
     navigate(`/properties?${params.toString()}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -410,7 +426,11 @@ export const HomePage: React.FC<HomePageProps> = ({
   };
 
   // Best / Featured properties pool (prefer API, fallback to prop properties)
-  const bestPropertiesSource = bestPropertiesApi.length > 0 ? bestPropertiesApi : properties;
+  const bestPropertiesSource = useMemo(() => {
+    const merged = new Map<string, Property>();
+    [...bestPropertiesApi, ...properties].forEach((property) => merged.set(String(property.id), property));
+    return Array.from(merged.values());
+  }, [bestPropertiesApi, properties]);
 
   // Filtered Best Properties based on Category Pills
   const filteredBestProperties = useMemo(() => {
@@ -426,34 +446,44 @@ export const HomePage: React.FC<HomePageProps> = ({
     } else if (bestCategoryFilter === 'sale') {
       list = list.filter(p => p.operation_type === 'sale');
     }
-    return list.slice(0, 6);
-  }, [bestPropertiesSource, bestCategoryFilter]);
+    if (bestStatusFilter !== 'all') {
+      list = list.filter(p => p.status === bestStatusFilter);
+    }
+    return [...list].sort((a, b) => {
+      const statusDifference = sortAvailableFirst(a, b);
+      if (statusDifference !== 0) return statusDifference;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }).slice(0, 6);
+  }, [bestPropertiesSource, bestCategoryFilter, bestStatusFilter]);
 
   // Room Rental Discovery Inventory (only if room properties exist)
   const roomRentalProperties = useMemo(() => {
     return properties
       .filter(p => p.operation_type === 'rent' && p.has_detailed_rooms && p.detailed_rooms && p.detailed_rooms.length > 0)
+      .sort(sortAvailableFirst)
       .slice(0, 4);
   }, [properties]);
 
   // Best Offers Inventory (Active date-valid offers prioritized)
   const offerProperties = useMemo(() => {
-    const activeOffers = properties.filter(p => evaluatePropertyOffer(p).isActive);
+    const activeOffers = properties.filter(p => evaluatePropertyOffer(p).isActive).sort(sortAvailableFirst);
     if (activeOffers.length > 0) return activeOffers.slice(0, 4);
     return properties
       .filter(p => Boolean(p.is_negotiable) || (Array.isArray(p.tags) && p.tags.some(t => {
         const str = typeof t === 'string' ? t : (t && typeof t === 'object' && 'name' in t ? (t as any).name : String(t || ''));
         return typeof str === 'string' && (str.includes('عرض') || str.includes('خصم') || str.includes('مميز'));
       })))
+      .sort(sortAvailableFirst)
       .slice(0, 4);
   }, [properties]);
 
   // Trending / Most-Viewed properties (prefer API, fallback to sorted properties)
   const mostViewedProperties = useMemo(() => {
-    if (topViewedProperties.length > 0) return topViewedProperties.slice(0, 4);
+    if (topViewedProperties.length > 0) {
+      return [...topViewedProperties].sort((a, b) => sortAvailableFirst(a, b) || (b.views || 0) - (a.views || 0)).slice(0, 4);
+    }
     return [...properties]
-      .filter(p => p.status === 'available')
-      .sort((a, b) => (b.views || 0) - (a.views || 0))
+      .sort((a, b) => sortAvailableFirst(a, b) || (b.views || 0) - (a.views || 0))
       .slice(0, 4);
   }, [topViewedProperties, properties]);
 
@@ -649,14 +679,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                 type="button"
                 onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
                 className={`flex items-center gap-1 sm:gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition cursor-pointer shrink-0 ${
-                  showAdvancedSearch || searchAudience !== 'all'
+                  showAdvancedSearch || searchAudience !== 'all' || searchStatus !== 'all' || searchSort !== 'availability'
                     ? 'bg-slate-900 text-white border-slate-900'
                     : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
               >
                 <SlidersHorizontal className="w-3.5 h-3.5 text-[#8D6A28]" />
                 <span>{showAdvancedSearch ? 'إخفاء الفلاتر' : 'فلاتر إضافية'}</span>
-                {searchAudience !== 'all' && (
+                {(searchAudience !== 'all' || searchStatus !== 'all' || searchSort !== 'availability') && (
                   <span className="w-2 h-2 rounded-full bg-[#8D6A28]" />
                 )}
               </button>
@@ -840,6 +870,27 @@ export const HomePage: React.FC<HomePageProps> = ({
                     </div>
                   </div>
 
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-semibold text-slate-700">حالة الإتاحة</label>
+                    <select value={searchStatus} onChange={(e) => setSearchStatus(e.target.value as PropertyStatus | 'all')} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none">
+                      <option value="all">كل الحالات</option>
+                      <option value="available">متاح</option>
+                      <option value="reserved">محجوز</option>
+                      <option value="rented">تم التأجير</option>
+                      <option value="sold">تم البيع</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-semibold text-slate-700">ترتيب النتائج</label>
+                    <select value={searchSort} onChange={(e) => setSearchSort(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none">
+                      <option value="availability">المتاح أولاً</option>
+                      <option value="newest">الأحدث أولاً</option>
+                      <option value="price_asc">الأقل سعراً</option>
+                      <option value="price_desc">الأعلى سعراً</option>
+                    </select>
+                  </div>
+
                   <div className="flex items-end">
                     <button
                       type="button"
@@ -850,6 +901,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                         setSearchRentalMode('all');
                         setSearchMaxPrice('');
                         setSearchAudience('all');
+                        setSearchStatus('all');
+                        setSearchSort('availability');
                       }}
                       className="w-full py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-600 transition cursor-pointer"
                     >
@@ -1036,6 +1089,28 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
 
             {/* 6. Rental Mode or Budget Filter in Popup */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="block text-[11px] font-semibold text-slate-700">حالة الإتاحة</label>
+                <select value={searchStatus} onChange={(e) => setSearchStatus(e.target.value as PropertyStatus | 'all')} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none">
+                  <option value="all">كل الحالات</option>
+                  <option value="available">متاح</option>
+                  <option value="reserved">محجوز</option>
+                  <option value="rented">تم التأجير</option>
+                  <option value="sold">تم البيع</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-[11px] font-semibold text-slate-700">ترتيب النتائج</label>
+                <select value={searchSort} onChange={(e) => setSearchSort(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none">
+                  <option value="availability">المتاح أولاً</option>
+                  <option value="newest">الأحدث أولاً</option>
+                  <option value="price_asc">الأقل سعراً</option>
+                  <option value="price_desc">الأعلى سعراً</option>
+                </select>
+              </div>
+            </div>
+
             {searchOperation === 'rent' && searchRentalMode !== 'room' ? (
               <div className="space-y-1">
                 <label className="block text-[11px] font-semibold text-slate-700">نظام التأجير</label>
@@ -1079,6 +1154,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                   setSearchRentalMode('all');
                   setSearchMaxPrice('');
                   setSearchAudience('all');
+                  setSearchStatus('all');
+                  setSearchSort('availability');
                 }}
                 className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-600 transition cursor-pointer text-center"
               >
@@ -1086,7 +1163,10 @@ export const HomePage: React.FC<HomePageProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setIsMobileFilterPopupOpen(false)}
+                onClick={() => {
+                  setIsMobileFilterPopupOpen(false);
+                  handleHeroSearch();
+                }}
                 className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition cursor-pointer text-center"
               >
                 تطبيق الفلاتر
@@ -1222,6 +1302,26 @@ export const HomePage: React.FC<HomePageProps> = ({
               ))}
             </div>
 
+            {/* Availability status filter */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+              {[
+                { id: 'all', label: 'كل الحالات' },
+                { id: 'available', label: 'متاح' },
+                { id: 'reserved', label: 'محجوز' },
+                { id: 'rented', label: 'تم التأجير' },
+                { id: 'sold', label: 'تم البيع' },
+              ].map((status) => (
+                <button
+                  key={status.id}
+                  type="button"
+                  onClick={() => setBestStatusFilter(status.id as PropertyStatus | 'all')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 transition ${bestStatusFilter === status.id ? 'bg-[#8D6A28] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                >
+                  {status.label}
+                </button>
+              ))}
+            </div>
+
             {/* Properties Grid with Horizontal Mobile Scrolling */}
             {isLoading || isLoadingBestApi ? (
               <PropertyGridSkeleton count={6} />
@@ -1244,7 +1344,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <HomeIcon className="w-10 h-10 text-slate-400 mx-auto" />
                 <p className="text-sm font-semibold text-slate-600">لا توجد عقارات متاحة حالياً في هذا التصنيف</p>
                 <button
-                  onClick={() => setBestCategoryFilter('all')}
+                  onClick={() => {
+                    setBestCategoryFilter('all');
+                    setBestStatusFilter('all');
+                  }}
                   className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold cursor-pointer"
                 >
                   عرض جميع العقارات

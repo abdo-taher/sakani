@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Property, LocationDistrict, OperationType, PropertyType, PropertyFilterState, AudienceType } from '../types';
+import { Property, LocationDistrict, OperationType, PropertyType, PropertyFilterState, AudienceType, PropertyStatus } from '../types';
 import { PropertyCard } from '../components/PropertyCard';
 import { PropertyGridSkeleton } from '../components/Skeletons';
 import { evaluatePropertyOffer } from '../utils/offerUtils';
@@ -53,6 +54,14 @@ interface ListingPageProps {
 }
 
 type ActiveListingTab = 'all' | 'sale' | 'rent_whole' | 'rent_room' | 'furnished' | 'offers';
+type PropertySort = 'availability' | 'newest' | 'price_asc' | 'price_desc' | 'area_desc' | 'discount_desc' | 'distance';
+
+const availabilityRank: Record<PropertyStatus, number> = {
+  available: 0,
+  reserved: 1,
+  rented: 2,
+  sold: 3,
+};
 
 export const ListingPage: React.FC<ListingPageProps> = ({
   properties,
@@ -82,6 +91,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
   const urlMaxPrice = searchParams.get('max_price');
   const urlRooms = searchParams.get('rooms');
   const urlSort = searchParams.get('sort');
+  const urlStatus = searchParams.get('status') as PropertyStatus | null;
 
   // Compute active listing tab from URL
   const activeListingTab: ActiveListingTab = useMemo(() => {
@@ -103,7 +113,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
   const [minPrice, setMinPrice] = useState<string>(urlMinPrice || initialFilters.min_price?.toString() || '');
   const [maxPrice, setMaxPrice] = useState<string>(urlMaxPrice || initialFilters.max_price?.toString() || '');
   const [roomsFilter, setRoomsFilter] = useState<string>(urlRooms || 'all');
-  const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc' | 'area_desc' | 'discount_desc' | 'distance'>((urlSort as any) || 'newest');
+  const [statusFilter, setStatusFilter] = useState<PropertyStatus | 'all'>(urlStatus || initialFilters.status || 'all');
+  const [sortBy, setSortBy] = useState<PropertySort>((urlSort as PropertySort) || 'availability');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Proximity Geolocation States
@@ -116,7 +127,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     if (isProximityActive) {
       setIsProximityActive(false);
       setUserCoords(null);
-      if (sortBy === 'distance') setSortBy('newest');
+      if (sortBy === 'distance') setSortBy('availability');
       return;
     }
 
@@ -151,8 +162,17 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     setMinPrice(urlMinPrice || '');
     setMaxPrice(urlMaxPrice || '');
     setRoomsFilter(urlRooms || 'all');
-    setSortBy((urlSort as any) || 'newest');
-  }, [urlDistrict, urlType, urlQ, urlMinPrice, urlMaxPrice, urlRooms, urlSort]);
+    setStatusFilter(urlStatus || 'all');
+    setSortBy((urlSort as PropertySort) || 'availability');
+  }, [urlDistrict, urlType, urlQ, urlMinPrice, urlMaxPrice, urlRooms, urlStatus, urlSort]);
+
+  useEffect(() => {
+    if (!showAdvancedFilters) return;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showAdvancedFilters]);
 
   // Helper to update URL search parameters
   const updateUrlParams = (updates: Record<string, string | null>) => {
@@ -258,6 +278,9 @@ export const ListingPage: React.FC<ListingPageProps> = ({
         if (p.rooms < rNum) return false;
       }
 
+      // 4.1 Availability status
+      if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+
       // 5. Min Price
       if (minPrice && Number(minPrice) > 0) {
         if (p.price < Number(minPrice)) return false;
@@ -300,6 +323,11 @@ export const ListingPage: React.FC<ListingPageProps> = ({
 
       return true;
     }).sort((a, b) => {
+      if (sortBy === 'availability') {
+        const statusDifference = (availabilityRank[a.status] ?? 99) - (availabilityRank[b.status] ?? 99);
+        if (statusDifference !== 0) return statusDifference;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
       if (sortBy === 'distance' && (a as any).distance !== undefined && (b as any).distance !== undefined) {
         return (a as any).distance - (b as any).distance;
       }
@@ -327,6 +355,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     minPrice,
     maxPrice,
     roomsFilter,
+    statusFilter,
     sortBy,
     isProximityActive,
     userCoords,
@@ -341,7 +370,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     setMinPrice('');
     setMaxPrice('');
     setRoomsFilter('all');
-    setSortBy('newest');
+    setStatusFilter('all');
+    setSortBy('availability');
     setSearchParams({}, { replace: true });
   };
 
@@ -623,21 +653,33 @@ export const ListingPage: React.FC<ListingPageProps> = ({
         </div>
       </div>
 
-      {/* Advanced Filters Expandable Drawer / Box */}
-      {showAdvancedFilters && (
-        <div className="bg-slate-50 p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4 animate-fade-in">
+      {/* Advanced Filters Popup */}
+      {showAdvancedFilters && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6" dir="rtl">
+          <button
+            type="button"
+            aria-label="إغلاق نافذة التصفية"
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm cursor-default"
+            onClick={() => setShowAdvancedFilters(false)}
+          />
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-50 p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-2xl space-y-4 animate-scale-up">
           <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
               <Filter className="w-4 h-4 text-[#8D6A28]" />
               خيارات التصفية التفصيلية
             </h3>
-            <button
-              onClick={resetFilters}
-              className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              إعادة ضبط الفلاتر
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={resetFilters}
+                className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                إعادة ضبط الفلاتر
+              </button>
+              <button type="button" onClick={() => setShowAdvancedFilters(false)} className="p-2 rounded-xl hover:bg-slate-200 text-slate-500" aria-label="إغلاق">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -723,6 +765,26 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               />
             </div>
 
+            {/* Availability Status */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">حالة الإتاحة</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  const val = e.target.value as PropertyStatus | 'all';
+                  setStatusFilter(val);
+                  updateUrlParams({ status: val === 'all' ? null : val });
+                }}
+                className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 outline-none"
+              >
+                <option value="all">كل الحالات</option>
+                <option value="available">متاح</option>
+                <option value="reserved">محجوز</option>
+                <option value="rented">تم التأجير</option>
+                <option value="sold">تم البيع</option>
+              </select>
+            </div>
+
             {/* Max Price */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">أعلى سعر (ج.م)</label>
@@ -757,8 +819,14 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               </select>
             </div>
           </div>
+          <div className="flex justify-end pt-2 border-t border-slate-200">
+            <button type="button" onClick={() => setShowAdvancedFilters(false)} className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800">
+              تطبيق الفلاتر
+            </button>
+          </div>
+          </div>
         </div>
-      )}
+      , document.body)}
 
       {/* Sorting & Proximity & Results Count Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600 border-b border-slate-200 pb-3">
@@ -815,6 +883,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
             className="bg-transparent font-bold text-slate-900 border-none outline-none cursor-pointer text-xs"
           >
             {isProximityActive && <option value="distance">الأقرب جغرافياً (مسافة)</option>}
+            <option value="availability">المتاح أولاً</option>
             <option value="newest">الأحدث أولاً</option>
             <option value="discount_desc">🔥 أعلى نسبة خصم</option>
             <option value="price_asc">الأقل سعراً</option>

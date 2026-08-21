@@ -149,14 +149,10 @@ class NotificationController extends Controller
             'token' => 'required|string|max:500',
             'phone' => 'nullable|string|max:25',
             'device_type' => 'nullable|string|max:50',
-            'role' => 'nullable|string|max:50',
         ]);
 
-        $user = $request->user();
-        $isAdmin = ($user && in_array($user->role, ['admin', 'super_admin'])) || $request->input('role') === 'admin';
-
         $phone = null;
-        if (!$isAdmin && $request->filled('phone')) {
+        if ($request->filled('phone')) {
             $phone = preg_replace('/\D/', '', $request->phone);
             if (str_starts_with($phone, '20') && strlen($phone) > 10) {
                 $phone = '0' . substr($phone, 2);
@@ -166,9 +162,13 @@ class NotificationController extends Controller
         $deviceToken = DeviceToken::updateOrCreate(
             ['token' => $request->token],
             [
-                'user_id' => $isAdmin ? ($user ? $user->id : 1) : null,
+                // This is the public/customer endpoint. Never trust a caller-supplied
+                // role to promote a push token into the admin audience.
+                'user_id' => null,
                 'phone' => $phone,
-                'device_type' => $isAdmin ? 'admin_web' : ($request->device_type ?? 'web'),
+                'device_type' => $request->device_type === 'admin_web'
+                    ? 'web'
+                    : ($request->device_type ?? 'web'),
                 'last_used_at' => now(),
             ]
         );
@@ -195,7 +195,7 @@ class NotificationController extends Controller
         $deviceToken = DeviceToken::updateOrCreate(
             ['token' => $request->token],
             [
-                'user_id' => $user ? $user->id : 1,
+                'user_id' => $user->id,
                 'phone' => null,
                 'device_type' => 'admin_web',
                 'last_used_at' => now(),

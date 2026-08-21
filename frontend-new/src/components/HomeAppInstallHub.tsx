@@ -123,9 +123,9 @@ export const HomeAppInstallHub: React.FC<HomeAppInstallHubProps> = ({ settings }
     try {
       await deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
       if (choice.outcome === 'accepted') {
         setAppInstalled(true);
-        setDeferredPrompt(null);
       }
     } catch (e) {
       console.warn(e);

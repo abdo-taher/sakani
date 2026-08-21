@@ -193,7 +193,7 @@ export interface PropertyFilterState {
   status?: PropertyStatus | 'all';
   featured_only?: boolean;
   offers_only?: boolean;
-  sort_by?: 'newest' | 'price_asc' | 'price_desc' | 'views_desc' | 'area_desc' | 'discount_desc';
+  sort_by?: 'availability' | 'newest' | 'price_asc' | 'price_desc' | 'views_desc' | 'area_desc' | 'discount_desc';
   mode?: 'full' | 'room' | 'all';
   discovery?: string;
 }

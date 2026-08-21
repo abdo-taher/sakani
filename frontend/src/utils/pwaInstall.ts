@@ -57,14 +57,16 @@ export const triggerPWAInstall = async (): Promise<{ outcome: 'accepted' | 'dism
   if (globalDeferredPrompt) {
     try {
       const promptEvent = globalDeferredPrompt;
-      promptEvent.prompt();
+      await promptEvent.prompt();
       const choiceResult = await promptEvent.userChoice;
+      // A BeforeInstallPromptEvent can only be used once, whether the user
+      // accepts or dismisses it.
+      globalDeferredPrompt = null;
+      notifyPwaListeners();
       if (choiceResult && choiceResult.outcome === 'accepted') {
-        globalDeferredPrompt = null;
         try {
           localStorage.setItem('sakani_pwa_installed', 'true');
         } catch {}
-        notifyPwaListeners();
         return { outcome: 'accepted' };
       }
       return { outcome: 'dismissed' };

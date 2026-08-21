@@ -269,9 +269,9 @@ export const EgyptianWelcomeFeedbackModal: React.FC = () => {
     try {
       await deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
       if (choice.outcome === 'accepted') {
         setAppInstalled(true);
-        setDeferredPrompt(null);
       }
     } catch (e) {}
   };
