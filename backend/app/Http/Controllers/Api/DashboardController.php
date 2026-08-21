@@ -12,6 +12,7 @@ use App\Models\ContactMessage;
 use App\Models\Room;
 use App\Models\VisitorLog;
 use App\Models\ReferralFeedback;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -154,7 +155,7 @@ class DashboardController extends Controller
             try {
                 $topViewedProperties = Property::orderByDesc('views')
                     ->take(6)
-                    ->get(['id', 'title', 'price', 'views', 'status', 'operation_type', 'location_id']);
+                    ->get(['id', 'title', 'price', 'views', 'status', 'category_id', 'location_id']);
             } catch (Exception $e) {}
 
             // Monthly stats (past 6 months)

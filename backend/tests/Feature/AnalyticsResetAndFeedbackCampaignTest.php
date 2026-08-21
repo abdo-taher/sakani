@@ -163,6 +163,31 @@ class AnalyticsResetAndFeedbackCampaignTest extends TestCase
     }
 
     /**
+     * 2.5 Admin Dashboard Endpoint Across All Ranges
+     */
+    public function test_admin_can_access_dashboard_overview_all_ranges(): void
+    {
+        foreach (['all', 'today', '7_days', '30_days'] as $rng) {
+            $res = $this->actingAs($this->admin, 'sanctum')->getJson("/api/dashboard?range={$rng}");
+            $res->assertOk();
+            $res->assertJson([
+                'success' => true,
+            ]);
+            $res->assertJsonStructure([
+                'success',
+                'counts',
+                'audience_distribution',
+                'category_distribution',
+                'location_distribution',
+                'top_viewed_properties',
+                'monthly_stats',
+                'visitor_stats',
+                'referral_stats',
+            ]);
+        }
+    }
+
+    /**
      * 3. Safe Visits Reset Baseline & Business Data Preservation
      */
     public function test_admin_can_safely_reset_visits_baseline_and_preserve_all_business_data(): void
