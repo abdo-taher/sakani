@@ -101,13 +101,23 @@ class AuthController extends Controller
         ]);
     }
     public function logout(Request $request)
-{
-    $request->user()->currentAccessToken()->delete();
+    {
+        try {
+            $user = $request->user('sanctum') ?: $request->user();
+            if ($user) {
+                if (method_exists($user, 'currentAccessToken') && $user->currentAccessToken()) {
+                    $user->currentAccessToken()->delete();
+                }
+            }
+        } catch (\Throwable $e) {
+            // Silently handle any token deletion/revocation issues
+        }
 
-    return response()->json([
-        'message' => 'تم تسجيل الخروج بنجاح'
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تسجيل الخروج بنجاح'
+        ]);
+    }
 public function updateCredentials(Request $request)
 {
     $validated = $request->validate([

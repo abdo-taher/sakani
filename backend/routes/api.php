@@ -44,6 +44,7 @@ Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'ind
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login-status', [AuthController::class, 'loginStatus']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 Route::post('/contact-messages/{id}/reply', [ContactMessageController::class, 'reply']);
 Route::get('/contact-messages', [ContactMessageController::class, 'index']);
@@ -105,7 +106,6 @@ Route::prefix('favorites')->group(function () {
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/media/upload', [MediaUploadController::class, 'upload']);
     Route::delete('/media/delete', [MediaUploadController::class, 'destroy']);
-    Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', function (Request $request) {
         return $request->user();
     });

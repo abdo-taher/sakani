@@ -214,6 +214,9 @@ export async function apiRequest<T = any>(
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('sakani_admin_auth_changed', { detail: { isAdmin: false } }));
       }
+      if (endpoint === '/logout' || endpoint.endsWith('/logout')) {
+        return { success: true, message: 'تم تسجيل الخروج بنجاح' } as any;
+      }
     }
     const errorData = await response.json().catch(() => ({}));
     const err = new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
@@ -253,11 +256,17 @@ export const ApiService = {
         }).catch(() => {});
       }
       await apiRequest('/logout', { method: 'POST' }).catch(() => {});
+    } catch (_) {
+      // Ignore network errors during logout
     } finally {
       sessionStorage.removeItem('token');
       localStorage.removeItem('token');
       localStorage.removeItem('sakani_token');
       localStorage.removeItem('sakani_admin_session_v3');
+      localStorage.removeItem('sakani_admin_logged_in');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('sakani_admin_auth_changed', { detail: { isAdmin: false } }));
+      }
     }
   },
 
