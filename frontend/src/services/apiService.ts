@@ -532,7 +532,25 @@ export const ApiService = {
     if (!getAuthToken()) return StorageService.getInquiries();
     try {
       const res = await apiRequest('/reservations');
-      return normalizeData(res);
+      const data = normalizeData(res);
+      if (Array.isArray(data)) {
+        return data.map((r: any) => ({
+          ...r,
+          id: String(r.id),
+          property_id: String(r.property_id || (r.property && r.property.id) || ''),
+          property_title: r.property_title || (r.property && r.property.title) || 'عقار',
+          property_ref: r.property_ref || (r.property && r.property.ref_id) || `SK-${String(r.property_id || '').padStart(4, '0')}`,
+          room_id: r.room_id ? String(r.room_id) : undefined,
+          room_name: r.room_name || (r.room && r.room.room_name) || undefined,
+          client_name: r.client_name || r.name || 'عميل',
+          client_phone: r.client_phone || r.phone || '',
+          message: r.message || '',
+          status: r.status || 'pending',
+          notes: r.notes || '',
+          created_at: r.created_at || new Date().toISOString(),
+        }));
+      }
+      return data;
     } catch {
       return StorageService.getInquiries();
     }

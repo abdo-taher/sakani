@@ -552,15 +552,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenAd
 
                   <div className="flex items-center gap-2 shrink-0">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                      inq.status === 'new'
+                      inq.status === 'new' || inq.status === 'pending'
                         ? 'bg-rose-100 text-rose-800'
-                        : inq.status === 'in_progress'
+                        : inq.status === 'in_progress' || inq.status === 'accepted' || inq.status === 'confirmed'
                         ? 'bg-amber-100 text-amber-800'
                         : inq.status === 'completed'
                         ? 'bg-emerald-100 text-emerald-800'
                         : 'bg-slate-100 text-slate-600'
                     }`}>
-                      {inq.status === 'new' ? 'جديد' : inq.status === 'in_progress' ? 'متابعة' : inq.status === 'completed' ? 'تم' : 'ملغي'}
+                      {inq.status === 'new' || inq.status === 'pending' ? 'جديد' : inq.status === 'accepted' || inq.status === 'confirmed' || inq.status === 'in_progress' ? 'متابعة' : inq.status === 'completed' ? 'تم' : 'ملغي'}
                     </span>
                     {inq.client_phone && (
                       <a
