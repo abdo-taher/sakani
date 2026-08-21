@@ -1,5 +1,28 @@
 <?php
 
+$firstFilledEnvironmentValue = static function (array $keys, mixed $default = null): mixed {
+    foreach ($keys as $key) {
+        $value = env($key);
+        if ($value !== null && $value !== '') {
+            return $value;
+        }
+    }
+
+    return $default;
+};
+
+$r2AccountId = $firstFilledEnvironmentValue([
+    'R2_ACCOUNT_ID',
+    'CLOUDFLARE_R2_ACCOUNT_ID',
+    'CLOUDFLARE_ACCOUNT_ID',
+    'CF_ACCOUNT_ID',
+]);
+
+$r2Endpoint = $firstFilledEnvironmentValue(['R2_ENDPOINT', 'CLOUDFLARE_R2_ENDPOINT']);
+if (!$r2Endpoint && $r2AccountId) {
+    $r2Endpoint = 'https://' . $r2AccountId . '.r2.cloudflarestorage.com';
+}
+
 return [
 
     /*
@@ -14,6 +37,8 @@ return [
     */
 
     'default' => env('FILESYSTEM_DISK', 'local'),
+
+    'media_disk' => env('MEDIA_DISK', 'r2'),
 
     /*
     |--------------------------------------------------------------------------
@@ -62,12 +87,15 @@ return [
 
         'r2' => [
             'driver' => 's3',
-            'key' => env('R2_ACCESS_KEY_ID', env('CLOUDFLARE_R2_ACCESS_KEY_ID')),
-            'secret' => env('R2_SECRET_ACCESS_KEY', env('CLOUDFLARE_R2_SECRET_ACCESS_KEY')),
-            'region' => env('R2_REGION', env('CLOUDFLARE_R2_REGION', 'auto')),
-            'bucket' => env('R2_BUCKET', env('CLOUDFLARE_R2_BUCKET', 'sakani')),
-            'endpoint' => env('R2_ENDPOINT', env('CLOUDFLARE_R2_ENDPOINT', env('CF_ACCOUNT_ID') ? 'https://' . env('CF_ACCOUNT_ID') . '.r2.cloudflarestorage.com' : null)),
-            'url' => env('R2_PUBLIC_URL', env('CLOUDFLARE_R2_PUBLIC_URL')),
+            'key' => $firstFilledEnvironmentValue(['R2_ACCESS_KEY_ID', 'CLOUDFLARE_R2_ACCESS_KEY_ID']),
+            'secret' => $firstFilledEnvironmentValue(['R2_SECRET_ACCESS_KEY', 'CLOUDFLARE_R2_SECRET_ACCESS_KEY']),
+            'region' => $firstFilledEnvironmentValue(['R2_REGION', 'CLOUDFLARE_R2_REGION'], 'auto'),
+            'bucket' => $firstFilledEnvironmentValue(['R2_BUCKET', 'CLOUDFLARE_R2_BUCKET'], 'sakani'),
+            'endpoint' => $r2Endpoint,
+            'url' => $firstFilledEnvironmentValue(
+                ['R2_PUBLIC_URL', 'CLOUDFLARE_R2_PUBLIC_URL'],
+                'https://pub-53f4892d4ffe491787baac754cbe0059.r2.dev'
+            ),
             'use_path_style_endpoint' => env('R2_USE_PATH_STYLE_ENDPOINT', true),
             'throw' => true,
             'report' => true,

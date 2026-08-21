@@ -335,11 +335,14 @@ export const AdminRoomManagementModal: React.FC<AdminRoomManagementModalProps> =
     if (!window.confirm(`هل أنت متأكد من حذف الغرفة "${roomName}" نهائياً؟`)) return;
 
     // 1. API delete
-    const numRoomId = parseInt(roomId.replace(/\D/g, ''), 10);
+    const numRoomId = /^\d+$/.test(roomId) ? Number(roomId) : 0;
     if (numRoomId) {
       try {
         await ApiService.deleteRoom(numRoomId);
-      } catch {}
+      } catch (err: any) {
+        setErrorMsg(err?.data?.message || err?.message || 'تعذر حذف الغرفة من الخادم');
+        return;
+      }
     }
 
     // 2. Storage update

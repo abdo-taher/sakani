@@ -46,24 +46,22 @@ export const AdminOfferModal: React.FC<AdminOfferModalProps> = ({
   onClose,
   onOfferUpdated,
 }) => {
-  if (!isOpen || !property) return null;
+  const originalPrice = Number(property?.price) || 0;
 
-  const originalPrice = Number(property.price) || 0;
-
-  const [hasOffer, setHasOffer] = useState<boolean>(Boolean(property.has_offer));
-  const [offerPrice, setOfferPrice] = useState<string>(property.offer_price ? String(property.offer_price) : '');
+  const [hasOffer, setHasOffer] = useState<boolean>(Boolean(property?.has_offer));
+  const [offerPrice, setOfferPrice] = useState<string>(property?.offer_price ? String(property.offer_price) : '');
   const [discountPercent, setDiscountPercent] = useState<string>(
-    property.offer_discount_percentage
+    property?.offer_discount_percentage
       ? String(property.offer_discount_percentage)
-      : property.offer_price && originalPrice > 0
+      : property?.offer_price && originalPrice > 0
       ? String(Math.round(((originalPrice - property.offer_price) / originalPrice) * 100))
       : '10'
   );
   const [startDate, setStartDate] = useState<string>(
-    property.offer_start_date ? property.offer_start_date.split('T')[0] : getTodayDateString()
+    property?.offer_start_date ? property.offer_start_date.split('T')[0] : getTodayDateString()
   );
   const [endDate, setEndDate] = useState<string>(
-    property.offer_end_date
+    property?.offer_end_date
       ? property.offer_end_date.split('T')[0]
       : () => {
           const d = new Date();
@@ -71,8 +69,8 @@ export const AdminOfferModal: React.FC<AdminOfferModalProps> = ({
           return d.toISOString().split('T')[0];
         }
   );
-  const [offerTitle, setOfferTitle] = useState<string>(property.offer_title || '');
-  const [offerBadge, setOfferBadge] = useState<string>(property.offer_badge || 'خصم خاص');
+  const [offerTitle, setOfferTitle] = useState<string>(property?.offer_title || '');
+  const [offerBadge, setOfferBadge] = useState<string>(property?.offer_badge || 'خصم خاص');
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -105,6 +103,8 @@ export const AdminOfferModal: React.FC<AdminOfferModalProps> = ({
       setErrorMsg(null);
     }
   }, [property]);
+
+  if (!isOpen || !property) return null;
 
   // Handler: changing Offer Price auto updates Discount Percentage
   const handleOfferPriceChange = (val: string) => {
@@ -185,16 +185,12 @@ export const AdminOfferModal: React.FC<AdminOfferModalProps> = ({
     };
 
     try {
-      // 1. Update in LocalStorage
-      const localUpdated = StorageService.updatePropertyOffer(property.id, payload);
-
-      // 2. Update via Backend API if numeric ID
+      // Persist remotely first so a failed request cannot be reported as success.
       const numId = parseInt(property.id.replace(/\D/g, ''), 10);
       if (numId) {
-        await ApiService.updatePropertyOffer(numId, payload).catch((err) => {
-          console.warn('API offer update sync note:', err);
-        });
+        await ApiService.updatePropertyOffer(numId, payload);
       }
+      StorageService.updatePropertyOffer(property.id, payload);
 
       const finalProp: Property = {
         ...property,

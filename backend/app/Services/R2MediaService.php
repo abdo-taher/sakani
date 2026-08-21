@@ -32,11 +32,25 @@ class R2MediaService
      */
     public function isConfigured(): bool
     {
-        $key = config('filesystems.disks.r2.key');
-        $secret = config('filesystems.disks.r2.secret');
-        $endpoint = config('filesystems.disks.r2.endpoint');
+        if ($this->disk !== 'r2') {
+            return true;
+        }
 
-        return !empty($key) && !empty($secret) && !empty($endpoint);
+        return $this->missingConfigurationKeys() === [];
+    }
+
+    /** Return safe configuration labels only; never return credential values. */
+    public function missingConfigurationKeys(): array
+    {
+        $required = [
+            'access_key' => config('filesystems.disks.r2.key'),
+            'secret_key' => config('filesystems.disks.r2.secret'),
+            'bucket' => config('filesystems.disks.r2.bucket'),
+            'endpoint_or_account_id' => config('filesystems.disks.r2.endpoint'),
+            'public_url' => config('filesystems.disks.r2.url'),
+        ];
+
+        return array_keys(array_filter($required, fn ($value) => empty($value)));
     }
 
     /**
@@ -133,6 +147,9 @@ class R2MediaService
     public function getUrl(string $key): string
     {
         $normalizedKey = self::normalizeKey($key);
+        if ($this->disk !== 'r2') {
+            return Storage::disk($this->disk)->url($normalizedKey);
+        }
         $publicBase = rtrim($this->publicUrl ?: config('filesystems.disks.r2.url', 'https://pub-53f4892d4ffe491787baac754cbe0059.r2.dev'), '/');
         // Strip trailing /sakani from base if present to prevent duplication
         $publicBase = preg_replace('#/sakani$#i', '', $publicBase);
@@ -177,18 +194,23 @@ class R2MediaService
      */
     public function uploadFile(UploadedFile $file, string $folder = 'sakani/properties/images'): array
     {
-        if ($this->disk === 'r2' && !$this->isConfigured()) {
-            throw new Exception('Cloudflare R2 storage is not fully configured.');
-        }
-
         $canonicalFolder = self::normalizeFolder($folder);
         $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin';
         $fileName = Str::random(24) . '.' . strtolower($extension);
 
+        $targetDisk = $this->disk;
+        if ($targetDisk === 'r2' && !$this->isConfigured()) {
+            Log::warning(
+                'Cloudflare R2 storage is not fully configured (Missing: ' .
+                implode(', ', $this->missingConfigurationKeys()) .
+                '). Falling back to local public disk.'
+            );
+            $targetDisk = 'public';
+        }
+
         try {
-            $storage = Storage::disk($this->disk);
-            // R2 public access is provided by the bucket/domain. Do not send an
-            // S3 object ACL because Cloudflare R2 does not support object ACLs.
+            $storage = Storage::disk($targetDisk);
+            // Put file on active disk
             $storedPath = $storage->putFileAs(
                 $canonicalFolder,
                 $file,
@@ -196,16 +218,25 @@ class R2MediaService
             );
 
             if (!$storedPath) {
-                throw new Exception('The storage driver did not persist the uploaded file.');
+                throw new Exception("The storage driver ({$targetDisk}) did not persist the uploaded file.");
             }
 
-            $key = self::normalizeKey($storedPath);
-            if (!$storage->exists($key)) {
-                throw new Exception("Uploaded object could not be verified on {$this->disk}: {$key}");
+            if ($targetDisk === 'r2') {
+                $key = self::normalizeKey($storedPath);
+                if (!$storage->exists($key)) {
+                    throw new Exception("Uploaded object could not be verified on {$targetDisk}: {$key}");
+                }
+                $url = $this->publicUrl($key);
+            } else {
+                $key = self::normalizeKey($storedPath);
+                $url = $storage->url($storedPath);
+                if (!str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
+                    $appUrl = rtrim(config('app.url', 'https://api.sakani.site'), '/');
+                    $url = $appUrl . '/' . ltrim($url, '/');
+                }
             }
-            $url = $this->publicUrl($key);
 
-            Log::info("File uploaded successfully to R2: {$key}");
+            Log::info("File uploaded successfully to disk [{$targetDisk}]: {$key}");
 
             return [
                 'success' => true,
@@ -216,9 +247,10 @@ class R2MediaService
                 'size' => $file->getSize(),
                 'mime_type' => $file->getMimeType(),
                 'original_name' => $file->getClientOriginalName(),
+                'storage_disk' => $targetDisk,
             ];
         } catch (Exception $e) {
-            Log::error("Failed to upload file to R2: " . $e->getMessage(), [
+            Log::error("Failed to upload file to disk [{$targetDisk}]: " . $e->getMessage(), [
                 'folder' => $canonicalFolder,
                 'original_name' => $file->getClientOriginalName(),
             ]);

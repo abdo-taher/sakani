@@ -1405,7 +1405,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
           isOpen={isOfferModalOpen}
           property={property}
           onClose={() => setIsOfferModalOpen(false)}
-          onOfferSaved={() => {
+          onOfferUpdated={() => {
             setIsOfferModalOpen(false);
             if (id) loadPropertyData(id);
           }}
@@ -1418,7 +1418,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
           isOpen={isRoomsModalOpen}
           property={property}
           onClose={() => setIsRoomsModalOpen(false)}
-          onRoomsUpdated={() => {
+          onUpdated={() => {
             setIsRoomsModalOpen(false);
             if (id) loadPropertyData(id);
           }}

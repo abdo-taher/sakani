@@ -328,9 +328,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   // Lightweight direct CSS Parallax (0 React re-renders)
   const handleHeroMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (window.innerWidth < 1024 || !heroRef.current) return;
-    const rect = heroRef.current.getBoundingClientRect();
-    const px = ((e.clientX - rect.left) / rect.width - 0.5) * 8;
-    const py = ((e.clientY - rect.top) / rect.height - 0.5) * 6;
+    const px = (e.clientX / window.innerWidth - 0.5) * 8;
+    const py = (e.clientY / window.innerHeight - 0.5) * 6;
     heroRef.current.style.setProperty('--hx', `${px}px`);
     heroRef.current.style.setProperty('--hy', `${py}px`);
   };

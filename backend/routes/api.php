@@ -35,8 +35,6 @@ use App\Http\Controllers\Api\FeedbackCampaignController;
 Route::get('/health', [ConfigController::class, 'health']);
 Route::get('/config', [ConfigController::class, 'getConfig']);
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index']);
-Route::post('/media/upload', [MediaUploadController::class, 'upload']);
-Route::delete('/media/delete', [MediaUploadController::class, 'destroy']);
 
 /*
 |--------------------------------------------------------------------------
@@ -102,6 +100,8 @@ Route::prefix('favorites')->group(function () {
 */
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/media/upload', [MediaUploadController::class, 'upload']);
+    Route::delete('/media/delete', [MediaUploadController::class, 'destroy']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', function (Request $request) {
         return $request->user();

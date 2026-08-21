@@ -43,6 +43,19 @@ jobs:
         command_timeout: 5m
 
     - name: Deploy & Configure
+      env:
+        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+        R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+        R2_PUBLIC_URL: ${{ secrets.R2_PUBLIC_URL }}
+        CLOUDFLARE_R2_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID }}
+        CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}
+        CLOUDFLARE_R2_BUCKET: ${{ secrets.CLOUDFLARE_R2_BUCKET }}
+        CLOUDFLARE_R2_ENDPOINT: ${{ secrets.CLOUDFLARE_R2_ENDPOINT }}
+        CLOUDFLARE_R2_PUBLIC_URL: ${{ secrets.CLOUDFLARE_R2_PUBLIC_URL }}
+        CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -51,6 +64,7 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         timeout: 60s
         command_timeout: 15m
+        envs: R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY,R2_ACCOUNT_ID,R2_BUCKET,R2_ENDPOINT,R2_PUBLIC_URL,CLOUDFLARE_R2_ACCESS_KEY_ID,CLOUDFLARE_R2_SECRET_ACCESS_KEY,CLOUDFLARE_R2_BUCKET,CLOUDFLARE_R2_ENDPOINT,CLOUDFLARE_R2_PUBLIC_URL,CF_ACCOUNT_ID
         script: |
           set -e
           cd ~/domains/sakani.site/public_html
@@ -68,6 +82,44 @@ jobs:
           if [ ! -f .env ]; then
             cp .env.example .env
           fi
+
+          # Safely inject R2 deployment secrets when configured in GitHub.
+          # Empty GitHub secrets never overwrite existing Hostinger values.
+          set_env_if_provided() {
+            ENV_NAME="$1" ENV_VALUE="$2" php -r '
+              $name = getenv("ENV_NAME");
+              $value = getenv("ENV_VALUE");
+              if ($value === false || $value === "") exit(0);
+              $file = ".env";
+              $lines = file_exists($file) ? file($file, FILE_IGNORE_NEW_LINES) : [];
+              $encoded = "\"" . addcslashes($value, "\\\"") . "\"";
+              $replacement = $name . "=" . $encoded;
+              $found = false;
+              foreach ($lines as &$line) {
+                if (str_starts_with(trim($line), $name . "=")) {
+                  $line = $replacement;
+                  $found = true;
+                  break;
+                }
+              }
+              unset($line);
+              if (!$found) $lines[] = $replacement;
+              file_put_contents($file, implode(PHP_EOL, $lines) . PHP_EOL);
+            '
+          }
+
+          set_env_if_provided R2_ACCESS_KEY_ID "$R2_ACCESS_KEY_ID"
+          set_env_if_provided R2_SECRET_ACCESS_KEY "$R2_SECRET_ACCESS_KEY"
+          set_env_if_provided R2_ACCOUNT_ID "$R2_ACCOUNT_ID"
+          set_env_if_provided R2_BUCKET "$R2_BUCKET"
+          set_env_if_provided R2_ENDPOINT "$R2_ENDPOINT"
+          set_env_if_provided R2_PUBLIC_URL "$R2_PUBLIC_URL"
+          set_env_if_provided CLOUDFLARE_R2_ACCESS_KEY_ID "$CLOUDFLARE_R2_ACCESS_KEY_ID"
+          set_env_if_provided CLOUDFLARE_R2_SECRET_ACCESS_KEY "$CLOUDFLARE_R2_SECRET_ACCESS_KEY"
+          set_env_if_provided CLOUDFLARE_R2_BUCKET "$CLOUDFLARE_R2_BUCKET"
+          set_env_if_provided CLOUDFLARE_R2_ENDPOINT "$CLOUDFLARE_R2_ENDPOINT"
+          set_env_if_provided CLOUDFLARE_R2_PUBLIC_URL "$CLOUDFLARE_R2_PUBLIC_URL"
+          set_env_if_provided CF_ACCOUNT_ID "$CF_ACCOUNT_ID"
 
           sed -i "s/APP_NAME=.*/APP_NAME=Sakani/" .env
           sed -i "s/APP_ENV=.*/APP_ENV=production/" .env
@@ -92,6 +144,20 @@ jobs:
           php artisan route:clear 2>/dev/null || true
           php artisan view:clear 2>/dev/null || true
           php artisan event:clear 2>/dev/null || true
+
+          # Stop deployment before users receive upload 500s when R2 secrets are absent.
+          php -r '
+            require "vendor/autoload.php";
+            $app = require "bootstrap/app.php";
+            $kernel = $app->make("Illuminate\\Contracts\\Console\\Kernel");
+            $kernel->bootstrap();
+            $service = $app->make("App\\Services\\R2MediaService");
+            if (!$service->isConfigured()) {
+              fwrite(STDERR, "R2 configuration missing: " . implode(", ", $service->missingConfigurationKeys()) . PHP_EOL);
+              exit(1);
+            }
+            echo "R2 configuration present" . PHP_EOL;
+          '
 
           # Run migrations
           echo "Running migrations..."

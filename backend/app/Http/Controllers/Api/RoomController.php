@@ -80,7 +80,13 @@ class RoomController extends Controller
 
     public function destroy($id)
     {
-        $room = Room::findOrFail($id);
+        $room = Room::find($id);
+        if (!$room) {
+            return response()->json([
+                'success' => true,
+                'message' => 'الغرفة محذوفة بالفعل',
+            ]);
+        }
         $property = $room->property;
 
         $room->delete();

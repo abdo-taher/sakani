@@ -53,13 +53,14 @@ class MediaUploadController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Media uploaded successfully to Cloudflare R2',
+                'message' => 'Media uploaded successfully',
                 'url' => $result['url'],
                 'key' => $result['key'],
                 'public_id' => $result['public_id'],
                 'file_path' => $result['file_path'],
                 'size' => $result['size'],
                 'mime_type' => $result['mime_type'],
+                'storage_disk' => $result['storage_disk'] ?? 'r2',
             ], 201);
         } catch (Exception $e) {
             Log::error("Media upload endpoint error: " . $e->getMessage());
@@ -67,7 +68,7 @@ class MediaUploadController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to upload media: ' . $e->getMessage(),
-            ], 500);
+            ], 502);
         }
     }
 

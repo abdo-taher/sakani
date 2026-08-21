@@ -271,5 +271,9 @@ class PropertyRoundTripTest extends TestCase
             ->assertJsonPath('data.property_type.slug', 'villa')
             ->assertJsonCount(0, 'data.images')
             ->assertJsonCount(0, 'data.detailed_rooms');
+
+        $this->deleteJson('/api/rooms/999999999')
+            ->assertOk()
+            ->assertJsonPath('success', true);
     }
 }
