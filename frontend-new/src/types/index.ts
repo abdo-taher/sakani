@@ -114,6 +114,7 @@ export interface LocationDistrict {
   id: string;
   name: string;
   available_count: number;
+  properties_count?: number;
   image_url: string;
   description: string;
   coordinates?: {

@@ -13,13 +13,19 @@ class LocationController extends Controller
     // عرض كل الأماكن
     public function index()
     {
-        $locations = Cache::remember('sakani_locations_all', 300, function () {
-            $data = Location::withCount(['properties as available_count' => function ($q) {
-                $q->where('status', 'available')->where('is_uploading', false);
-            }])->get();
+        $locations = Cache::remember('sakani_locations_all_v2', 300, function () {
+            $data = Location::withCount([
+                'properties as properties_count' => function ($q) {
+                    $q->publiclyVisible();
+                },
+                'properties as available_count' => function ($q) {
+                    $q->publiclyVisible()->where('status', 'available');
+                },
+            ])->get();
 
             $data->transform(function ($loc) {
                 $minPrice = $loc->properties()
+                    ->publiclyVisible()
                     ->where('status', 'available')
                     ->where('price', '>', 0)
                     ->min('price');

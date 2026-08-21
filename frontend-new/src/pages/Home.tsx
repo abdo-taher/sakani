@@ -1303,7 +1303,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
 
             {/* Availability status filter */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+            {/* <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
               {[
                 { id: 'all', label: 'كل الحالات' },
                 { id: 'available', label: 'متاح' },
@@ -1320,7 +1320,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   {status.label}
                 </button>
               ))}
-            </div>
+            </div> */}
 
             {/* Properties Grid with Horizontal Mobile Scrolling */}
             {isLoading || isLoadingBestApi ? (

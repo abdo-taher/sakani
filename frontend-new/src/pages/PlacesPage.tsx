@@ -149,6 +149,7 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
             id: String(d.id),
             name: d.name,
             available_count: Number(d.available_count) || 0,
+            properties_count: Number(d.properties_count) || 0,
             image_url: resolveImageUrl(d.image_url),
             description: d.address || d.description || '',
             coordinates: (d.latitude && d.longitude) ? { lat: Number(d.latitude), lng: Number(d.longitude) } : undefined,
@@ -284,11 +285,13 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
         const dName = String(district.name || '').toLowerCase();
         const pLoc = String(p.location_id || '').toLowerCase();
         const pDist = String(p.district_name || '').toLowerCase();
-        return pLoc === dId || pDist === dName || pDist.includes(dName) || dName.includes(pDist);
+        if (pLoc && dId) return pLoc === dId;
+        return Boolean(pDist && dName && pDist === dName);
       });
 
-      const rentProps = matchingProps.filter(p => p.operation_type === 'rent');
-      const saleProps = matchingProps.filter(p => p.operation_type === 'sale');
+      const availableProps = matchingProps.filter(p => p.status === 'available' && !p.is_uploading);
+      const rentProps = availableProps.filter(p => p.operation_type === 'rent');
+      const saleProps = availableProps.filter(p => p.operation_type === 'sale');
       const rentCount = rentProps.length;
       const saleCount = saleProps.length;
 
@@ -309,27 +312,27 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
 
       // Property types breakdown
       const propertyTypes: Record<string, number> = {};
-      matchingProps.forEach(p => {
+      availableProps.forEach(p => {
         const t = p.property_type || 'apartment';
         propertyTypes[t] = (propertyTypes[t] || 0) + 1;
       });
 
       // Finishing types breakdown
       const finishingTypes: Record<string, number> = {};
-      matchingProps.forEach(p => {
+      availableProps.forEach(p => {
         const f = p.finishing || 'super_lux';
         finishingTypes[f] = (finishingTypes[f] || 0) + 1;
       });
 
       // Average area & rooms
-      const areas = matchingProps.map(p => p.area).filter(a => a > 0);
-      const rooms = matchingProps.map(p => p.rooms).filter(r => r > 0);
+      const areas = availableProps.map(p => p.area).filter(a => a > 0);
+      const rooms = availableProps.map(p => p.rooms).filter(r => r > 0);
       const avgArea = areas.length > 0 ? Math.round(areas.reduce((s, a) => s + a, 0) / areas.length) : 0;
       const avgRooms = rooms.length > 0 ? Math.round(rooms.reduce((s, r) => s + r, 0) / rooms.length) : 0;
 
       // Nearby services from amenities
       const allAmenities = new Set<string>();
-      matchingProps.forEach(p => {
+      availableProps.forEach(p => {
         if (Array.isArray(p.amenities)) {
           p.amenities.forEach((a: any) => {
             const name = typeof a === 'string' ? a : (a.name || a.slug || '');
@@ -340,7 +343,7 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
       const nearbyServices = Array.from(allAmenities).slice(0, 6);
 
       // Dynamic category and tag from property data
-      const { category, tag, tagColor, suitableFor } = deriveCategoryAndTag(matchingProps);
+      const { category, tag, tagColor, suitableFor } = deriveCategoryAndTag(availableProps);
 
       // Features derived from data
       const features: string[] = [];
@@ -348,12 +351,12 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
       if (avgRooms > 0) features.push(`${avgRooms} غرف في المتوسط`);
       const topFinishing = Object.entries(finishingTypes).sort((a, b) => b[1] - a[1])[0];
       if (topFinishing) features.push(`معظم التشطيبات: ${FINISHING_LABELS[topFinishing[0]] || topFinishing[0]}`);
-      const furnishedCount = matchingProps.filter(p => p.furnishing === 'furnished').length;
+      const furnishedCount = availableProps.filter(p => p.furnishing === 'furnished').length;
       if (furnishedCount > 0) features.push(`${furnishedCount} وحدة مفروشة`);
 
       return {
         ...district,
-        totalAvailable: matchingProps.length || district.available_count || 0,
+        totalAvailable: district.available_count,
         rentCount,
         saleCount,
         extra: {
@@ -376,6 +379,11 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
       };
     });
   }, [districts, properties]);
+
+  const totalAvailableProperties = useMemo(
+    () => districts.reduce((total, district) => total + (Number(district.available_count) || 0), 0),
+    [districts]
+  );
 
   // Filtered districts
   const filteredDistricts = useMemo(() => {
@@ -478,7 +486,7 @@ export const PlacesPage: React.FC<PlacesPageProps> = ({ districts: propDistricts
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 border border-white/10 backdrop-blur-xs">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                {properties.length}+ عقار متاح ومفحوص
+                {totalAvailableProperties} عقار متاح ومفحوص
               </span>
             </div>
           </div>

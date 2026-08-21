@@ -18,6 +18,7 @@ class CacheHelper
             
             // Invalidate location aggregations (counts & min prices)
             Cache::forget('sakani_locations_all');
+            Cache::forget('sakani_locations_all_v2');
             
             // Invalidate public stats
             Cache::forget('sakani_public_stats_v2');
@@ -36,6 +37,7 @@ class CacheHelper
     {
         try {
             Cache::forget('sakani_locations_all');
+            Cache::forget('sakani_locations_all_v2');
             Cache::forget('sakani_public_stats_v2');
             Cache::put('sakani_props_version', time(), 86400 * 30);
             self::clearDashboardCaches();

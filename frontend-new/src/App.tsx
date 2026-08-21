@@ -205,6 +205,7 @@ function MainApp() {
           id: String(d.id),
           name: d.name,
           available_count: Number(d.available_count) || 0,
+          properties_count: Number(d.properties_count) || 0,
           image_url: resolveImageUrl(d.image_url),
           description: d.address || d.description || '',
           coordinates: (d.latitude && d.longitude) ? { lat: Number(d.latitude), lng: Number(d.longitude) } : undefined,
