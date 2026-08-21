@@ -64,19 +64,18 @@ export const AdminPropertySubmissionsPage: React.FC = () => {
       } else if (res && res.data && Array.isArray(res.data)) {
         setSubmissions(res.data);
         if (res.counts) setCounts(res.counts);
-      } else {
         const localProps = StorageService.getProperties().filter(p => 
           filterStatus === 'all' 
-            ? Boolean(p.submitter_phone || p.status === 'pending_review' || p.status === 'rejected')
-            : (filterStatus === 'pending_review' ? p.status === 'pending_review' : p.status === filterStatus)
+            ? Boolean(p.submitter_phone || p.submission_status === 'pending_review' || p.submission_status === 'rejected')
+            : (filterStatus === 'pending_review' ? (p.submission_status === 'pending_review' || (p.status as string) === 'pending_review') : p.submission_status === filterStatus)
         );
         setSubmissions(localProps);
       }
     } catch (e) {
       const localProps = StorageService.getProperties().filter(p => 
         filterStatus === 'all' 
-          ? Boolean(p.submitter_phone || p.status === 'pending_review' || p.status === 'rejected')
-          : (filterStatus === 'pending_review' ? p.status === 'pending_review' : p.status === filterStatus)
+          ? Boolean(p.submitter_phone || p.submission_status === 'pending_review' || p.submission_status === 'rejected')
+          : (filterStatus === 'pending_review' ? (p.submission_status === 'pending_review' || (p.status as string) === 'pending_review') : p.submission_status === filterStatus)
       );
       setSubmissions(localProps);
     }
@@ -119,7 +118,7 @@ export const AdminPropertySubmissionsPage: React.FC = () => {
       console.warn('API approve error, saving to local cache:', e);
     }
 
-    StorageService.updatePropertyStatus(selectedSubmission.id, 'available');
+    StorageService.updateSubmissionStatus(selectedSubmission.id, 'approved');
 
     setIsProcessing(false);
     setIsReviewModalOpen(false);
@@ -141,7 +140,7 @@ export const AdminPropertySubmissionsPage: React.FC = () => {
       console.warn('API reject error, saving to local cache:', e);
     }
 
-    StorageService.updatePropertyStatus(selectedSubmission.id, 'rejected');
+    StorageService.updateSubmissionStatus(selectedSubmission.id, 'rejected', reason);
 
     setIsProcessing(false);
     setIsReviewModalOpen(false);

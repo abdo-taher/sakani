@@ -53,7 +53,7 @@ use Illuminate\Foundation\Application;
                 if ($request->is('api/*') || $request->expectsJson()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Unauthenticated or session expired.'
+                        'message' => 'Unauthenticated'
                     ], 401);
                 }
             });

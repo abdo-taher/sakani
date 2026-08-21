@@ -383,7 +383,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
 
   const handleCall = () => {
     const settings = StorageService.getSettings();
-    const phone = property.owner_phone || settings.phone || settings.company_phone || '01067725976';
+    const phone = property.owner_phone || settings.phone || '01067725976';
     window.location.href = `tel:${phone}`;
   };
 
@@ -391,7 +391,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
 
   const handleWhatsApp = () => {
     const settings = StorageService.getSettings();
-    const rawWhatsapp = settings.whatsapp || settings.company_whatsapp || property.owner_phone || '201067725976';
+    const rawWhatsapp = settings.whatsapp || property.owner_phone || '201067725976';
     const whatsappNum = String(rawWhatsapp).replace(/\D/g, '');
     const priceText = offerInfo?.isActive 
       ? `بسعر العرض الخاص ${formatPrice(offerInfo.offerPrice)} ج.م (بدلاً من ${formatPrice(offerInfo.originalPrice)} ج.م - وفر ${offerInfo.discountPercentage}%)`
@@ -843,10 +843,10 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                     </div>
                   </div>
 
-                  {offerInfo.endDateFormatted && (
+                  {offerInfo.formattedEndDate && (
                     <div className="text-xs text-amber-100/95 flex items-center gap-1.5 pt-1 relative z-10 font-bold">
                       <CalendarCheck className="w-4 h-4 text-amber-300" />
-                      <span>فترة العرض سارية حتى: {offerInfo.endDateFormatted}</span>
+                      <span>فترة العرض سارية حتى: {offerInfo.formattedEndDate}</span>
                     </div>
                   )}
                 </div>

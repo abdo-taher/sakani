@@ -26,7 +26,6 @@ import {
   Eye
 } from 'lucide-react';
 import { ReservationCardSkeleton, ModernStateFeedback } from '../components/Skeletons';
-import { FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 
 export interface CustomerReservationItem {
   id: string | number;

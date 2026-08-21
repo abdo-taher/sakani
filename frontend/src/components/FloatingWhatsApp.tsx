@@ -5,7 +5,7 @@ import { StorageService } from '../services/storageService';
 export const FloatingWhatsApp: React.FC = () => {
   const handleClick = () => {
     const settings = StorageService.getSettings();
-    const rawNum = settings.whatsapp || settings.company_whatsapp || '201067725976';
+    const rawNum = settings.whatsapp || '201067725976';
     const whatsappNum = String(rawNum).replace(/\D/g, '');
     const text = encodeURIComponent('السلام عليكم، أود الاستفسار عن العقارات المتاحة في دمياط الجديدة عبر منصة سكني.');
     window.open(`https://wa.me/${whatsappNum}?text=${text}`, '_blank');

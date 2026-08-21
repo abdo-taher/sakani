@@ -208,7 +208,7 @@ export const AdminLocationsPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {districts.map((dist) => {
-          const count = properties.filter(p => p.district_id === dist.id || p.location_id === dist.id).length;
+          const count = properties.filter(p => (p as any).district_id === dist.id || String(p.location_id) === String(dist.id)).length;
 
           return (
             <div 

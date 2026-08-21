@@ -70,7 +70,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const messages = StorageService.getContactMessages();
   const newMessagesCount = messages.filter(m => m.status === 'new').length;
   const properties = StorageService.getProperties();
-  const pendingSubmissionsCount = properties.filter(p => p.status === 'pending_review').length;
+  const pendingSubmissionsCount = properties.filter(p => p.submission_status === 'pending_review' || (p.status as string) === 'pending_review').length;
 
   const handleLogoutClick = () => {
     StorageService.setAdminLoggedIn(false);
@@ -89,6 +89,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       groupTitle: 'إدارة العقارات',
       items: [
         { path: '/admin/properties', label: 'العقارات', icon: Building2, badge: `${properties.length}` },
+        { path: '/admin/properties/create', label: 'إضافة عقار جديد', icon: Plus, badge: null },
         { path: '/admin/property-submissions', label: 'العقارات المضافة من العملاء', icon: FilePlus2, badge: pendingSubmissionsCount > 0 ? `${pendingSubmissionsCount} جديد` : null },
         { path: '/admin/reservations', label: 'طلبات الحجز والمعاينات', icon: CalendarCheck, badge: newInquiriesCount > 0 ? `${newInquiriesCount} جديد` : null },
         { path: '/admin/need-requests', label: 'طلبات البحث عن عقار', icon: HelpCircle, badge: pendingNeedsCount > 0 ? `${pendingNeedsCount}` : null },

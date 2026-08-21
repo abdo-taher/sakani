@@ -39,12 +39,45 @@ export const AddPropertyPage: React.FC = () => {
   const [ownerPhone, setOwnerPhone] = useState(() => StorageService.getClientPhone() || '');
   const [ownerNotes, setOwnerNotes] = useState('');
 
+  // Dynamic Lists from Backend
+  const [districts, setDistricts] = useState(DISTRICTS_LIST);
+  const [amenitiesList, setAmenitiesList] = useState(AMENITIES_LIST);
+
   // Property Basic Data
   const [operationType, setOperationType] = useState<OperationType>('rent');
   const [propertyType, setPropertyType] = useState<PropertyType>('apartment');
   const [districtId, setDistrictId] = useState<string>(DISTRICTS_LIST[0].id);
   const [price, setPrice] = useState<string>('');
   const [isNegotiable, setIsNegotiable] = useState(true);
+
+  // Load live data from API
+  React.useEffect(() => {
+    ApiService.getLocations().then((res) => {
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped = res.map((l: any) => ({
+          id: String(l.id),
+          name: l.name,
+          description: l.description || '',
+          count: Number(l.available_count || l.properties_count) || 0,
+          available_count: Number(l.available_count || l.properties_count) || 0,
+          image_url: l.image_url || '',
+          coordinates: { lat: Number(l.latitude) || 31.4357, lng: Number(l.longitude) || 31.6708 },
+        }));
+        setDistricts(mapped);
+        setDistrictId(mapped[0].id);
+      }
+    }).catch(() => {});
+
+    ApiService.getAmenities().then((res) => {
+      if (Array.isArray(res) && res.length > 0) {
+        setAmenitiesList(res.map((a: any) => ({
+          id: a.slug || a.name || String(a.id),
+          name: a.name,
+          icon: 'Sparkles',
+        })));
+      }
+    }).catch(() => {});
+  }, []);
 
   // Specs
   const [title, setTitle] = useState('');
@@ -110,7 +143,7 @@ export const AddPropertyPage: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    const selectedDist = DISTRICTS_LIST.find(d => d.id === districtId);
+    const selectedDist = districts.find(d => d.id === districtId);
     const generatedTitle = title.trim() || `${propertyType === 'apartment' ? 'شقة' : 'عقار'} ${area ? `بمساحة ${area} م²` : ''} في ${selectedDist?.name || 'دمياط الجديدة'}`.trim();
     const generatedDesc = description.trim() || `عقار معروض ${operationType === 'sale' ? 'للبيع' : 'للإيجار'} في ${selectedDist?.name || 'دمياط الجديدة'} ${area ? `بمساحة ${area} م²،` : ''} موقع مميز وتشطيب عالي الجودة.`;
 
@@ -121,9 +154,9 @@ export const AddPropertyPage: React.FC = () => {
       is_negotiable: isNegotiable,
       operation_type: operationType,
       property_type: propertyType,
-      category_id: operationType === 'sale' ? 1 : 2,
-      property_type_id: 1,
-      location_id: 1,
+      category_id: operationType === 'sale' ? '1' : '2',
+      property_type_id: '1',
+      location_id: districtId || '1',
       latitude: coords.lat,
       longitude: coords.lng,
       area: (area && Number(area) > 0) ? Number(area) : null,
@@ -141,7 +174,7 @@ export const AddPropertyPage: React.FC = () => {
     };
 
     // Save submitter phone in storage for convenience
-    StorageService.saveClientPhone(ownerPhone.trim());
+    StorageService.setClientPhone(ownerPhone.trim());
 
     // 1. Submit to Backend API
     try {
@@ -155,7 +188,8 @@ export const AddPropertyPage: React.FC = () => {
       ...payload,
       district_name: selectedDist ? selectedDist.name : 'دمياط الجديدة',
       balconies: 1,
-      status: 'pending_review',
+      status: 'available',
+      submission_status: 'pending_review',
       featured: false,
       tags: ['عقار قيد المراجعة', selectedDist?.name || 'دمياط الجديدة', operationType === 'sale' ? 'للبيع' : 'للإيجار'],
       owner_name: ownerName.trim(),
@@ -547,7 +581,7 @@ export const AddPropertyPage: React.FC = () => {
                       onChange={(e) => setDistrictId(e.target.value)}
                       className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold bg-slate-50 outline-none"
                     >
-                      {DISTRICTS_LIST.map((d) => (
+                      {districts.map((d) => (
                         <option key={d.id} value={d.id}>{d.name}</option>
                       ))}
                     </select>
@@ -570,7 +604,7 @@ export const AddPropertyPage: React.FC = () => {
                   <div className="space-y-2 pt-2 border-t border-slate-100">
                     <label className="block text-xs font-bold text-slate-700">المرافق والتجهيزات المتوفرة</label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {AMENITIES_LIST.map((a) => {
+                      {amenitiesList.map((a) => {
                         const isChecked = selectedAmenities.includes(a.id);
                         return (
                           <button

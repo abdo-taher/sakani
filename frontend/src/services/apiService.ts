@@ -754,11 +754,23 @@ export const ApiService = {
     });
   },
 
-  async deleteNotification(id: string | number) {
+  async deleteNotification(id: string | number, phone?: string) {
     if (!id || (typeof id === 'string' && (id.startsWith('welcome') || id.startsWith('cnotif') || isNaN(Number(id))))) {
       return { success: true };
     }
-    return apiRequest(`/notifications/${id}`, { method: 'DELETE' });
+    const endpoint = phone ? `/customer/notifications/${id}` : `/notifications/${id}`;
+    return apiRequest(endpoint, { method: 'DELETE' });
+  },
+
+  async deleteAllNotifications(phone?: string) {
+    if (phone) {
+      const cleanDigits = phone.replace(/\D/g, '');
+      return apiRequest('/customer/notifications', {
+        method: 'DELETE',
+        body: JSON.stringify({ phone: cleanDigits || phone }),
+      });
+    }
+    return apiRequest('/notifications', { method: 'DELETE' });
   },
 
   // ---------------- Device Tokens for FCM ----------------

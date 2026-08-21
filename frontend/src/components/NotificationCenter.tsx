@@ -52,6 +52,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
   );
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const prevUnreadCountRef = useRef<number | null>(null);
@@ -286,15 +288,50 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   const handleDeleteNotification = async (id: string | number, e: React.MouseEvent) => {
     e.stopPropagation();
+    const rawPhone = customerPhone || StorageService.getClientPhone() || '';
+    const cleanDigits = rawPhone.replace(/\D/g, '');
+
     if (role === 'customer') {
       StorageService.deleteCustomerNotification(id);
     }
 
     try {
-      await ApiService.deleteNotification(id);
+      await ApiService.deleteNotification(id, cleanDigits.length >= 7 ? cleanDigits : undefined);
     } catch (e) {}
 
-    setNotifications((prev) => prev.filter((n) => String(n.id) !== String(id)));
+    const updated = notifications.filter((n) => String(n.id) !== String(id));
+    setNotifications(updated);
+    setUnreadCount(updated.filter(n => !n.is_read).length);
+  };
+
+  const handleDeleteAll = async () => {
+    if (isDeletingAll) return;
+    setIsDeletingAll(true);
+    const backupNotifications = [...notifications];
+    const backupUnread = unreadCount;
+
+    try {
+      const rawPhone = customerPhone || StorageService.getClientPhone() || '';
+      const cleanDigits = rawPhone.replace(/\D/g, '');
+
+      if (role === 'customer') {
+        StorageService.deleteAllCustomerNotifications();
+      }
+
+      await ApiService.deleteAllNotifications(cleanDigits.length >= 7 ? cleanDigits : undefined);
+
+      setNotifications([]);
+      setUnreadCount(0);
+      setShowDeleteAllConfirm(false);
+    } catch (error: any) {
+      console.error('Failed to delete all notifications:', error);
+      // Restore on failure to not falsely appear empty
+      setNotifications(backupNotifications);
+      setUnreadCount(backupUnread);
+      alert(error?.message || 'فشل مسح الإشعارات، يرجى المحاولة مرة أخرى');
+    } finally {
+      setIsDeletingAll(false);
+    }
   };
 
   const handleItemClick = (notification: NotificationItem) => {
@@ -473,6 +510,17 @@ const formatRelativeTime = (dateStr: string) => {
                   </button>
                 )}
 
+                {/* Delete All Notifications */}
+                {notifications.length > 0 && (
+                  <button
+                    onClick={() => setShowDeleteAllConfirm(true)}
+                    className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs transition cursor-pointer"
+                    title="مسح كل الإشعارات"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+
                 {/* Close Button */}
                 <button
                   onClick={() => setIsOpen(false)}
@@ -483,6 +531,37 @@ const formatRelativeTime = (dateStr: string) => {
                 </button>
               </div>
             </div>
+
+            {/* Delete All Confirmation Banner */}
+            {showDeleteAllConfirm && (
+              <div className="p-3.5 bg-red-50/95 border-b border-red-200 text-slate-800 space-y-2 shrink-0 animate-fade-in">
+                <div className="flex items-center gap-2 text-xs font-bold text-red-800">
+                  <Trash2 className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>هل أنت متأكد من رغبتك في حذف جميع الإشعارات؟</span>
+                </div>
+                <p className="text-[11px] text-red-600 leading-relaxed font-medium">
+                  سيتم مسح كافة إشعاراتك نهائياً ولن تتمكن من استرجاعها.
+                </p>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleDeleteAll}
+                    disabled={isDeletingAll}
+                    className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    {isDeletingAll ? <span>جاري الحذف...</span> : <span>نعم، حذف الكل</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteAllConfirm(false)}
+                    disabled={isDeletingAll}
+                    className="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition cursor-pointer"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* High-Impact Interactive Approval Card if Unapproved */}
             {isNotifUnapproved && (

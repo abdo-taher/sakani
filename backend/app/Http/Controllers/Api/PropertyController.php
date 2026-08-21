@@ -294,10 +294,10 @@ class PropertyController extends Controller
             'longitude' => 'nullable|numeric|between:-180,180',
             'rent_duration' => 'nullable|in:monthly,3_months,6_months,yearly',
             'area' => 'nullable|numeric|min:0',
-            'rooms' => 'required|integer',
-            'bathrooms' => 'required|integer',
+            'rooms' => 'nullable|integer|min:0',
+            'bathrooms' => 'nullable|integer|min:0',
             'floor' => 'nullable|integer',
-            'balconies' => 'nullable|integer',
+            'balconies' => 'nullable|integer|min:0',
             'finishing' => 'nullable|string',
             'furnishing' => 'nullable|string',
             'audience_type' => 'nullable|string|in:families,young_men,female_students,all',
@@ -320,7 +320,7 @@ class PropertyController extends Controller
             'rooms_data.*.name' => 'required|string|max:255',
             'rooms_data.*.description' => 'nullable|string',
             'rooms_data.*.price' => 'required|numeric|min:0',
-            'rooms_data.*.area' => 'nullable|integer|min:1',
+            'rooms_data.*.area' => 'nullable|numeric|min:0',
             'rooms_data.*.status' => 'nullable|in:available,reserved,rented',
             'rooms_data.*.media' => 'sometimes|array|max:20',
             'rooms_data.*.media.*.image_url' => 'required|string|max:2048',
@@ -330,23 +330,44 @@ class PropertyController extends Controller
             'amenities' => 'sometimes|array',
             'tags' => 'sometimes|array',
             
-            // Images validation
+            // Images validation: accepts UploadedFiles and string URLs
             'images' => 'sometimes|array|max:20',
-            'images.*' => 'sometimes|file|image|mimes:jpeg,jpg,png,webp|max:10240',
+            'images.*' => [
+                'sometimes',
+                function ($attribute, $value, $fail) {
+                    if ($value instanceof \Illuminate\Http\UploadedFile) {
+                        $extension = strtolower($value->getClientOriginalExtension());
+                        $allowed = ['jpeg', 'jpg', 'png', 'webp', 'gif', 'bmp', 'svg'];
+                        if (!in_array($extension, $allowed)) {
+                            $fail("حقل {$attribute} يجب أن يكون ملف صورة صالح (jpg, png, webp).");
+                        }
+                        if ($value->getSize() > 10485760) {
+                            $fail("حجم ملف الصورة في {$attribute} يتجاوز الحد الأقصى (10 ميجابايت).");
+                        }
+                    } elseif (is_string($value)) {
+                        $trimmed = trim($value);
+                        if (empty($trimmed) || strlen($trimmed) > 2048) {
+                            $fail("رابط الصورة في {$attribute} غير صالح.");
+                        }
+                    } else {
+                        $fail("حقل {$attribute} يجب أن يكون ملف صورة أو رابط صالح.");
+                    }
+                },
+            ],
             'image_types' => 'sometimes|array',
             'image_types.*' => 'sometimes|string|in:' . implode(',', array_keys(PropertyImage::IMAGE_TYPES)),
             'image_captions' => 'sometimes|array',
             'image_captions.*' => 'sometimes|string|max:255',
             
             // Pre-uploaded images (from separate upload endpoints)
-            'uploaded_images' => 'sometimes|array',
-            'uploaded_images.*.image_url' => 'required|string|url',
-            'uploaded_images.*.image_public_id' => 'required|string',
-            'uploaded_images.*.image_type' => 'sometimes|string|in:' . implode(',', array_keys(PropertyImage::IMAGE_TYPES)),
-            'uploaded_images.*.caption' => 'sometimes|string|max:255',
-            'uploaded_images.*.media_type' => 'sometimes|string|in:image,video',
-            'uploaded_images.*.sort_order' => 'sometimes|integer|min:0',
-            'uploaded_images.*.is_primary' => 'sometimes|boolean',
+            'uploaded_images' => 'sometimes|array|max:20',
+            'uploaded_images.*.image_url' => 'required|string',
+            'uploaded_images.*.image_public_id' => 'nullable|string',
+            'uploaded_images.*.image_type' => 'sometimes|nullable|string|in:' . implode(',', array_keys(PropertyImage::IMAGE_TYPES)),
+            'uploaded_images.*.caption' => 'sometimes|nullable|string|max:255',
+            'uploaded_images.*.media_type' => 'sometimes|nullable|string|in:image,video',
+            'uploaded_images.*.sort_order' => 'sometimes|nullable|integer|min:0',
+            'uploaded_images.*.is_primary' => 'sometimes|nullable|boolean',
         ]);
 
         $categoryId = $this->resolveCategoryId($request);
@@ -694,8 +715,8 @@ class PropertyController extends Controller
 
         $request->validate([
             'title' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|required|string|max:2000',
-            'price' => 'sometimes|required|numeric|min:0',
+            'description' => 'sometimes|required|string',
+            'price' => 'sometimes|nullable|numeric|min:0',
             'is_negotiable' => 'sometimes|boolean',
             'has_offer' => 'sometimes|boolean',
             'offer_price' => 'sometimes|nullable|numeric|min:0',
@@ -704,19 +725,19 @@ class PropertyController extends Controller
             'offer_end_date' => 'sometimes|nullable|date',
             'offer_title' => 'sometimes|nullable|string|max:255',
             'offer_badge' => 'sometimes|nullable|string|max:100',
-            'property_type_id' => 'sometimes|required|exists:property_types,id',
-            'category_id' => 'sometimes|required|exists:categories,id',
+            'property_type_id' => 'sometimes|nullable|exists:property_types,id',
+            'category_id' => 'sometimes|nullable|exists:categories,id',
             'operation_type' => 'sometimes|nullable|in:sale,rent',
             'property_type' => 'sometimes|nullable|string',
-            'location_id' => 'sometimes|required|exists:locations,id',
+            'location_id' => 'sometimes|nullable|exists:locations,id',
             'address_detail' => 'sometimes|nullable|string|max:500',
             'address' => 'sometimes|nullable|string|max:500',
             'latitude' => 'sometimes|nullable|numeric|between:-90,90',
             'longitude' => 'sometimes|nullable|numeric|between:-180,180',
             'rent_duration' => 'sometimes|nullable|in:monthly,3_months,6_months,yearly',
             'area' => 'sometimes|nullable|numeric|min:0',
-            'rooms' => 'sometimes|required|integer|min:0',
-            'bathrooms' => 'sometimes|required|integer|min:0',
+            'rooms' => 'sometimes|nullable|integer|min:0',
+            'bathrooms' => 'sometimes|nullable|integer|min:0',
             'floor' => 'sometimes|nullable|integer|min:0',
             'balconies' => 'sometimes|nullable|integer|min:0',
             'finishing' => 'sometimes|nullable|string',
@@ -743,14 +764,40 @@ class PropertyController extends Controller
             'amenities' => 'sometimes|array',
             'tags' => 'sometimes|array',
             'replace_images' => 'sometimes|boolean',
+            
+            // Images validation: accepts UploadedFiles and string URLs
+            'images' => 'sometimes|array|max:20',
+            'images.*' => [
+                'sometimes',
+                function ($attribute, $value, $fail) {
+                    if ($value instanceof \Illuminate\Http\UploadedFile) {
+                        $extension = strtolower($value->getClientOriginalExtension());
+                        $allowed = ['jpeg', 'jpg', 'png', 'webp', 'gif', 'bmp', 'svg'];
+                        if (!in_array($extension, $allowed)) {
+                            $fail("حقل {$attribute} يجب أن يكون ملف صورة صالح (jpg, png, webp).");
+                        }
+                        if ($value->getSize() > 10485760) {
+                            $fail("حجم ملف الصورة في {$attribute} يتجاوز الحد الأقصى (10 ميجابايت).");
+                        }
+                    } elseif (is_string($value)) {
+                        $trimmed = trim($value);
+                        if (empty($trimmed) || strlen($trimmed) > 2048) {
+                            $fail("رابط الصورة في {$attribute} غير صالح.");
+                        }
+                    } else {
+                        $fail("حقل {$attribute} يجب أن يكون ملف صورة أو رابط صالح.");
+                    }
+                },
+            ],
+            
             'uploaded_images' => 'sometimes|array|max:20',
-            'uploaded_images.*.image_url' => 'required|string|url',
+            'uploaded_images.*.image_url' => 'required|string',
             'uploaded_images.*.image_public_id' => 'nullable|string',
-            'uploaded_images.*.image_type' => 'sometimes|string|in:' . implode(',', array_keys(PropertyImage::IMAGE_TYPES)),
+            'uploaded_images.*.image_type' => 'sometimes|nullable|string|in:' . implode(',', array_keys(PropertyImage::IMAGE_TYPES)),
             'uploaded_images.*.caption' => 'sometimes|nullable|string|max:255',
-            'uploaded_images.*.media_type' => 'sometimes|string|in:image,video',
-            'uploaded_images.*.sort_order' => 'sometimes|integer|min:0',
-            'uploaded_images.*.is_primary' => 'sometimes|boolean',
+            'uploaded_images.*.media_type' => 'sometimes|nullable|string|in:image,video',
+            'uploaded_images.*.sort_order' => 'sometimes|nullable|integer|min:0',
+            'uploaded_images.*.is_primary' => 'sometimes|nullable|boolean',
             'replace_rooms' => 'sometimes|boolean',
             'videos' => 'sometimes|array|max:20',
             'videos.*.url' => 'required|string|url|max:1000',
@@ -762,7 +809,7 @@ class PropertyController extends Controller
             'rooms_data.*.name' => 'required|string|max:255',
             'rooms_data.*.description' => 'nullable|string',
             'rooms_data.*.price' => 'required|numeric|min:0',
-            'rooms_data.*.area' => 'nullable|integer|min:1',
+            'rooms_data.*.area' => 'nullable|numeric|min:0',
             'rooms_data.*.status' => 'nullable|in:available,reserved,rented',
             'rooms_data.*.media' => 'sometimes|array|max:20',
             'rooms_data.*.media.*.image_url' => 'required|string|max:2048',

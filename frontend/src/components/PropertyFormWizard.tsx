@@ -324,7 +324,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
         setFinishing(normalizeFinishing(prop.finishing));
         setFurnishing(normalizeFurnishing(prop.furnishing));
 
-        setStatus(String(prop.status || 'available'));
+        setStatus(prop.status || 'available');
         setFeatured(Boolean(prop.featured));
 
         setPrice(String(prop.price || ''));
@@ -760,6 +760,30 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       }
     } catch (err: any) {
       console.error('Failed to submit property wizard:', err);
+      const serverErrors = err?.data?.errors;
+      if (serverErrors && typeof serverErrors === 'object') {
+        const formattedErrors: Record<string, string> = {};
+        for (const [key, val] of Object.entries(serverErrors)) {
+          formattedErrors[key] = Array.isArray(val) ? val[0] : String(val);
+        }
+        setErrors(formattedErrors);
+
+        // Find which step corresponds to the first error and jump there
+        const firstErrorKey = Object.keys(formattedErrors)[0];
+        if (['title', 'description', 'property_type', 'operation_type', 'category_id', 'property_type_id'].includes(firstErrorKey)) {
+          setCurrentStep(1);
+        } else if (['location_id', 'district_id', 'latitude', 'longitude', 'address_detail', 'address'].includes(firstErrorKey)) {
+          setCurrentStep(2);
+        } else if (['area', 'rooms', 'bathrooms', 'floor', 'balconies', 'finishing', 'furnishing', 'audience_type'].includes(firstErrorKey)) {
+          setCurrentStep(3);
+        } else if (['price', 'is_negotiable', 'has_offer', 'rent_duration', 'detailed_rooms', 'rooms_data'].some(k => firstErrorKey.startsWith(k))) {
+          setCurrentStep(4);
+        } else if (['amenities', 'tags'].includes(firstErrorKey)) {
+          setCurrentStep(5);
+        } else if (['images', 'uploaded_images', 'video', 'video_url', 'videos'].some(k => firstErrorKey.startsWith(k))) {
+          setCurrentStep(6);
+        }
+      }
       setGeneralError(err.message || 'حدث خطأ أثناء حفظ العقار، يرجى مراجعة البيانات');
     } finally {
       setIsSubmitting(false);

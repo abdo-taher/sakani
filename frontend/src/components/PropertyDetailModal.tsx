@@ -5,6 +5,7 @@ import { StorageService } from '../services/storageService';
 import { AMENITIES_LIST } from '../data/mockData';
 import { getAmenityDisplay } from '../utils/amenities';
 import { PropertyMultiVideoPlayer } from './PropertyMultiVideoPlayer';
+import { PropertyVideoThumbnail } from './PropertyVideoThumbnail';
 import { ClientRoomDetailsModal } from './ClientRoomDetailsModal';
 import { FALLBACK_PROPERTY_IMAGE, resolveImageUrl } from '../utils/media';
 import { 
@@ -42,7 +43,6 @@ import {
   Clock,
   ArrowRight,
   FileText,
-  Play,
   Lock,
   Tag,
   Play,

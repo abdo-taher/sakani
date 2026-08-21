@@ -25,6 +25,7 @@ class AuthController extends Controller
         $usernameKey = 'login_attempts_username_' . $request->username;
 
         if (RateLimiter::tooManyAttempts($ipKey, 5) || RateLimiter::tooManyAttempts($usernameKey, 3)) {
+            RateLimiter::hit($ipKey, 600);
             $ipSeconds = RateLimiter::availableIn($ipKey);
             $usernameSeconds = RateLimiter::availableIn($usernameKey);
             

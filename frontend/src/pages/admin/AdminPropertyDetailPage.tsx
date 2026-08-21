@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
-import { Property, PropertyReservation } from '../../types';
+import { Property, InquiryReservation } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { ApiService } from '../../services/apiService';
 import { evaluatePropertyOffer, formatArabicDate } from '../../utils/offerUtils';
@@ -68,7 +68,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [property, setProperty] = useState<Property | null>(null);
-  const [reservations, setReservations] = useState<PropertyReservation[]>([]);
+  const [reservations, setReservations] = useState<InquiryReservation[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeMediaIndex, setActiveMediaIndex] = useState<number>(0);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState<boolean>(false);
@@ -183,7 +183,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
 
     // 3. Load associated reservations & inquiries
     try {
-      const allReservations = StorageService.getReservations();
+      const allReservations = StorageService.getInquiries();
       const related = allReservations.filter((r) => String(r.property_id) === String(propId));
       setReservations(related);
     } catch {}
@@ -273,7 +273,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
     if (!property) return;
     try {
       await ApiService.updateProperty(property.id, { status: newStatus });
-      StorageService.updateProperty(property.id, { status: newStatus });
+      StorageService.updatePropertyStatus(property.id, newStatus);
       setProperty({ ...property, status: newStatus });
     } catch (err) {
       alert('حدث خطأ أثناء تحديث حالة العقار');
@@ -285,7 +285,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
     const nextFeatured = !property.featured;
     try {
       await ApiService.updateProperty(property.id, { featured: nextFeatured });
-      StorageService.updateProperty(property.id, { featured: nextFeatured });
+      StorageService.saveProperty({ ...property, featured: nextFeatured });
       setProperty({ ...property, featured: nextFeatured });
     } catch (err) {
       alert('حدث خطأ أثناء تعديل تمييز العقار');
@@ -456,7 +456,7 @@ export const AdminPropertyDetailPage: React.FC = () => {
   const settings = StorageService.getSettings();
   const commissionPercentage = typeof settings.commission_percentage === 'number' 
     ? settings.commission_percentage 
-    : (parseFloat(String(settings.commission_percentage || settings.commission_rate || '2.5')) || 2.5);
+    : (parseFloat(String(settings.commission_percentage || '2.5')) || 2.5);
 
   const estimatedCommission = Math.round(effectivePrice * (commissionPercentage / 100)) || 0;
 
@@ -822,13 +822,13 @@ export const AdminPropertyDetailPage: React.FC = () => {
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
                 <span className="text-[11px] font-medium text-slate-500 block">نوع التشطيب</span>
                 <span className="text-sm font-bold text-slate-900">
-                  {property.finishing === 'super_lux' ? 'سوبر لوكس' : property.finishing === 'ultra_lux' ? 'ألترا لوكس' : property.finishing === 'lux' ? 'لوكس' : 'نصف تشطيب'}
+                  {property.finishing === 'super_lux' ? 'سوبر لوكس' : (property.finishing as string) === 'ultra_lux' ? 'ألترا لوكس' : property.finishing === 'lux' ? 'لوكس' : 'نصف تشطيب'}
                 </span>
               </div>
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
                 <span className="text-[11px] font-medium text-slate-500 block">حالة الفرش</span>
                 <span className="text-sm font-bold text-slate-900">
-                  {property.furnishing === 'furnished' ? 'مفروش بالكامل' : property.furnishing === 'semi_furnished' ? 'نصف مفروش' : 'غير مفروش'}
+                  {property.furnishing === 'furnished' ? 'مفروش بالكامل' : (property.furnishing as string) === 'semi_furnished' ? 'نصف مفروش' : 'غير مفروش'}
                 </span>
               </div>
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
@@ -1209,9 +1209,9 @@ export const AdminPropertyDetailPage: React.FC = () => {
                     <div className="flex items-center justify-between font-semibold">
                       <span className="text-slate-900">{res.client_name}</span>
                       <span className={`px-2 py-0.5 rounded text-[10px] ${
-                        res.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-[#8D6A28] border border-amber-200'
+                        res.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-[#8D6A28] border border-amber-200'
                       }`}>
-                        {res.status === 'confirmed' ? 'مؤكد' : 'قيد المتابعة'}
+                        {res.status === 'completed' ? 'مكتمل' : 'قيد المتابعة'}
                       </span>
                     </div>
                     <p className="text-slate-500 font-mono text-[11px]">{res.client_phone}</p>

@@ -235,6 +235,27 @@ export const StorageService = {
     }
   },
 
+  updateSubmissionStatus(id: string, submission_status: string, reason?: string): void {
+    const properties = this.getProperties();
+    const prop = properties.find(p => p.id === id);
+    if (prop) {
+      prop.submission_status = submission_status;
+      if (submission_status === 'approved') {
+        prop.status = 'available';
+      }
+      if (reason) {
+        prop.rejection_reason = reason;
+      }
+      safeSet(KEYS.PROPERTIES, properties);
+      this.addActivityLog({
+        type: 'status_change',
+        title: 'مراجعة طلب نشر عقار',
+        description: `تم تغيير حالة طلب نشر العقار (${prop.ref_id}) إلى "${submission_status === 'approved' ? 'مقبول' : 'مرفوض'}"`,
+        ref_id: prop.ref_id,
+      });
+    }
+  },
+
   updatePropertyOffer(id: string, offerData: {
     has_offer: boolean;
     offer_price?: number | null;
@@ -596,6 +617,10 @@ export const StorageService = {
     }
 
     const newItem: NeedRequest = {
+      client_name: request.client_name || '',
+      client_phone: request.client_phone || '',
+      listing_type: request.listing_type || 'buy',
+      property_type: request.property_type || 'apartment',
       ...request,
       id: `need-${Date.now()}`,
       status: 'pending',
@@ -1332,6 +1357,11 @@ export const StorageService = {
     const filtered = list.filter(n => String(n.id) !== String(id));
     safeSet(KEYS.CUSTOMER_NOTIFICATIONS, filtered);
     safeDispatchEvent('sakani_customer_notifications_updated', filtered);
+  },
+
+  deleteAllCustomerNotifications(): void {
+    safeSet(KEYS.CUSTOMER_NOTIFICATIONS, []);
+    safeDispatchEvent('sakani_customer_notifications_updated', []);
   },
 
   // ---------------- Reset to initial clean seed ----------------

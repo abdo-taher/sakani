@@ -20,7 +20,7 @@ function applyFallback(image: HTMLImageElement): void {
 export function installGlobalImageFallback(): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  const appWindow = window as Window & Record<string, unknown>;
+  const appWindow = window as unknown as Window & Record<string, unknown>;
   if (appWindow[INSTALL_FLAG]) return;
   appWindow[INSTALL_FLAG] = true;
 

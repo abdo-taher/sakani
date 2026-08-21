@@ -100,8 +100,8 @@ export interface Property {
   submitter_notes?: string;
   admin_notes?: string;
   submission_status?: string;
-  category_id?: number;
-  property_type_id?: number;
+  category_id?: number | string;
+  property_type_id?: number | string;
   property_type_record?: Record<string, any> | null;
   image_records?: any[];
   amenity_records?: any[];
@@ -142,16 +142,20 @@ export interface NeedRequest {
   id: string;
   client_name: string;
   client_phone: string;
-  listing_type: 'buy' | 'rent';
+  listing_type: 'buy' | 'rent' | string;
   property_type: string;
-  location: string;
-  budget: number;
+  location?: string;
+  preferred_district?: string;
+  budget?: number;
+  min_price?: number;
+  max_price?: number;
   area?: number;
   rooms?: number;
   rent_duration?: string;
   notes?: string;
-  status: 'pending' | 'contacted';
+  status: 'pending' | 'in_progress' | 'contacted' | 'matched' | 'cancelled' | string;
   created_at: string;
+  [key: string]: any;
 }
 
 export type NeedPropertyRequest = NeedRequest;
@@ -241,6 +245,19 @@ export interface SystemSettings {
   facebook_url?: string;
   instagram_url?: string;
   tiktok_url?: string;
+  twitter_url?: string;
+  // Contact & Company Aliases
+  company_phone?: string;
+  company_phone_secondary?: string;
+  company_whatsapp?: string;
+  company_email?: string;
+  company_address?: string;
+  // CMS Section Titles & Footer
+  featured_section_title?: string;
+  latest_section_title?: string;
+  footer_description?: string;
+  footer_copyright?: string;
+  maintenance_mode?: boolean;
   // Feedback & Visitor Surveys
   feedback_enabled?: boolean;
   feedback_delay_seconds?: number;
@@ -253,6 +270,7 @@ export interface SystemSettings {
   notification_prompt_enabled?: boolean;
   // Why Us Items
   why_us_items: WhyUsItem[];
+  [key: string]: any;
 }
 
 export interface ActivityLog {

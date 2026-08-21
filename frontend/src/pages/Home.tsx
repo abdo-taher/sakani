@@ -1573,7 +1573,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </p>
                 </div>
                 <Link
-                  to="/properties?operation=rent&mode=room&audience=singles"
+                  to="/properties?operation=rent&mode=room&audience=young_men"
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8D6A28] hover:text-[#AC7F2B] pt-2"
                 >
                   <span>تصفح سكن الشباب</span>

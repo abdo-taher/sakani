@@ -401,8 +401,61 @@ class NotificationController extends Controller
      */
     public function destroy($id)
     {
-        Notification::findOrFail($id)->delete();
+        $notification = Notification::find($id);
+        if ($notification) {
+            $notification->delete();
+        }
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => 'تم حذف الإشعار بنجاح',
+        ]);
+    }
+
+    /**
+     * Delete All Admin Notifications (Authenticated Admin)
+     */
+    public function destroyAllAdmin(Request $request)
+    {
+        $deleted = Notification::forAdmin()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم مسح كافة إشعارات الإدارة بنجاح',
+            'deleted_count' => $deleted,
+        ]);
+    }
+
+    /**
+     * Delete All Customer Notifications (Scoped to Customer Phone)
+     */
+    public function destroyAllCustomer(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string|max:25',
+        ]);
+
+        $rawPhone = trim($request->phone);
+        $cleanPhone = $this->cleanPhone($rawPhone);
+
+        if (empty($cleanPhone) || strlen($cleanPhone) < 6) {
+            return response()->json([
+                'success' => false,
+                'message' => 'رقم الهاتف غير صالح',
+            ], 422);
+        }
+
+        $deleted = Notification::where('recipient_type', 'customer')
+            ->where(function ($q) use ($rawPhone, $cleanPhone) {
+                $q->where('customer_phone', $cleanPhone)
+                  ->orWhere('customer_phone', $rawPhone);
+            })
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم مسح كافة إشعاراتك بنجاح',
+            'deleted_count' => $deleted,
+        ]);
     }
 }

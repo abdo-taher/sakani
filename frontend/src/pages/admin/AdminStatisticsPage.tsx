@@ -132,7 +132,7 @@ export const AdminStatisticsPage: React.FC = () => {
             available_properties: props.filter(p => p.status === 'available').length,
             rented_properties: props.filter(p => p.status === 'rented').length,
             sold_properties: props.filter(p => p.status === 'sold').length,
-            pending_submissions: props.filter(p => p.status === 'pending_review').length,
+            pending_submissions: props.filter(p => p.submission_status === 'pending_review' || (p.status as string) === 'pending_review').length,
             approved_submissions: props.filter(p => p.status === 'available').length,
             rejected_submissions: 0,
             total_reservations: inqs.length,

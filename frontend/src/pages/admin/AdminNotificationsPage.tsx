@@ -46,6 +46,7 @@ export const AdminNotificationsPage: React.FC = () => {
   const [permissionState, setPermissionState] = useState<NotificationPermission>(
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
   );
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [composerTitle, setComposerTitle] = useState('');
   const [composerMessage, setComposerMessage] = useState('');
@@ -55,6 +56,8 @@ export const AdminNotificationsPage: React.FC = () => {
   const [isSendingNotification, setIsSendingNotification] = useState(false);
   const [composerSuccess, setComposerSuccess] = useState<string | null>(null);
   const [composerError, setComposerError] = useState<string | null>(null);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [activeRecipientsInfo, setActiveRecipientsInfo] = useState<{
     active_devices_count: number;
     active_customers_count: number;
@@ -193,6 +196,24 @@ export const AdminNotificationsPage: React.FC = () => {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (isDeletingAll) return;
+    setIsDeletingAll(true);
+    const backup = [...notifications];
+
+    try {
+      await ApiService.deleteAllNotifications();
+      setNotifications([]);
+      setShowDeleteAllConfirm(false);
+    } catch (error: any) {
+      console.error('Failed to delete all admin notifications:', error);
+      setNotifications(backup);
+      alert(error?.message || 'فشل مسح الإشعارات، يرجى المحاولة مرة أخرى');
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
   const filtered = notifications.filter((n) => {
     const matchesSearch =
       n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -291,8 +312,50 @@ export const AdminNotificationsPage: React.FC = () => {
               <span>تحديد الكل كمقروء ({unreadCount})</span>
             </button>
           )}
+
+          {/* Delete all */}
+          {notifications.length > 0 && (
+            <button
+              onClick={() => setShowDeleteAllConfirm(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 text-red-600 text-xs font-bold shadow-xs transition cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4 text-red-600" />
+              <span>مسح كل الإشعارات</span>
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Delete All Confirmation Banner */}
+      {showDeleteAllConfirm && (
+        <div className="bg-red-50/95 border border-red-200 rounded-3xl p-4 sm:p-5 text-slate-800 space-y-3 animate-fade-in">
+          <div className="flex items-center gap-2 text-sm font-bold text-red-800">
+            <Trash2 className="w-5 h-5 text-red-600 shrink-0" />
+            <span>هل أنت متأكد من رغبتك في حذف جميع إشعارات الإدارة؟</span>
+          </div>
+          <p className="text-xs text-red-600 leading-relaxed font-medium">
+            سيتم مسح كافة الإشعارات المسجلة في لوحة الإدارة نهائياً ولن تتمكن من استرجاعها.
+          </p>
+          <div className="flex items-center gap-2.5 pt-1">
+            <button
+              type="button"
+              onClick={handleDeleteAll}
+              disabled={isDeletingAll}
+              className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              {isDeletingAll ? <span>جاري الحذف...</span> : <span>نعم، حذف الكل الآن</span>}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDeleteAllConfirm(false)}
+              disabled={isDeletingAll}
+              className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition cursor-pointer"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Admin Manual Notification Composer Panel */}
       {isComposerOpen && (

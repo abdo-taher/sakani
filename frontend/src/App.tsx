@@ -46,7 +46,6 @@ const AdminNotificationsPage = lazy(() => import('./pages/admin/AdminNotificatio
 
 // Modals & Drawers & Notifications
 import { QuickPreviewModal } from './components/QuickPreviewModal';
-import { AddPropertyModal } from './components/AddPropertyModal';
 import { InquiryModal } from './components/InquiryModal';
 import { NeedRequestModal } from './components/NeedRequestModal';
 import { AdminLoginModal } from './components/AdminLoginModal';
@@ -77,7 +76,6 @@ function MainApp() {
   const [selectedPropertyForInquiry, setSelectedPropertyForInquiry] = useState<Property | null>(null);
   const [selectedRoomForInquiry, setSelectedRoomForInquiry] = useState<DetailedRoom | undefined>(undefined);
   const [isQuickPreviewOpen, setIsQuickPreviewOpen] = useState(false);
-  const [isAddPropertyModalOpen, setIsAddPropertyModalOpen] = useState(false);
   const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
   const [isNeedModalOpen, setIsNeedModalOpen] = useState(false);
   const [isAdminLoginModalOpen, setIsAdminLoginModalOpen] = useState(false);
@@ -166,14 +164,30 @@ function MainApp() {
           balconies: Number(p.balconies) || 1,
           finishing: p.finishing || 'super_lux',
           furnishing: p.furnishing || 'unfurnished',
+          audience_type: p.audience_type || 'all',
           status: p.status || 'available',
+          submission_status: p.submission_status || 'approved',
           featured: Boolean(p.featured),
           views: Number(p.views) || 0,
+          slug: p.slug || String(p.id),
+          latitude: p.latitude !== null && p.latitude !== undefined ? Number(p.latitude) : undefined,
+          longitude: p.longitude !== null && p.longitude !== undefined ? Number(p.longitude) : undefined,
+          address: p.address || undefined,
+          owner_name: p.owner_name || p.submitter_name || undefined,
+          owner_phone: p.owner_phone || p.submitter_phone || undefined,
+          has_offer: Boolean(p.has_offer),
+          offer_price: p.offer_price !== null && p.offer_price !== undefined ? Number(p.offer_price) : null,
+          offer_discount_percentage: p.offer_discount_percentage !== null && p.offer_discount_percentage !== undefined ? Number(p.offer_discount_percentage) : null,
+          offer_start_date: p.offer_start_date || null,
+          offer_end_date: p.offer_end_date || null,
+          offer_title: p.offer_title || null,
+          offer_badge: p.offer_badge || null,
           images: Array.isArray(p.images) && p.images.length > 0
             ? p.images.map((img: any) => typeof img === 'string' ? img : (img.image_url || img.url || img.image_path)).filter(Boolean)
             : (p.image_url ? [p.image_url] : [FALLBACK_PROPERTY_IMAGE]),
           video_url: p.video_url,
           video_thumbnail_url: p.video_thumbnail_url,
+          videos: Array.isArray(p.videos) ? p.videos : undefined,
           amenities: Array.isArray(p.amenities)
             ? p.amenities.map((a: any) => typeof a === 'string' ? a : a.slug || a.name || a.id)
             : [],
@@ -363,7 +377,7 @@ function MainApp() {
           element={
             isAdmin ? (
               <AdminLayout
-                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenAddProperty={() => navigate('/admin/properties/create')}
                 onLogout={handleLogoutAdmin}
               />
             ) : (
@@ -451,7 +465,7 @@ function MainApp() {
                 onToggleFavorite={handleToggleFavorite}
                 onSelectProperty={handleSelectProperty}
                 onQuickPreview={handleQuickPreview}
-                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenAddProperty={() => navigate('/add-property')}
                 onOpenNeedModal={() => navigate('/need-property')}
               />
             }
@@ -468,7 +482,7 @@ function MainApp() {
                 onToggleFavorite={handleToggleFavorite}
                 onSelectProperty={handleSelectProperty}
                 onQuickPreview={handleQuickPreview}
-                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenAddProperty={() => navigate('/add-property')}
                 onOpenNeedModal={() => navigate('/need-property')}
               />
             }
@@ -485,7 +499,7 @@ function MainApp() {
                 onToggleFavorite={handleToggleFavorite}
                 onSelectProperty={handleSelectProperty}
                 onQuickPreview={handleQuickPreview}
-                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenAddProperty={() => navigate('/add-property')}
                 onOpenNeedModal={() => navigate('/need-property')}
               />
             }
@@ -502,7 +516,7 @@ function MainApp() {
                 onToggleFavorite={handleToggleFavorite}
                 onSelectProperty={handleSelectProperty}
                 onQuickPreview={handleQuickPreview}
-                onOpenAddProperty={() => setIsAddPropertyModalOpen(true)}
+                onOpenAddProperty={() => navigate('/add-property')}
                 onOpenNeedModal={() => navigate('/need-property')}
               />
             }
@@ -600,13 +614,6 @@ function MainApp() {
           }}
         />
       )}
-
-      {/* Add Property Modal */}
-      <AddPropertyModal
-        isOpen={isAddPropertyModalOpen}
-        onClose={() => setIsAddPropertyModalOpen(false)}
-        onPropertyAdded={handlePropertyAdded}
-      />
 
       {/* Reservation / Inquiry Modal with 1-active-reservation per property rule */}
       <InquiryModal

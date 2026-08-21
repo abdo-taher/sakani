@@ -4,6 +4,7 @@ import { SakaniLogo } from './SakaniLogo';
 import { ActiveTab } from './BottomNav';
 import { NotificationCenter } from './NotificationCenter';
 import { StorageService } from '../services/storageService';
+import { SystemSettings } from '../types';
 import { 
   Heart, 
   User, 

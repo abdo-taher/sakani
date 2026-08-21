@@ -128,10 +128,10 @@ export const AdminReservationsPage: React.FC = () => {
 
   const filteredInquiries = inquiries.filter((inq) => {
     const matchesSearch =
-      inq.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inq.client_phone.includes(searchTerm) ||
-      inq.property_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inq.property_ref.toLowerCase().includes(searchTerm.toLowerCase());
+      (inq.client_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (inq.client_phone || '').includes(searchTerm) ||
+      (inq.property_title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (inq.property_ref || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = filterStatus === 'all' || inq.status === filterStatus;
     return matchesSearch && matchesStatus;
@@ -478,7 +478,7 @@ export const AdminReservationsPage: React.FC = () => {
                       </a>
                       <button
                         type="button"
-                        onClick={() => handleDelete(inq.id)}
+                        onClick={() => handleDeleteInquiry(inq.id)}
                         className="p-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition"
                         title="حذف الطلب"
                       >

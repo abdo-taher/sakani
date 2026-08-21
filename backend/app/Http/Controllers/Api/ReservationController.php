@@ -122,6 +122,36 @@ class ReservationController extends Controller
                 ], 409);
             }
 
+            // 3. Check customer active reservations across the system
+            $allActiveForPhone = Reservation::whereIn('status', $activeStatuses)
+                ->lockForUpdate()
+                ->get()
+                ->first(function ($r) use ($rawPhone, $normalizedPhone) {
+                    return $r->phone === $rawPhone || 
+                        (!empty($normalizedPhone) && $this->normalizePhone($r->phone) === $normalizedPhone);
+                });
+
+            if ($allActiveForPhone) {
+                $isSameTarget = ($allActiveForPhone->property_id == $propertyId && 
+                    ((int)$allActiveForPhone->room_id === (int)$roomId));
+
+                if ($isSameTarget) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'لديك طلب حجز قائم بالفعل لهذا العقار. يمكنك التواصل معنا لمتابعة حالة الحجز.',
+                        'error_code' => 'DUPLICATE_ACTIVE_RESERVATION',
+                        'active_reservation' => $allActiveForPhone,
+                    ], 422);
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لديك طلب حجز قائم بالفعل على عقار آخر. لا يمكنك حجز عقار جديد قبل إنهاء الطلب الحالي.',
+                    'error_code' => 'ACTIVE_RESERVATION_EXISTS',
+                    'active_reservation' => $allActiveForPhone,
+                ], 422);
+            }
+
             // =========================================================================
             // CASE A: ROOM RESERVATION (Unit = Room)
             // =========================================================================
@@ -155,7 +185,7 @@ class ReservationController extends Controller
                     ], 409);
                 }
 
-                // Check active reservation specifically for this room (property_id + room_id + phone)
+                // Check active reservation specifically for this room (property_id + room_id)
                 $existingActiveRoom = Reservation::where('property_id', $propertyId)
                     ->where('room_id', $roomId)
                     ->whereIn('status', $activeStatuses)
@@ -163,18 +193,6 @@ class ReservationController extends Controller
                     ->first();
 
                 if ($existingActiveRoom) {
-                    $isSameCustomer = ($existingActiveRoom->phone === $rawPhone || 
-                        (!empty($normalizedPhone) && $this->normalizePhone($existingActiveRoom->phone) === $normalizedPhone));
-
-                    if ($isSameCustomer) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'لقد قمت بإرسال طلب حجز لهذه الغرفة بالفعل.',
-                            'error_code' => 'DUPLICATE_RESERVATION',
-                            'active_reservation' => $existingActiveRoom,
-                        ], 409);
-                    }
-
                     return response()->json([
                         'success' => false,
                         'message' => 'هذه الغرفة محجوزة بالفعل ولا يمكن حجزها حالياً.',
@@ -376,7 +394,7 @@ class ReservationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم تقديم طلب الحجز بنجاح وموافقة الطلب المبدئية',
+                'message' => 'تم تقديم طلب الحجز بنجاح',
                 'data' => $reservation->load(['property', 'room']),
             ], 201);
         });
@@ -566,6 +584,8 @@ class ReservationController extends Controller
                 return response()->json([
                     'reserved' => false,
                     'can_reserve' => false,
+                    'is_same_property' => false,
+                    'has_active_reservation' => false,
                     'message' => 'الغرفة المحددة غير موجودة أو لا تنتمي لهذا العقار.',
                     'status' => 'not_found',
                 ], 422);
@@ -575,54 +595,55 @@ class ReservationController extends Controller
                 return response()->json([
                     'reserved' => false,
                     'can_reserve' => false,
+                    'is_same_property' => false,
+                    'has_active_reservation' => false,
                     'message' => 'تم تأجير هذه الغرفة بالفعل وليست متاحة للحجز.',
                     'status' => 'rented',
                 ]);
             }
 
-            $activeReservation = Reservation::where('property_id', $propertyId)
-                ->where('room_id', $roomId)
-                ->whereIn('status', $activeStatuses)
-                ->first();
-
-            $isSameCustomer = false;
+            // Check if this specific customer has an active reservation anywhere
+            $customerActiveRes = null;
             if (!empty($rawPhone)) {
-                $userRoomRes = Reservation::where('property_id', $propertyId)
-                    ->where('room_id', $roomId)
-                    ->whereIn('status', $activeStatuses)
+                $customerActiveRes = Reservation::whereIn('status', $activeStatuses)
                     ->get()
                     ->first(function ($r) use ($rawPhone, $normalizedPhone) {
                         return $r->phone === $rawPhone || 
                             (!empty($normalizedPhone) && $this->normalizePhone($r->phone) === $normalizedPhone);
                     });
-
-                if ($userRoomRes) {
-                    $isSameCustomer = true;
-                    $activeReservation = $userRoomRes;
-                }
             }
 
-            if ($isSameCustomer) {
+            if ($customerActiveRes) {
+                $isSameTarget = ($customerActiveRes->property_id == $propertyId && (int)$customerActiveRes->room_id === (int)$roomId);
                 return response()->json([
                     'reserved' => true,
                     'can_reserve' => false,
                     'has_active_reservation' => true,
+                    'is_same_property' => $isSameTarget,
                     'is_same_customer' => true,
                     'status' => 'reserved',
-                    'message' => 'لقد قمت بإرسال طلب حجز لهذه الغرفة بالفعل',
-                    'active_reservation' => $activeReservation,
+                    'message' => $isSameTarget
+                        ? 'لقد قمت بإرسال طلب حجز لهذه الغرفة بالفعل.'
+                        : 'لديك طلب حجز قائم بالفعل على عقار آخر. لا يمكنك حجز عقار جديد قبل إنهاء الطلب الحالي.',
+                    'active_reservation' => $customerActiveRes,
                 ]);
             }
 
-            if ($room->status === 'reserved' || $activeReservation) {
+            $roomActiveReservation = Reservation::where('property_id', $propertyId)
+                ->where('room_id', $roomId)
+                ->whereIn('status', $activeStatuses)
+                ->first();
+
+            if ($room->status === 'reserved' || $roomActiveReservation) {
                 return response()->json([
                     'reserved' => false,
                     'can_reserve' => false,
-                    'has_active_reservation' => true,
+                    'has_active_reservation' => false,
+                    'is_same_property' => false,
                     'is_same_customer' => false,
                     'status' => 'reserved',
                     'message' => 'هذه الغرفة محجوزة بالفعل ولا يمكن حجزها حالياً.',
-                    'active_reservation' => $activeReservation,
+                    'active_reservation' => $roomActiveReservation,
                 ]);
             }
 
@@ -630,6 +651,8 @@ class ReservationController extends Controller
                 'reserved' => false,
                 'can_reserve' => true,
                 'has_active_reservation' => false,
+                'is_same_property' => false,
+                'is_same_customer' => false,
                 'status' => 'available',
                 'message' => null,
             ]);
@@ -638,45 +661,43 @@ class ReservationController extends Controller
         // =========================================================================
         // CASE B: WHOLE PROPERTY RESERVATION CHECK (Unit = Property)
         // =========================================================================
-        $activeReservation = Reservation::where('property_id', $propertyId)
-            ->whereNull('room_id')
-            ->whereIn('status', $activeStatuses)
-            ->first();
-
-        $isSameCustomer = false;
+        $customerActiveRes = null;
         if (!empty($rawPhone)) {
-            $userPropRes = Reservation::where('property_id', $propertyId)
-                ->whereNull('room_id')
-                ->whereIn('status', $activeStatuses)
+            $customerActiveRes = Reservation::whereIn('status', $activeStatuses)
                 ->get()
                 ->first(function ($r) use ($rawPhone, $normalizedPhone) {
                     return $r->phone === $rawPhone || 
                         (!empty($normalizedPhone) && $this->normalizePhone($r->phone) === $normalizedPhone);
                 });
-
-            if ($userPropRes) {
-                $isSameCustomer = true;
-                $activeReservation = $userPropRes;
-            }
         }
 
-        if ($isSameCustomer) {
+        if ($customerActiveRes) {
+            $isSameProp = ($customerActiveRes->property_id == $propertyId);
             return response()->json([
                 'reserved' => true,
                 'can_reserve' => false,
                 'has_active_reservation' => true,
+                'is_same_property' => $isSameProp,
                 'is_same_customer' => true,
                 'status' => 'reserved',
-                'message' => 'لقد قمت بإرسال طلب حجز لهذا العقار بالفعل',
-                'active_reservation' => $activeReservation,
+                'message' => $isSameProp
+                    ? 'لقد قمت بإرسال طلب حجز لهذا العقار بالفعل.'
+                    : 'لديك طلب حجز قائم بالفعل على عقار آخر. لا يمكنك حجز عقار جديد قبل إنهاء الطلب الحالي.',
+                'active_reservation' => $customerActiveRes,
             ]);
         }
+
+        $activeReservation = Reservation::where('property_id', $propertyId)
+            ->whereNull('room_id')
+            ->whereIn('status', $activeStatuses)
+            ->first();
 
         if ($property->status === 'reserved' || $activeReservation) {
             return response()->json([
                 'reserved' => false,
                 'can_reserve' => false,
-                'has_active_reservation' => true,
+                'has_active_reservation' => false,
+                'is_same_property' => false,
                 'is_same_customer' => false,
                 'status' => 'reserved',
                 'message' => 'هذا العقار محجوز بالفعل ولا يمكن حجزه حالياً.',
@@ -688,6 +709,8 @@ class ReservationController extends Controller
             'reserved' => false,
             'can_reserve' => true,
             'has_active_reservation' => false,
+            'is_same_property' => false,
+            'is_same_customer' => false,
             'status' => 'available',
             'message' => null,
         ]);

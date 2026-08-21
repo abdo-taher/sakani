@@ -73,6 +73,8 @@ Route::delete('/device-tokens', [NotificationController::class, 'destroyDeviceTo
 Route::get('/customer/notifications', [NotificationController::class, 'customerIndex']);
 Route::post('/customer/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 Route::post('/customer/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+Route::delete('/customer/notifications', [NotificationController::class, 'destroyAllCustomer']);
+Route::delete('/customer/notifications/{id}', [NotificationController::class, 'destroy']);
 Route::get('/customer/reservations', [ReservationController::class, 'customerIndex']);
 // Public property submission for review
 Route::post('/properties/submit', [PropertySubmissionController::class, 'submit']);
@@ -174,6 +176,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+    Route::delete('/notifications', [NotificationController::class, 'destroyAllAdmin']);
     Route::post('/admin/device-tokens', [NotificationController::class, 'storeAdminDeviceToken']);
     Route::get('/admin/notifications/active-recipients-count', [NotificationController::class, 'getActiveRecipientsCount']);
     Route::post('/admin/notifications/send-manual', [NotificationController::class, 'sendManualNotification']);

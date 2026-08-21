@@ -297,6 +297,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
         const matchTitle = p.title?.toLowerCase().includes(q);
         const matchDesc = p.description?.toLowerCase().includes(q);
         const matchDistrict = p.district_name?.toLowerCase().includes(q);
+        const matchRef = (p.ref_id ? p.ref_id.toLowerCase().includes(q) : false) || String(p.id).includes(q);
         const matchTags = Array.isArray(p.tags) && p.tags.some((t: any) => {
           const str = typeof t === 'string' ? t : (t?.name || String(t || ''));
           return typeof str === 'string' && str.toLowerCase().includes(q);

@@ -37,6 +37,7 @@ export const AdminCustomersPage: React.FC = () => {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [tierFilter, setTierFilter] = useState<'all' | 'gold' | 'blue' | 'slate'>('all');
   const [sortBy, setSortBy] = useState('engagement'); // engagement, recent, reservations, requests
 
   // Selection State for Bulk Recommendation
@@ -159,6 +160,9 @@ export const AdminCustomersPage: React.FC = () => {
   };
 
   const filteredCustomers = customers.filter(c => {
+    if (tierFilter !== 'all' && c.tier !== tierFilter) {
+      return false;
+    }
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       return (
