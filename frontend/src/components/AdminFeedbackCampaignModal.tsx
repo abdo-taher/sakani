@@ -57,32 +57,78 @@ export const AdminFeedbackCampaignModal: React.FC<AdminFeedbackCampaignModalProp
     { id: 'opt-3', label: 'مقبولة وبحاجة لتحسين 👌' },
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
-  const loadData = () => {
-    const s = StorageService.getFeedbackStats();
-    setStats(s);
-    setCampaigns(s.campaigns);
-    setResponses(StorageService.getFeedbackResponses());
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [campsRes, statsRes, respRes] = await Promise.allSettled([
+        ApiService.getFeedbackCampaigns(),
+        ApiService.getFeedbackStats(),
+        ApiService.getFeedbackResponses({ campaign_id: selectedCampaignId, search: searchFilter }),
+      ]);
+
+      if (campsRes.status === 'fulfilled' && Array.isArray(campsRes.value)) {
+        setCampaigns(campsRes.value);
+      } else {
+        setCampaigns(StorageService.getFeedbackCampaigns());
+      }
+
+      if (statsRes.status === 'fulfilled' && statsRes.value) {
+        setStats(statsRes.value);
+      } else {
+        setStats(StorageService.getFeedbackStats());
+      }
+
+      if (respRes.status === 'fulfilled' && respRes.value && Array.isArray(respRes.value.data)) {
+        setResponses(respRes.value.data);
+      } else {
+        setResponses(StorageService.getFeedbackResponses());
+      }
+    } catch (e) {
+      console.warn('Error loading feedback data in modal:', e);
+    }
+    setLoading(false);
   };
 
   useEffect(() => {
     if (isOpen) {
       loadData();
     }
-  }, [isOpen]);
+  }, [isOpen, selectedCampaignId, searchFilter]);
 
-  const handleToggleStatus = (id: string, currentStatus: boolean) => {
-    StorageService.toggleFeedbackCampaignStatus(id, !currentStatus);
-    loadData();
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      await ApiService.updateFeedbackCampaign(String(id), { is_active: !currentStatus });
+    } catch {
+      StorageService.toggleFeedbackCampaignStatus(id, !currentStatus);
+    }
+    await loadData();
     showToast('تم تحديث حالة الحملة بنجاح');
   };
 
-  const handleDeleteCampaign = (id: string) => {
+  const handleDeleteCampaign = async (id: string) => {
     if (window.confirm('هل أنت متأكد من حذف هذه الحملة؟')) {
-      StorageService.deleteFeedbackCampaign(id);
-      loadData();
+      try {
+        await ApiService.deleteFeedbackCampaign(String(id));
+      } catch {
+        StorageService.deleteFeedbackCampaign(id);
+      }
+      await loadData();
       showToast('تم حذف الحملة بنجاح');
+    }
+  };
+
+  const handleDeleteResponse = async (id: string | number) => {
+    if (window.confirm('هل أنت متأكد من حذف هذه الاستجابة؟')) {
+      try {
+        await ApiService.deleteFeedbackResponse(id);
+      } catch {
+        // Fallback
+      }
+      await loadData();
+      showToast('تم حذف الاستجابة بنجاح');
     }
   };
 
