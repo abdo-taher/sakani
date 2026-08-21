@@ -88,6 +88,7 @@ Route::post('/feedback/campaigns', [FeedbackCampaignController::class, 'store'])
 Route::put('/feedback/campaigns/{id}', [FeedbackCampaignController::class, 'update']);
 Route::delete('/feedback/campaigns/{id}', [FeedbackCampaignController::class, 'destroy']);
 Route::get('/feedback/responses', [FeedbackCampaignController::class, 'responses']);
+Route::delete('/feedback/responses/{id}', [FeedbackCampaignController::class, 'destroyResponse']);
 Route::get('/feedback/stats', [FeedbackCampaignController::class, 'stats']);
 
 // Public favorite routes (for guest users using local storage)
@@ -147,6 +148,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::apiResource('tags', TagController::class)->except(['index']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/statistics', [StatisticsController::class, 'index']);
+    Route::post('/analytics/reset-visits', [StatisticsController::class, 'resetVisits']);
+    Route::post('/admin/analytics/reset-visits', [StatisticsController::class, 'resetVisits']);
     Route::post('/cloudinary/signature', [CloudinaryController::class, 'signature']);
     Route::put('/admin/credentials', [AuthController::class, 'updateCredentials']);
 

@@ -673,10 +673,10 @@ export const ApiService = {
     return this.getDashboard(range);
   },
 
-  async getStatistics() {
+  async getStatistics(range: string = 'all') {
     if (!getAuthToken()) return null;
     try {
-      const res = await apiRequest('/statistics');
+      const res = await apiRequest(`/statistics?range=${range}`);
       return normalizeData(res);
     } catch {
       return null;
@@ -1065,5 +1065,41 @@ export const ApiService = {
       // Fallback
     }
     return StorageService.getFeedbackStats();
+  },
+
+  async getFeedbackResponses(params?: { campaign_id?: string; search?: string; page?: number; per_page?: number }) {
+    const query = new URLSearchParams();
+    if (params?.campaign_id && params.campaign_id !== 'all') query.set('campaign_id', params.campaign_id);
+    if (params?.search) query.set('search', params.search);
+    if (params?.page) query.set('page', String(params.page));
+    if (params?.per_page) query.set('per_page', String(params.per_page));
+
+    try {
+      const res = await apiRequest(`/feedback/responses?${query.toString()}`);
+      if (res && res.data) return res;
+    } catch {
+      // Fallback to local storage
+    }
+    const local = StorageService.getFeedbackResponses();
+    return { success: true, data: local, total: local.length, last_page: 1 };
+  },
+
+  async deleteFeedbackResponse(id: string | number) {
+    try {
+      const res = await apiRequest(`/feedback/responses/${id}`, {
+        method: 'DELETE',
+      });
+      return res;
+    } catch {
+      // Fallback
+    }
+    return { success: true };
+  },
+
+  async resetVisits() {
+    const res = await apiRequest('/analytics/reset-visits', {
+      method: 'POST',
+    });
+    return res;
   },
 };

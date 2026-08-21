@@ -27,7 +27,8 @@ import {
   Bell,
   Users,
   FilePlus2,
-  Send
+  Send,
+  MessageSquare
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -99,6 +100,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       groupTitle: 'العملاء والتواصل',
       items: [
         { path: '/admin/customers', label: 'دليل العملاء واستخبارات الاتصال', icon: Users, badge: 'تفاعل' },
+        { path: '/admin/feedback-campaigns', label: 'حملات واستطلاعات الرأي', icon: MessageSquare, badge: null },
         { path: '/admin/contact-messages', label: 'رسائل التواصل', icon: Mail, badge: newMessagesCount > 0 ? `${newMessagesCount}` : null },
         { path: '/admin/marketing', label: 'النشرات البريدية والتسويق', icon: Send, badge: null },
         { path: '/admin/notifications', label: 'سجل الإشعارات والتنبيهات', icon: Bell, badge: null },

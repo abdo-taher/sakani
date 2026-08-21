@@ -284,4 +284,18 @@ class FeedbackCampaignController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Delete an individual feedback response
+     */
+    public function destroyResponse($id)
+    {
+        $response = FeedbackResponse::findOrFail($id);
+        $response->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم حذف الاستجابة بنجاح',
+        ]);
+    }
 }

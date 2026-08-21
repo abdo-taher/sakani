@@ -183,24 +183,41 @@ class DashboardController extends Controller
                 });
             } catch (Exception $e) {}
 
-            // Visitor stats (Unique IPs across Today, Month, All-Time + Total Pageviews)
+            // Baseline & Reset Information
+            $baselineSetting = Setting::where('key', 'visits_baseline_at')->value('value');
+            $baseline = $baselineSetting ? \Carbon\Carbon::parse($baselineSetting) : null;
+            $lastResetAt = Setting::where('key', 'visits_last_reset_at')->value('value');
+            $resetBy = Setting::where('key', 'visits_reset_by')->value('value') ?: 'مدير النظام';
+
+            // Visitor stats (Unique IPs across Today, Month, All-Time + Total Pageviews respecting baseline)
             $visitorStats = [
-                'today'            => 1,
-                'month'            => 1,
-                'all_time'         => 1,
-                'total_visits'     => 1,
+                'today'            => 0,
+                'month'            => 0,
+                'all_time'         => 0,
+                'total_visits'     => 0,
                 'property_views'   => $counts['total_views'] ?? 0,
                 'daily_breakdown'  => [],
+                'baseline_at'      => $baseline ? $baseline->toISOString() : null,
+                'last_reset_at'    => $lastResetAt,
+                'reset_by'         => $resetBy,
             ];
 
             try {
                 $today      = now()->startOfDay();
                 $monthStart = now()->startOfMonth();
 
-                $todayUnique = (int) (VisitorLog::where('created_at', '>=', $today)->selectRaw('COUNT(DISTINCT ip) as c')->value('c') ?: 0);
-                $monthUnique = (int) (VisitorLog::where('created_at', '>=', $monthStart)->selectRaw('COUNT(DISTINCT ip) as c')->value('c') ?: 0);
-                $allTimeUnique = (int) (VisitorLog::selectRaw('COUNT(DISTINCT ip) as c')->value('c') ?: 0);
-                $totalVisits = (int) VisitorLog::count();
+                $todayStart = $baseline && $baseline > $today ? $baseline : $today;
+                $monthStartEffective = $baseline && $baseline > $monthStart ? $baseline : $monthStart;
+
+                $todayQuery = VisitorLog::where('created_at', '>=', $todayStart);
+                $monthQuery = VisitorLog::where('created_at', '>=', $monthStartEffective);
+                $allTimeQuery = VisitorLog::query();
+                if ($baseline) $allTimeQuery->where('created_at', '>=', $baseline);
+
+                $todayUnique = (int) ($todayQuery->selectRaw('COUNT(DISTINCT ip) as c')->value('c') ?: 0);
+                $monthUnique = (int) ($monthQuery->selectRaw('COUNT(DISTINCT ip) as c')->value('c') ?: 0);
+                $allTimeUnique = (int) ($allTimeQuery->selectRaw('COUNT(DISTINCT ip) as c')->value('c') ?: 0);
+                $totalVisits = (int) (clone $allTimeQuery)->count();
 
                 // Last 7 days breakdown
                 $dailyBreakdown = [];
@@ -209,24 +226,35 @@ class DashboardController extends Controller
                     $d = now()->subDays($i);
                     $dStart = (clone $d)->startOfDay();
                     $dEnd = (clone $d)->endOfDay();
-                    $dayUnique = (int) (VisitorLog::whereBetween('created_at', [$dStart, $dEnd])->selectRaw('COUNT(DISTINCT ip) as c')->value('c') ?: 0);
-                    $dayViews = (int) VisitorLog::whereBetween('created_at', [$dStart, $dEnd])->count();
+                    
+                    if ($baseline && $baseline > $dEnd) {
+                        $dayUnique = 0;
+                        $dayViews = 0;
+                    } else {
+                        $actualStart = ($baseline && $baseline > $dStart) ? $baseline : $dStart;
+                        $dayUnique = (int) (VisitorLog::whereBetween('created_at', [$actualStart, $dEnd])->selectRaw('COUNT(DISTINCT ip) as c')->value('c') ?: 0);
+                        $dayViews = (int) VisitorLog::whereBetween('created_at', [$actualStart, $dEnd])->count();
+                    }
+
                     $dayName = ($i === 0) ? 'اليوم (' . ($arabicDays[$d->format('D')] ?? '') . ')' : ($arabicDays[$d->format('D')] ?? $d->format('D'));
                     $dailyBreakdown[] = [
                         'date'      => $d->format('Y-m-d'),
                         'day_name'  => $dayName,
-                        'visitors'  => max($dayUnique, $i === 0 ? 1 : 0),
-                        'views'     => max($dayViews, $dayUnique),
+                        'visitors'  => $dayUnique,
+                        'views'     => $dayViews,
                     ];
                 }
 
                 $visitorStats = [
-                    'today'            => max(1, $todayUnique),
-                    'month'            => max($todayUnique, $monthUnique),
-                    'all_time'         => max($monthUnique, $allTimeUnique),
-                    'total_visits'     => max($totalVisits, ($counts['total_views'] ?? 0)),
+                    'today'            => $todayUnique,
+                    'month'            => $monthUnique,
+                    'all_time'         => $allTimeUnique,
+                    'total_visits'     => $totalVisits,
                     'property_views'   => $counts['total_views'] ?? 0,
                     'daily_breakdown'  => $dailyBreakdown,
+                    'baseline_at'      => $baseline ? $baseline->toISOString() : null,
+                    'last_reset_at'    => $lastResetAt,
+                    'reset_by'         => $resetBy,
                 ];
             } catch (Exception $e) {
                 Log::warning('Visitor stats calculation error: ' . $e->getMessage());

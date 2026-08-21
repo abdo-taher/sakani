@@ -144,10 +144,10 @@ class PropertyController extends Controller
 
         // 6. Filter by Price Range
         if ($request->filled('min_price') && (float) $request->input('min_price') > 0) {
-            $query->where('price', '>=', (float) $request->input('min_price'));
+            $query->whereRaw('CAST(price AS DECIMAL) >= ?', [(float) $request->input('min_price')]);
         }
         if ($request->filled('max_price') && (float) $request->input('max_price') > 0) {
-            $query->where('price', '<=', (float) $request->input('max_price'));
+            $query->whereRaw('CAST(price AS DECIMAL) <= ?', [(float) $request->input('max_price')]);
         }
 
         // 7. Filter by Minimum Rooms
@@ -196,11 +196,17 @@ class PropertyController extends Controller
             $query->whereNotNull('latitude')
                   ->whereNotNull('longitude');
 
-            $haversine = "(6371 * acos(cos(radians({$lat})) * cos(radians(latitude)) * cos(radians(longitude) - radians({$lng})) + sin(radians({$lat})) * sin(radians(latitude))))";
-            
-            $query->selectRaw("properties.*, {$haversine} AS distance")
-                  ->having('distance', '<=', $radius)
-                  ->orderBy('distance', 'asc');
+            $latDelta = $radius / 111.0;
+            $lngDelta = $radius / (111.0 * max(0.01, cos(deg2rad($lat))));
+            $query->whereBetween('latitude', [$lat - $latDelta, $lat + $latDelta])
+                  ->whereBetween('longitude', [$lng - $lngDelta, $lng + $lngDelta]);
+
+            if (DB::connection()->getDriverName() === 'mysql' || DB::connection()->getDriverName() === 'mariadb') {
+                $haversine = "(6371 * acos(cos(radians({$lat})) * cos(radians(latitude)) * cos(radians(longitude) - radians({$lng})) + sin(radians({$lat})) * sin(radians(latitude))))";
+                $query->selectRaw("properties.*, {$haversine} AS distance")
+                      ->whereRaw("{$haversine} <= ?", [$radius])
+                      ->orderBy('distance', 'asc');
+            }
             $isProximityFiltered = true;
         }
 
@@ -218,9 +224,23 @@ class PropertyController extends Controller
         $properties = $isProximityFiltered ? $query->get() : $query->latest()->get();
 
         // Add sanitized images and multi-videos for each property
-        $properties->transform(function ($property) use ($user) {
+        $latVal = $request->filled('lat') ? (float) $request->input('lat') : null;
+        $lngVal = $request->filled('lng') ? (float) $request->input('lng') : null;
+
+        $properties->transform(function ($property) use ($user, $isProximityFiltered, $latVal, $lngVal) {
+            if ($isProximityFiltered && $latVal !== null && $lngVal !== null && $property->latitude && $property->longitude) {
+                $property->distance = round(6371 * acos(
+                    cos(deg2rad($latVal)) * cos(deg2rad((float)$property->latitude)) *
+                    cos(deg2rad((float)$property->longitude) - deg2rad($lngVal)) +
+                    sin(deg2rad($latVal)) * sin(deg2rad((float)$property->latitude))
+                ), 2);
+            }
             return $this->formatPropertyMedia($property, $user);
         });
+
+        if ($isProximityFiltered) {
+            $properties = $properties->sortBy('distance')->values();
+        }
 
         if ($isPublicQuery) {
             Cache::put($cacheKey, $properties, 180);

@@ -33,6 +33,7 @@ const AdminPropertySubmissionsPage = lazy(() => import('./pages/admin/AdminPrope
 const AdminReservationsPage = lazy(() => import('./pages/admin/AdminReservationsPage').then(m => ({ default: m.AdminReservationsPage })));
 const AdminNeedRequestsPage = lazy(() => import('./pages/admin/AdminNeedRequestsPage').then(m => ({ default: m.AdminNeedRequestsPage })));
 const AdminCustomersPage = lazy(() => import('./pages/admin/AdminCustomersPage').then(m => ({ default: m.AdminCustomersPage })));
+const AdminFeedbackCampaignsPage = lazy(() => import('./pages/admin/AdminFeedbackCampaignsPage').then(m => ({ default: m.AdminFeedbackCampaignsPage })));
 const AdminMarketingMailPage = lazy(() => import('./pages/admin/AdminMarketingMailPage').then(m => ({ default: m.AdminMarketingMailPage })));
 const AdminContactMessagesPage = lazy(() => import('./pages/admin/AdminContactMessagesPage').then(m => ({ default: m.AdminContactMessagesPage })));
 const AdminLocationsPage = lazy(() => import('./pages/admin/AdminLocationsPage').then(m => ({ default: m.AdminLocationsPage })));
@@ -419,6 +420,8 @@ function MainApp() {
           <Route path="inquiries" element={<Navigate to="/admin/reservations" replace />} />
           <Route path="need-requests" element={<AdminNeedRequestsPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
+          <Route path="feedback-campaigns" element={<AdminFeedbackCampaignsPage />} />
+          <Route path="feedback" element={<Navigate to="/admin/feedback-campaigns" replace />} />
           <Route path="marketing" element={<AdminMarketingMailPage />} />
           <Route path="contact-messages" element={<AdminContactMessagesPage />} />
           <Route path="locations" element={<AdminLocationsPage />} />
