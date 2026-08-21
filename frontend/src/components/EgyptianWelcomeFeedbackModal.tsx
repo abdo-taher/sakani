@@ -26,16 +26,7 @@ import {
 import { ApiService } from '../services/apiService';
 import { StorageService, safeDispatchEvent } from '../services/storageService';
 import { requestNotificationPermission } from '../services/firebaseService';
-
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
-
+import { usePWAInstall } from '../utils/pwaInstall';
 const STORAGE_KEY = 'sakani_egyptian_welcome_feedback_v1';
 const WELCOME_NOTIF_KEY = 'sakani_welcome_notif_sent_v1';
 
@@ -62,11 +53,10 @@ export const EgyptianWelcomeFeedbackModal: React.FC = () => {
   const [activeStep, setActiveStep] = useState<'welcome_survey' | 'pwa_perks' | 'thank_you'>('welcome_survey');
 
   // PWA & Notification Integration
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const { isInstalled: appInstalled, installApp } = usePWAInstall();
   const [isMobile, setIsMobile] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [notifGranted, setNotifGranted] = useState(false);
-  const [appInstalled, setAppInstalled] = useState(false);
 
   useEffect(() => {
     // 0. Check admin settings
@@ -125,21 +115,7 @@ export const EgyptianWelcomeFeedbackModal: React.FC = () => {
       }
     }
 
-    // 3. PWA event listeners
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    const handleAppInstalled = () => {
-      setAppInstalled(true);
-      setDeferredPrompt(null);
-    };
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    // 4. Reveal Egyptian Hospitality Welcome Modal after admin-configured delay
+    // 3. Reveal Egyptian Hospitality Welcome Modal after admin-configured delay
     const delaySeconds = settings?.feedback_welcome_delay_seconds ?? settings?.feedback_delay_seconds ?? 60;
     const delayMs = Math.max(1500, delaySeconds * 1000);
 
@@ -154,8 +130,6 @@ export const EgyptianWelcomeFeedbackModal: React.FC = () => {
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
@@ -257,23 +231,7 @@ export const EgyptianWelcomeFeedbackModal: React.FC = () => {
   };
 
   const handleInstallPWA = async () => {
-    if (!deferredPrompt) {
-      if (isIOS) {
-        alert('لتثبيت التطبيق على الآيفون: اضغط على زر المشاركة (Share) في المتصفح ثم اختر "إضافة إلى الشاشة الرئيسية (Add to Home Screen)"');
-      } else {
-        alert('لتثبيت التطبيق: اضغط على خيارات المتصفح (⋮) ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية"');
-      }
-      return;
-    }
-
-    try {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      setDeferredPrompt(null);
-      if (choice.outcome === 'accepted') {
-        setAppInstalled(true);
-      }
-    } catch (e) {}
+    await installApp();
   };
 
   if (!isOpen) return null;

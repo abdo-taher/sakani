@@ -19,27 +19,18 @@ import {
 import { requestNotificationPermission } from '../services/firebaseService';
 import { SystemSettings } from '../types';
 import { QRCodeShareModal } from './QRCodeShareModal';
-
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
+import { usePWAInstall } from '../utils/pwaInstall';
 
 interface HomeAppInstallHubProps {
   settings?: SystemSettings;
 }
 
 export const HomeAppInstallHub: React.FC<HomeAppInstallHubProps> = ({ settings }) => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const { isInstalled: appInstalled, installApp } = usePWAInstall();
   const [isMobile, setIsMobile] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [notifGranted, setNotifGranted] = useState(false);
-  const [appInstalled, setAppInstalled] = useState(false);
   const [isProcessingNotif, setIsProcessingNotif] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -65,21 +56,7 @@ export const HomeAppInstallHub: React.FC<HomeAppInstallHubProps> = ({ settings }
       setNotifGranted(true);
     }
 
-    // 2. Listen for install prompt
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    const handleAppInstalled = () => {
-      setAppInstalled(true);
-      setDeferredPrompt(null);
-    };
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    // 3. Generate mini QR preview for desktop users
+    // 2. Generate mini QR preview for desktop users
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://sakani.site';
     QRCode.toDataURL(`${baseUrl}/#/properties?pwa_install=true&source=home_hub`, {
       width: 220,
@@ -88,11 +65,6 @@ export const HomeAppInstallHub: React.FC<HomeAppInstallHubProps> = ({ settings }
     }).then((url) => {
       setQrPreviewUrl(url);
     }).catch(() => {});
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
   }, []);
 
   const handleEnablePushNotifications = async () => {
@@ -115,21 +87,7 @@ export const HomeAppInstallHub: React.FC<HomeAppInstallHubProps> = ({ settings }
       return;
     }
 
-    if (!deferredPrompt) {
-      setIsQrModalOpen(true);
-      return;
-    }
-
-    try {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      setDeferredPrompt(null);
-      if (choice.outcome === 'accepted') {
-        setAppInstalled(true);
-      }
-    } catch (e) {
-      console.warn(e);
-    }
+    await installApp();
   };
 
   if (!isBannerEnabled) {

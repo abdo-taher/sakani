@@ -13,26 +13,17 @@ import {
 } from 'lucide-react';
 import { requestNotificationPermission } from '../services/firebaseService';
 import { StorageService } from '../services/storageService';
-
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
+import { usePWAInstall } from '../utils/pwaInstall';
 
 const STORAGE_KEY = 'sakani_first_visit_prompt_status_v1';
 
 export const FirstVisitPromptModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const { isInstalled: appInstalled, installApp } = usePWAInstall();
   const [isMobile, setIsMobile] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [notifGranted, setNotifGranted] = useState(false);
-  const [appInstalled, setAppInstalled] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
 
@@ -80,21 +71,7 @@ export const FirstVisitPromptModal: React.FC = () => {
       }
     }
 
-    // 3. Listen for PWA install prompt
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    const handleAppInstalled = () => {
-      setAppInstalled(true);
-      setDeferredPrompt(null);
-    };
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    // 4. Reveal prompt gracefully after 2.2 seconds
+    // 3. Reveal prompt gracefully after 2.2 seconds
     const timer = setTimeout(() => {
       // If already standalone (installed app) and notifications granted, no need to show
       if (standaloneCheck && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
@@ -105,8 +82,6 @@ export const FirstVisitPromptModal: React.FC = () => {
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
@@ -134,27 +109,7 @@ export const FirstVisitPromptModal: React.FC = () => {
   };
 
   const handleInstallApp = async () => {
-    if (isIOS) {
-      setShowIOSInstructions(true);
-      return;
-    }
-
-    if (!deferredPrompt) {
-      // Fallback
-      alert('لتثبيت التطبيق، اضغط على خيارات المتصفح (⋮) ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية"');
-      return;
-    }
-
-    try {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      setDeferredPrompt(null);
-      if (choice.outcome === 'accepted') {
-        setAppInstalled(true);
-      }
-    } catch (e) {
-      console.warn(e);
-    }
+    await installApp();
   };
 
   const handleCompleteAll = async () => {
@@ -167,18 +122,7 @@ export const FirstVisitPromptModal: React.FC = () => {
       }
 
       // 2. Trigger install prompt if available
-      if (deferredPrompt) {
-        await deferredPrompt.prompt();
-        const choice = await deferredPrompt.userChoice;
-        setDeferredPrompt(null);
-        if (choice.outcome === 'accepted') {
-          setAppInstalled(true);
-        }
-      } else if (isIOS && !isStandalone) {
-        setShowIOSInstructions(true);
-        setIsProcessing(false);
-        return;
-      }
+      await installApp();
 
       localStorage.setItem(STORAGE_KEY, 'completed');
       setTimeout(() => {
@@ -276,7 +220,7 @@ export const FirstVisitPromptModal: React.FC = () => {
           </div>
 
           {/* Feature 2: Install as Mobile App */}
-          {(isMobile || deferredPrompt) && (
+          {(isMobile || !appInstalled) && (
             <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 transition-all hover:bg-amber-50/40 hover:border-amber-200/50">
               <div className="w-10 h-10 rounded-xl bg-blue-100/80 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
                 <Smartphone className="w-5 h-5" />
