@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use App\Models\PropertyImage;
+use App\Models\Category;
+use App\Models\PropertyType;
 use App\Services\VideoUploadService;
 use App\Services\R2MediaService;
 use Illuminate\Http\Request;
@@ -13,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Helpers\CacheHelper;
 use Exception;
+use Illuminate\Validation\ValidationException;
 
 class PropertyController extends Controller
 {
@@ -61,10 +64,10 @@ class PropertyController extends Controller
             $op = $request->input('operation') ?: ($request->input('operation_type') ?: $request->input('category'));
             if ($op !== 'all') {
                 $query->where(function ($q) use ($op) {
-                    $q->where('operation_type', $op)
-                      ->orWhereHas('category', function ($cq) use ($op) {
-                          $cq->where('slug', $op)->orWhere('name', 'like', "%{$op}%");
-                      });
+                    $slugs = $op === 'sale' ? ['sale', 'sell', 'buy'] : [$op];
+                    $q->whereHas('category', function ($cq) use ($slugs) {
+                        $cq->whereIn('slug', $slugs);
+                    });
                 });
             }
         }
@@ -73,11 +76,15 @@ class PropertyController extends Controller
         if ($request->filled('type') || $request->filled('property_type')) {
             $type = $request->input('type') ?: $request->input('property_type');
             if ($type !== 'all') {
-                $query->where(function ($q) use ($type) {
-                    $q->where('property_type', $type)
-                      ->orWhereHas('propertyType', function ($tq) use ($type) {
-                          $tq->where('slug', $type)->orWhere('name', 'like', "%{$type}%");
-                      });
+                $typeNames = $this->propertyTypeNamesForSlug((string) $type);
+                $query->where(function ($q) use ($typeNames) {
+                    $q->whereHas('propertyType', function ($tq) use ($typeNames) {
+                        $tq->where(function ($namesQuery) use ($typeNames) {
+                            foreach ($typeNames as $name) {
+                                $namesQuery->orWhere('name', 'like', "%{$name}%");
+                            }
+                        });
+                    });
                 });
             }
         }
@@ -221,6 +228,7 @@ class PropertyController extends Controller
     public function byCategory(Request $request, $category)
     {
         $user = $request->user();
+        $categorySlugs = $category === 'sale' ? ['sale', 'sell', 'buy'] : [$category];
         try {
             $properties = Property::with([
                 'category', 
@@ -229,8 +237,8 @@ class PropertyController extends Controller
                 'images', 
                 'amenities',
                 'tags'
-            ])->whereHas('category', function ($query) use ($category) {
-                $query->where('slug', $category);
+            ])->whereHas('category', function ($query) use ($categorySlugs) {
+                $query->whereIn('slug', $categorySlugs);
             })->latest()->get();
         } catch (\Exception $e) {
             Log::error('Property byCategory eager load failed: ' . $e->getMessage());
@@ -240,8 +248,8 @@ class PropertyController extends Controller
                 'location', 
                 'images', 
                 'amenities',
-            ])->whereHas('category', function ($query) use ($category) {
-                $query->where('slug', $category);
+            ])->whereHas('category', function ($query) use ($categorySlugs) {
+                $query->whereIn('slug', $categorySlugs);
             })->latest()->get();
         }
 
@@ -262,7 +270,8 @@ class PropertyController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'price' => 'nullable|numeric',
+            'price' => 'nullable|numeric|min:0',
+            'is_negotiable' => 'sometimes|boolean',
             'has_offer' => 'sometimes|boolean',
             'offer_price' => 'nullable|numeric|min:0',
             'offer_discount_percentage' => 'nullable|integer|min:1|max:99',
@@ -270,9 +279,16 @@ class PropertyController extends Controller
             'offer_end_date' => 'nullable|date',
             'offer_title' => 'nullable|string|max:255',
             'offer_badge' => 'nullable|string|max:100',
-            'property_type_id' => 'required|exists:property_types,id',
-            'category_id' => 'required|exists:categories,id',
+            'operation_type' => 'required_without:category_id|nullable|in:sale,rent',
+            'property_type' => 'required_without:property_type_id|nullable|string',
+            'property_type_id' => 'nullable|exists:property_types,id',
+            'category_id' => 'nullable|exists:categories,id',
             'location_id' => 'required|exists:locations,id',
+            'address_detail' => 'nullable|string|max:500',
+            'address' => 'nullable|string|max:500',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'rent_duration' => 'nullable|in:monthly,3_months,6_months,yearly',
             'area' => 'nullable|integer',
             'rooms' => 'required|integer',
             'bathrooms' => 'required|integer',
@@ -291,6 +307,11 @@ class PropertyController extends Controller
             'status' => 'nullable|in:available,reserved,sold,rented',
             'featured' => 'boolean',
             'has_detailed_rooms' => 'boolean',
+            'submission_status' => 'nullable|string',
+            'submitter_name' => 'nullable|string|max:255',
+            'submitter_phone' => 'nullable|string|max:50',
+            'submitter_notes' => 'nullable|string',
+            'admin_notes' => 'nullable|string',
             'rooms_data' => 'sometimes|array',
             'rooms_data.*.name' => 'required|string|max:255',
             'rooms_data.*.description' => 'nullable|string',
@@ -313,7 +334,13 @@ class PropertyController extends Controller
             'uploaded_images.*.image_public_id' => 'required|string',
             'uploaded_images.*.image_type' => 'sometimes|string|in:' . implode(',', array_keys(PropertyImage::IMAGE_TYPES)),
             'uploaded_images.*.caption' => 'sometimes|string|max:255',
+            'uploaded_images.*.media_type' => 'sometimes|string|in:image,video',
+            'uploaded_images.*.sort_order' => 'sometimes|integer|min:0',
+            'uploaded_images.*.is_primary' => 'sometimes|boolean',
         ]);
+
+        $categoryId = $this->resolveCategoryId($request);
+        $propertyTypeId = $this->resolvePropertyTypeId($request, $categoryId);
 
         DB::beginTransaction();
 
@@ -368,6 +395,7 @@ class PropertyController extends Controller
                 'title' => $request->title,
                 'description' => $request->description,
                 'price' => $request->price,
+                'is_negotiable' => $request->boolean('is_negotiable', false),
                 'has_offer' => $request->boolean('has_offer', false),
                 'offer_price' => $request->filled('offer_price') ? $request->offer_price : null,
                 'offer_discount_percentage' => $request->filled('offer_discount_percentage') ? $request->offer_discount_percentage : null,
@@ -375,12 +403,11 @@ class PropertyController extends Controller
                 'offer_end_date' => $request->filled('offer_end_date') ? $request->offer_end_date : null,
                 'offer_title' => $request->offer_title,
                 'offer_badge' => $request->offer_badge,
-                'is_negotiable' => $request->boolean('is_negotiable', false),
                 'rent_duration' => $request->rent_duration,
-                'category_id' => $request->category_id,
-                'property_type_id' => $request->property_type_id,
+                'category_id' => $categoryId,
+                'property_type_id' => $propertyTypeId,
                 'location_id' => $request->location_id,
-                'address' => $request->address,
+                'address' => $request->input('address_detail', $request->address),
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
                 'area' => $request->filled('area') ? (int)$request->area : null,
@@ -398,6 +425,7 @@ class PropertyController extends Controller
                 'submitter_name' => $request->submitter_name,
                 'submitter_phone' => $request->submitter_phone,
                 'submitter_notes' => $request->submitter_notes,
+                'admin_notes' => $request->admin_notes,
                 'featured' => $request->featured ?? false,
                 'is_uploading' => false,
                 'has_detailed_rooms' => $request->boolean('has_detailed_rooms', false),
@@ -508,13 +536,11 @@ class PropertyController extends Controller
                     $query->ordered();
                 }, 
                 'amenities',
-                'tags'
+                'tags',
+                'detailedRooms.roomImages'
             ])->find($property->id);
 
-            // Add computed attributes
-            $property->primary_image = $property->images->where('is_primary', true)->first();
-            $property->images_by_type = $property->images->groupBy('image_type');
-            $property->total_images = $property->images->count();
+            $property = $this->formatPropertyMedia($property, $request->user());
 
             $message = 'Property created successfully';
             if (!empty($imageErrors)) {
@@ -526,11 +552,9 @@ class PropertyController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $message,
-                'data' => [
-                    'property' => $property,
-                    'uploaded_images_count' => count($uploadedImages),
-                    'image_errors' => $imageErrors,
-                ]
+                'data' => $property,
+                'uploaded_images_count' => count($uploadedImages),
+                'image_errors' => $imageErrors,
             ], 201);
 
         } catch (Exception $e) {
@@ -658,6 +682,7 @@ class PropertyController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string|max:2000',
             'price' => 'sometimes|required|numeric|min:0',
+            'is_negotiable' => 'sometimes|boolean',
             'has_offer' => 'sometimes|boolean',
             'offer_price' => 'sometimes|nullable|numeric|min:0',
             'offer_discount_percentage' => 'sometimes|nullable|integer|min:1|max:99',
@@ -667,7 +692,14 @@ class PropertyController extends Controller
             'offer_badge' => 'sometimes|nullable|string|max:100',
             'property_type_id' => 'sometimes|required|exists:property_types,id',
             'category_id' => 'sometimes|required|exists:categories,id',
+            'operation_type' => 'sometimes|nullable|in:sale,rent',
+            'property_type' => 'sometimes|nullable|string',
             'location_id' => 'sometimes|required|exists:locations,id',
+            'address_detail' => 'sometimes|nullable|string|max:500',
+            'address' => 'sometimes|nullable|string|max:500',
+            'latitude' => 'sometimes|nullable|numeric|between:-90,90',
+            'longitude' => 'sometimes|nullable|numeric|between:-180,180',
+            'rent_duration' => 'sometimes|nullable|in:monthly,3_months,6_months,yearly',
             'area' => 'sometimes|nullable|integer|min:1',
             'rooms' => 'sometimes|required|integer|min:0',
             'bathrooms' => 'sometimes|required|integer|min:0',
@@ -688,8 +720,24 @@ class PropertyController extends Controller
             'remove_images.*' => 'integer|exists:property_images,id',
             'status' => 'sometimes|nullable|in:available,reserved,sold,rented',
             'featured' => 'sometimes|boolean',
+            'has_detailed_rooms' => 'sometimes|boolean',
+            'submission_status' => 'sometimes|nullable|string',
+            'submitter_name' => 'sometimes|nullable|string|max:255',
+            'submitter_phone' => 'sometimes|nullable|string|max:50',
+            'submitter_notes' => 'sometimes|nullable|string',
+            'admin_notes' => 'sometimes|nullable|string',
             'amenities' => 'sometimes|array',
             'tags' => 'sometimes|array',
+            'replace_images' => 'sometimes|boolean',
+            'uploaded_images' => 'sometimes|array|max:20',
+            'uploaded_images.*.image_url' => 'required|string|url',
+            'uploaded_images.*.image_public_id' => 'nullable|string',
+            'uploaded_images.*.image_type' => 'sometimes|string|in:' . implode(',', array_keys(PropertyImage::IMAGE_TYPES)),
+            'uploaded_images.*.caption' => 'sometimes|nullable|string|max:255',
+            'uploaded_images.*.media_type' => 'sometimes|string|in:image,video',
+            'uploaded_images.*.sort_order' => 'sometimes|integer|min:0',
+            'uploaded_images.*.is_primary' => 'sometimes|boolean',
+            'replace_rooms' => 'sometimes|boolean',
             'rooms_data' => 'sometimes|array',
             'rooms_data.*.name' => 'required|string|max:255',
             'rooms_data.*.description' => 'nullable|string',
@@ -698,15 +746,29 @@ class PropertyController extends Controller
         ]);
 
         $updateData = $request->only([
-            'title', 'description', 'price', 'has_offer', 'offer_price', 'offer_discount_percentage',
+            'title', 'description', 'price', 'is_negotiable', 'has_offer', 'offer_price', 'offer_discount_percentage',
             'offer_start_date', 'offer_end_date', 'offer_title', 'offer_badge',
             'property_type_id', 'category_id', 
-            'location_id', 'latitude', 'longitude', 'rent_duration', 'area', 'rooms', 
+            'location_id', 'address', 'latitude', 'longitude', 'rent_duration', 'area', 'rooms',
             'bathrooms', 'floor', 'balconies', 'finishing', 'furnishing', 'audience_type',
             'video_thumbnail_url', 'video_thumbnail_public_id', 'status', 
             'submission_status', 'submitter_name', 'submitter_phone', 'submitter_notes',
             'admin_notes', 'featured', 'has_detailed_rooms'
         ]);
+
+        if ($request->has('address_detail')) {
+            $updateData['address'] = $request->input('address_detail');
+        }
+        if ($request->has('operation_type') || $request->has('category_id')) {
+            $updateData['category_id'] = $this->resolveCategoryId($request, $property->category_id);
+        }
+        if ($request->has('property_type') || $request->has('property_type_id') || isset($updateData['category_id'])) {
+            $updateData['property_type_id'] = $this->resolvePropertyTypeId(
+                $request,
+                (int) ($updateData['category_id'] ?? $property->category_id),
+                $property->property_type_id
+            );
+        }
 
         if ($request->has('finishing')) {
             $updateData['finishing'] = $this->normalizeFinishingValue($request->finishing);
@@ -830,12 +892,18 @@ class PropertyController extends Controller
         }
 
         // Add or sync pre-uploaded images if provided
-        if ($request->filled('uploaded_images')) {
+        if ($request->has('uploaded_images')) {
             $uploadedImages = $request->input('uploaded_images');
             $incomingUrls = array_filter(array_column($uploadedImages, 'image_url'));
             
-            // Delete old images that were removed by user
-            if (!empty($incomingUrls)) {
+            // Delete old images that were removed by the wizard, including all images when an empty list is submitted.
+            if ($request->boolean('replace_images')) {
+                if (empty($incomingUrls)) {
+                    $property->images()->delete();
+                } else {
+                    $property->images()->whereNotIn('image_url', $incomingUrls)->delete();
+                }
+            } elseif (!empty($incomingUrls)) {
                 $property->images()->whereNotIn('image_url', $incomingUrls)->delete();
             }
             
@@ -888,14 +956,16 @@ class PropertyController extends Controller
         }
 
         // Create or update rooms inline if provided without duplicates
-        if ($request->filled('rooms_data')) {
-            $incomingRooms = $request->rooms_data;
+        if ($request->has('rooms_data') || $request->boolean('replace_rooms')) {
+            $incomingRooms = (array) $request->input('rooms_data', []);
             $incomingNumericIds = array_filter(array_map(function($r) {
                 return (!empty($r['id']) && is_numeric($r['id'])) ? (int)$r['id'] : null;
             }, $incomingRooms));
 
             // Clean up removed rooms
-            if (!empty($incomingNumericIds)) {
+            if ($request->boolean('replace_rooms') && empty($incomingNumericIds)) {
+                $property->detailedRooms()->delete();
+            } elseif (!empty($incomingNumericIds)) {
                 $property->detailedRooms()->whereNotIn('id', $incomingNumericIds)->delete();
             }
 
@@ -1088,10 +1158,8 @@ class PropertyController extends Controller
 
             if ($request->filled('operation') && $request->input('operation') !== 'all') {
                 $op = $request->input('operation');
-                $query->where(function ($q) use ($op) {
-                    $q->where('operation_type', $op)
-                      ->orWhereHas('category', fn($cq) => $cq->where('slug', $op));
-                });
+                $slugs = $op === 'sale' ? ['sale', 'sell', 'buy'] : [$op];
+                $query->whereHas('category', fn($cq) => $cq->whereIn('slug', $slugs));
             }
 
             if ($request->filled('mode')) {
@@ -1415,6 +1483,79 @@ class PropertyController extends Controller
         $str = mb_strtolower(trim($val));
         if ((str_contains($str, 'مفروش') && !str_contains($str, 'غير')) || $str === 'furnished') return 'furnished';
         return 'unfurnished';
+    }
+
+    /**
+     * Resolve the persisted category from the form's operation type. The catalog
+     * uses `rent` for rentals and `sell` for properties offered for sale.
+     */
+    protected function resolveCategoryId(Request $request, ?int $fallbackId = null): int
+    {
+        if ($request->filled('operation_type')) {
+            $operation = $request->string('operation_type')->toString();
+            $slugs = $operation === 'rent' ? ['rent'] : ['sell', 'sale', 'buy'];
+            $category = Category::whereIn('slug', $slugs)
+                ->orderByRaw("CASE slug WHEN 'rent' THEN 0 WHEN 'sell' THEN 0 WHEN 'sale' THEN 1 ELSE 2 END")
+                ->first();
+            if ($category) {
+                return (int) $category->id;
+            }
+        }
+
+        $categoryId = $request->input('category_id', $fallbackId);
+        if ($categoryId && Category::whereKey($categoryId)->exists()) {
+            return (int) $categoryId;
+        }
+
+        throw ValidationException::withMessages([
+            'operation_type' => ['تعذر تحديد نوع العملية العقارية.'],
+        ]);
+    }
+
+    protected function resolvePropertyTypeId(Request $request, int $categoryId, ?int $fallbackId = null): int
+    {
+        if ($request->filled('property_type')) {
+            $names = $this->propertyTypeNamesForSlug($request->string('property_type')->toString());
+            $type = PropertyType::where('category_id', $categoryId)
+                ->where(function ($query) use ($names) {
+                    foreach ($names as $name) {
+                        $query->orWhere('name', 'like', "%{$name}%");
+                    }
+                })
+                ->first();
+            if ($type) {
+                return (int) $type->id;
+            }
+        }
+
+        $requestedId = $request->input('property_type_id', $fallbackId);
+        if ($requestedId) {
+            $type = PropertyType::whereKey($requestedId)->where('category_id', $categoryId)->first();
+            if ($type) {
+                return (int) $type->id;
+            }
+        }
+
+        throw ValidationException::withMessages([
+            'property_type' => ['نوع العقار المحدد غير متاح لهذه العملية.'],
+        ]);
+    }
+
+    protected function propertyTypeNamesForSlug(string $slug): array
+    {
+        return match ($slug) {
+            'apartment' => ['شقة'],
+            'villa' => ['فيلا'],
+            'duplex' => ['دوبلكس'],
+            'penthouse' => ['بنتهاوس'],
+            'studio' => ['ستوديو', 'استوديو'],
+            'shop' => ['محل'],
+            'land' => ['أرض', 'ارض'],
+            'office' => ['مكتب'],
+            'chalet' => ['شاليه'],
+            'building' => ['عمارة', 'مبنى', 'محلق'],
+            default => [$slug],
+        };
     }
 
     /**

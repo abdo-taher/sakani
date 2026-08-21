@@ -63,6 +63,7 @@ export interface Property {
   location_id: string;
   district_name: string;
   address_detail?: string;
+  address?: string;
   latitude?: number;
   longitude?: number;
   area: number;
@@ -86,6 +87,17 @@ export interface Property {
   created_at: string;
   owner_name?: string;
   owner_phone?: string;
+  submitter_name?: string;
+  submitter_phone?: string;
+  submitter_notes?: string;
+  admin_notes?: string;
+  submission_status?: string;
+  category_id?: number;
+  property_type_id?: number;
+  property_type_record?: Record<string, any> | null;
+  image_records?: any[];
+  amenity_records?: any[];
+  tag_records?: any[];
   has_detailed_rooms?: boolean;
   detailed_rooms?: DetailedRoom[];
 }
@@ -369,4 +381,3 @@ export interface FeedbackCampaignStats {
   campaigns: FeedbackCampaign[];
   recent_responses: FeedbackResponse[];
 }
-

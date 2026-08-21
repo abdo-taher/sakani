@@ -238,10 +238,33 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       if (!locationId && fallback.length > 0) setLocationId(fallback[0].id);
     }
 
-    const savedTags = localStorage.getItem('sakani_admin_tags');
-    if (savedTags) setAvailableTags(JSON.parse(savedTags));
-    const savedAmenities = localStorage.getItem('sakani_admin_amenities');
-    if (savedAmenities) setAvailableAmenities(JSON.parse(savedAmenities));
+    try {
+      const [amenities, tags] = await Promise.all([
+        ApiService.getAmenities(),
+        ApiService.getTags(),
+      ]);
+
+      if (Array.isArray(amenities)) {
+        setAvailableAmenities(
+          Array.from(new Set(amenities
+            .map((amenity: any) => typeof amenity === 'string' ? amenity : amenity?.name)
+            .filter(Boolean))) as string[]
+        );
+      }
+
+      if (Array.isArray(tags)) {
+        setAvailableTags(
+          Array.from(new Set(tags
+            .map((tag: any) => typeof tag === 'string' ? tag : tag?.name)
+            .filter(Boolean))) as string[]
+        );
+      }
+    } catch {
+      const savedTags = localStorage.getItem('sakani_admin_tags');
+      if (savedTags) setAvailableTags(JSON.parse(savedTags));
+      const savedAmenities = localStorage.getItem('sakani_admin_amenities');
+      if (savedAmenities) setAvailableAmenities(JSON.parse(savedAmenities));
+    }
   };
 
   const loadExistingProperty = async (id: string) => {
@@ -282,7 +305,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
         // Location
         const locId = prop.location_id || (prop.location && typeof prop.location === 'object' ? prop.location.id : prop.location);
         setLocationId(String(locId || ''));
-        setAddressDetail(String(prop.address_detail || ''));
+        setAddressDetail(String(prop.address_detail || prop.address || ''));
         setLatitude(String(prop.latitude || '31.4385'));
         setLongitude(String(prop.longitude || '31.6705'));
 
@@ -300,6 +323,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
         setFeatured(Boolean(prop.featured));
 
         setPrice(String(prop.price || ''));
+        setIsNegotiable(Boolean(prop.is_negotiable));
         setHasOffer(Boolean(prop.has_offer));
         setOfferPrice(prop.offer_price ? String(prop.offer_price) : '');
         setOfferDiscountPercentage(prop.offer_discount_percentage ? String(prop.offer_discount_percentage) : '');
@@ -416,7 +440,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
   // 3. Image Upload to Cloudflare R2
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files) as File[];
     setUploadingImage(true);
 
     try {
@@ -548,18 +572,18 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       title: title.trim(),
       description: description.trim(),
       price: Number(price) || 0,
+      is_negotiable: isNegotiable,
       has_offer: hasOffer,
-      offer_price: hasOffer && offerPrice ? Number(offerPrice) : undefined,
-      offer_discount_percentage: hasOffer && offerDiscountPercentage ? Number(offerDiscountPercentage) : undefined,
-      offer_start_date: hasOffer && offerStartDate ? offerStartDate : undefined,
-      offer_end_date: hasOffer && offerEndDate ? offerEndDate : undefined,
-      offer_title: hasOffer ? offerTitle : undefined,
-      offer_badge: hasOffer ? offerBadge : undefined,
+      offer_price: hasOffer && offerPrice ? Number(offerPrice) : null,
+      offer_discount_percentage: hasOffer && offerDiscountPercentage ? Number(offerDiscountPercentage) : null,
+      offer_start_date: hasOffer && offerStartDate ? offerStartDate : null,
+      offer_end_date: hasOffer && offerEndDate ? offerEndDate : null,
+      offer_title: hasOffer ? offerTitle : null,
+      offer_badge: hasOffer ? offerBadge : null,
       operation_type: operationType,
       property_type: propertyType,
-      property_type_id: 1, // Fallback map
-      category_id: operationType === 'rent' ? 2 : 1,
       location_id: locationId ? (parseInt(locationId.replace(/\D/g, ''), 10) || 1) : 1,
+      address_detail: addressDetail.trim() || null,
       latitude: Number(latitude) || 31.4385,
       longitude: Number(longitude) || 31.6705,
       area: Number(area) || 0,
@@ -574,11 +598,11 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       featured,
       amenities: selectedAmenities,
       tags: selectedTags,
-      rent_duration: operationType === 'rent' ? rentDuration : undefined,
+      rent_duration: operationType === 'rent' ? rentDuration : null,
       has_detailed_rooms: operationType === 'rent' && rentalMode === 'rooms',
-      video_url: videoUrl ? videoUrl.trim() : undefined,
-      video_public_id: videoUrl ? videoUrl.trim() : undefined,
-      video_thumbnail_url: (videoUrl && videoThumbnailUrl) ? videoThumbnailUrl.trim() : undefined,
+      video_url: videoUrl ? videoUrl.trim() : null,
+      video_public_id: videoUrl ? videoUrl.trim() : null,
+      video_thumbnail_url: (videoUrl && videoThumbnailUrl) ? videoThumbnailUrl.trim() : null,
       replace_images: true,
       replace_rooms: true,
       images: (() => {
@@ -612,10 +636,10 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
         description: r.description,
         price: r.price,
         area: r.area,
-      })) : undefined,
-      submitter_name: ownerName ? ownerName.trim() : undefined,
-      submitter_phone: ownerPhone ? normalizeEgyptianPhone(ownerPhone) : undefined,
-      admin_notes: adminNotes || undefined,
+      })) : [],
+      submitter_name: ownerName ? ownerName.trim() : null,
+      submitter_phone: ownerPhone ? normalizeEgyptianPhone(ownerPhone) : null,
+      admin_notes: adminNotes.trim() || null,
     };
 
     try {
@@ -1015,6 +1039,19 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                 />
               </div>
 
+              {/* Balconies */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">عدد الشرفات / البلكونات</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={balconies}
+                  onChange={(e) => setBalconies(e.target.value)}
+                  placeholder="1"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm font-bold text-slate-900 outline-none focus:border-[#8D6A28]"
+                />
+              </div>
+
               {/* Finishing */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">مستوى التشطيب</label>
@@ -1069,6 +1106,16 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                 />
                 {errors.price && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.price}</p>}
               </div>
+
+              <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer">
+                <span className="text-xs font-bold text-slate-700">السعر قابل للتفاوض</span>
+                <input
+                  type="checkbox"
+                  checked={isNegotiable}
+                  onChange={(e) => setIsNegotiable(e.target.checked)}
+                  className="w-4 h-4 accent-[#8D6A28]"
+                />
+              </label>
 
               {/* If Rent: Rental Mode and Period */}
               {operationType === 'rent' && (
@@ -1756,8 +1803,56 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
             <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
               <span>تم تجهيز {images.length} صور</span>
               {videoUrl && <span>• مرفق فيديو معاينة</span>}
-              {detailedRooms.length > 0 && <span>• {detailedRooms.length} غرف مفصلة</span>}
+            {detailedRooms.length > 0 && <span>• {detailedRooms.length} غرف مفصلة</span>}
             </div>
+
+            {isAdmin && (
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                <h4 className="text-xs font-black text-slate-700">بيانات المالك والنشر الإداري</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    value={ownerName}
+                    onChange={(e) => setOwnerName(e.target.value)}
+                    placeholder="اسم مالك العقار"
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#8D6A28]"
+                  />
+                  <input
+                    type="tel"
+                    value={ownerPhone}
+                    onChange={(e) => setOwnerPhone(e.target.value)}
+                    placeholder="رقم هاتف المالك"
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#8D6A28]"
+                  />
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as Property['status'])}
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#8D6A28]"
+                  >
+                    <option value="available">متاح</option>
+                    <option value="reserved">محجوز</option>
+                    <option value="sold">تم البيع</option>
+                    <option value="rented">تم التأجير</option>
+                  </select>
+                  <label className="flex items-center justify-between gap-3 px-4 py-3 bg-white border border-slate-200 rounded-xl cursor-pointer">
+                    <span className="text-xs font-bold text-slate-700">عقار مميز</span>
+                    <input
+                      type="checkbox"
+                      checked={featured}
+                      onChange={(e) => setFeatured(e.target.checked)}
+                      className="w-4 h-4 accent-[#8D6A28]"
+                    />
+                  </label>
+                </div>
+                <textarea
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  placeholder="ملاحظات الإدارة الداخلية"
+                  rows={3}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-[#8D6A28] resize-none"
+                />
+              </div>
+            )}
           </div>
         )}
 

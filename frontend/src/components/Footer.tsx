@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { SystemSettings } from '../types';
 import { SakaniLogo } from './SakaniLogo';
 import { ActiveTab } from './BottomNav';
 import { StorageService } from '../services/storageService';

@@ -477,7 +477,10 @@ class CustomerIntelligenceController extends Controller
 
         // 1. Match Operation Type
         if (!empty($need->listing_type) && $need->listing_type !== 'all') {
-            $query->where('operation_type', $need->listing_type === 'buy' ? 'sale' : $need->listing_type);
+            $slugs = $need->listing_type === 'buy'
+                ? ['buy', 'sell', 'sale']
+                : [$need->listing_type];
+            $query->whereHas('category', fn($categoryQuery) => $categoryQuery->whereIn('slug', $slugs));
         }
 
         // 2. Match Location

@@ -18,6 +18,7 @@ class Property extends Model
         'title',
         'description',
         'price',
+        'is_negotiable',
         'has_offer',
         'offer_price',
         'offer_discount_percentage',
@@ -28,6 +29,7 @@ class Property extends Model
         'category_id',
         'property_type_id',
         'location_id',
+        'address',
         'latitude',
         'longitude',
         'rent_duration',
@@ -63,6 +65,7 @@ class Property extends Model
 
     protected $casts = [
         'has_offer' => 'boolean',
+        'is_negotiable' => 'boolean',
         'price' => 'float',
         'offer_price' => 'float',
         'offer_discount_percentage' => 'integer',
@@ -81,6 +84,11 @@ class Property extends Model
         'effective_price',
         'discount_amount',
         'canonical_url',
+        'operation_type',
+        'district_name',
+        'address_detail',
+        'owner_name',
+        'owner_phone',
     ];
 
     /**
@@ -135,6 +143,32 @@ class Property extends Model
     public function getRefIdAttribute(): string
     {
         return 'SK-' . str_pad((string)$this->id, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function getOperationTypeAttribute(): string
+    {
+        $slug = $this->relationLoaded('category') ? $this->category?->slug : null;
+        return $slug === 'rent' ? 'rent' : 'sale';
+    }
+
+    public function getDistrictNameAttribute(): ?string
+    {
+        return $this->relationLoaded('location') ? $this->location?->name : null;
+    }
+
+    public function getAddressDetailAttribute(): ?string
+    {
+        return $this->address;
+    }
+
+    public function getOwnerNameAttribute(): ?string
+    {
+        return $this->submitter_name;
+    }
+
+    public function getOwnerPhoneAttribute(): ?string
+    {
+        return $this->submitter_phone;
     }
 
     /**

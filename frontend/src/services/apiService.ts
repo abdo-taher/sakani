@@ -47,6 +47,76 @@ export function normalizeData<T = any>(raw: any): T {
   return raw as T;
 }
 
+/** Normalize every property endpoint to the same complete frontend contract. */
+export function normalizeApiProperty(raw: any): any {
+  if (!raw || typeof raw !== 'object') return raw;
+
+  const imageRecords = Array.isArray(raw.images) ? raw.images : [];
+  const amenityRecords = Array.isArray(raw.amenities) ? raw.amenities : [];
+  const tagRecords = Array.isArray(raw.tags) ? raw.tags : [];
+  const roomRecords = Array.isArray(raw.detailed_rooms || raw.detailedRooms)
+    ? (raw.detailed_rooms || raw.detailedRooms)
+    : [];
+  const propertyTypeRecord = raw.property_type && typeof raw.property_type === 'object'
+    ? raw.property_type
+    : null;
+
+  return {
+    ...raw,
+    id: String(raw.id),
+    ref_id: raw.ref_id || `SK-${String(raw.id).padStart(4, '0')}`,
+    price: Number(raw.price) || 0,
+    is_negotiable: Boolean(raw.is_negotiable),
+    has_offer: Boolean(raw.has_offer),
+    offer_price: raw.offer_price == null ? undefined : Number(raw.offer_price),
+    offer_discount_percentage: raw.offer_discount_percentage == null ? undefined : Number(raw.offer_discount_percentage),
+    operation_type: raw.operation_type === 'rent' || raw.category?.slug === 'rent' ? 'rent' : 'sale',
+    property_type: propertyTypeRecord?.slug || raw.property_type || 'apartment',
+    property_type_record: propertyTypeRecord,
+    location_id: String(raw.location_id || raw.location?.id || ''),
+    district_name: raw.district_name || raw.location?.name || '',
+    address_detail: raw.address_detail || raw.address || '',
+    owner_name: raw.owner_name || raw.submitter_name || '',
+    owner_phone: raw.owner_phone || raw.submitter_phone || '',
+    area: Number(raw.area) || 0,
+    rooms: Number(raw.rooms) || 0,
+    bathrooms: Number(raw.bathrooms) || 0,
+    floor: raw.floor == null ? undefined : Number(raw.floor),
+    balconies: raw.balconies == null ? undefined : Number(raw.balconies),
+    featured: Boolean(raw.featured),
+    is_uploading: Boolean(raw.is_uploading),
+    views: Number(raw.cached_views ?? raw.views) || 0,
+    image_records: imageRecords,
+    images: imageRecords.length > 0
+      ? imageRecords
+          .map((image: any) => typeof image === 'string' ? image : (image.image_url || image.url || image.image_path))
+          .filter(Boolean)
+      : (raw.image_url ? [raw.image_url] : []),
+    amenities: amenityRecords
+      .map((amenity: any) => typeof amenity === 'string' ? amenity : (amenity.name || amenity.slug))
+      .filter(Boolean),
+    amenity_records: amenityRecords,
+    tags: tagRecords
+      .map((tag: any) => typeof tag === 'string' ? tag : (tag.name || tag.slug))
+      .filter(Boolean),
+    tag_records: tagRecords,
+    has_detailed_rooms: Boolean(raw.has_detailed_rooms),
+    detailed_rooms: roomRecords.map((room: any) => ({
+      ...room,
+      id: String(room.id),
+      price: Number(room.price) || 0,
+      area: room.area == null ? undefined : Number(room.area),
+      images: Array.isArray(room.room_images)
+        ? room.room_images.map((image: any) => image.image_url || image.url).filter(Boolean)
+        : (room.images || []),
+    })),
+  };
+}
+
+function normalizePropertyResult(raw: any): any {
+  return Array.isArray(raw) ? raw.map(normalizeApiProperty) : normalizeApiProperty(raw);
+}
+
 export function getAuthToken(): string | null {
   return (
     sessionStorage.getItem('token') ||
@@ -144,29 +214,29 @@ export const ApiService = {
   async getProperties(params?: Record<string, any>) {
     const query = params ? `?${new URLSearchParams(params).toString()}` : '';
     const res = await apiRequest(`/properties${query}`);
-    return normalizeData(res);
+    return normalizePropertyResult(normalizeData(res));
   },
 
   async getProperty(id: string | number) {
     const numId = typeof id === 'string' ? parseInt(id.replace(/\D/g, ''), 10) || id : id;
     const res = await apiRequest(`/properties/${numId}`);
-    return normalizeData(res);
+    return normalizePropertyResult(normalizeData(res));
   },
 
   async getFeaturedProperties() {
     const res = await apiRequest('/properties/best');
-    return normalizeData(res);
+    return normalizePropertyResult(normalizeData(res));
   },
 
   async getTopViewedProperties() {
     const res = await apiRequest('/properties/top-viewed');
-    return normalizeData(res);
+    return normalizePropertyResult(normalizeData(res));
   },
 
   async getRelatedProperties(id: string | number) {
     const numId = typeof id === 'string' ? parseInt(id.replace(/\D/g, ''), 10) || id : id;
     const res = await apiRequest(`/properties/${numId}/related`);
-    return normalizeData(res);
+    return normalizePropertyResult(normalizeData(res));
   },
 
   async recordPropertyView(id: string | number) {
@@ -179,7 +249,7 @@ export const ApiService = {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    return normalizeData(res);
+    return normalizePropertyResult(normalizeData(res));
   },
 
   async updateProperty(id: string | number, data: any) {
@@ -188,7 +258,7 @@ export const ApiService = {
       method: 'PUT',
       body: JSON.stringify(data),
     });
-    return normalizeData(res);
+    return normalizePropertyResult(normalizeData(res));
   },
 
   async updatePropertyOffer(id: string | number, offerData: {
@@ -205,12 +275,12 @@ export const ApiService = {
       method: 'PUT',
       body: JSON.stringify(offerData),
     });
-    return normalizeData(res);
+    return normalizePropertyResult(normalizeData(res));
   },
 
   async getOffers() {
     const res = await apiRequest('/properties/offers');
-    return normalizeData(res);
+    return normalizePropertyResult(normalizeData(res));
   },
 
   async deleteProperty(id: string | number) {
