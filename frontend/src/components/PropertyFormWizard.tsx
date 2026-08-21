@@ -76,6 +76,35 @@ const AUDIENCE_OPTIONS: { type: AudienceType; label: string; desc: string; badge
   { type: 'all', label: 'عام / الكل', desc: 'متاح لكافة الفئات', badge: 'متاح للجميع' },
 ];
 
+export const FINISHING_LABELS: Record<FinishingType, string> = {
+  super_lux: 'سوبر لوكس',
+  lux: 'لوكس',
+  semi_finished: 'نصف تشطيب',
+  red_brick: 'طوب أحمر / هيكل',
+};
+
+export const FURNISHING_LABELS: Record<FurnishingType, string> = {
+  unfurnished: 'غير مفروش',
+  furnished: 'مفروش بالكامل',
+};
+
+export const normalizeFinishing = (val: any): FinishingType => {
+  if (!val) return 'super_lux';
+  const str = String(val).toLowerCase().trim();
+  if (str === 'super_lux' || str.includes('سوبر')) return 'super_lux';
+  if (str === 'lux' || str.includes('لوكس')) return 'lux';
+  if (str === 'semi_finished' || str.includes('نصف') || str.includes('محارة')) return 'semi_finished';
+  if (str === 'red_brick' || str.includes('طوب') || str.includes('هيكل')) return 'red_brick';
+  return 'super_lux';
+};
+
+export const normalizeFurnishing = (val: any): FurnishingType => {
+  if (!val) return 'unfurnished';
+  const str = String(val).toLowerCase().trim();
+  if ((str.includes('مفروش') && !str.includes('غير')) || str === 'furnished') return 'furnished';
+  return 'unfurnished';
+};
+
 const WIZARD_STEPS = [
   { step: 1, title: 'المعلومات والتصنيف', subtitle: 'النوع والفئة المستهدفة' },
   { step: 2, title: 'الموقع والخريطة', subtitle: 'الحي والإحداثيات' },
@@ -257,17 +286,15 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
         setLatitude(String(prop.latitude || '31.4385'));
         setLongitude(String(prop.longitude || '31.6705'));
 
-        setArea(String(prop.area || ''));
-        setRooms(String(prop.rooms ?? 3));
+        setArea(String(prop.area ?? prop.area_sqm ?? ''));
+        const roomsCount = prop.rooms ?? (Array.isArray(prop.detailed_rooms || prop.detailedRooms) ? (prop.detailed_rooms || prop.detailedRooms).length : 3);
+        setRooms(String(roomsCount));
         setBathrooms(String(prop.bathrooms ?? 2));
         setFloor(String(prop.floor ?? 1));
         setBalconies(String(prop.balconies ?? 1));
 
-        const fin = typeof prop.finishing === 'string' ? prop.finishing : (prop.finishing?.slug || 'super_lux');
-        setFinishing(fin);
-
-        const furn = typeof prop.furnishing === 'string' ? prop.furnishing : (prop.furnishing?.slug || 'unfurnished');
-        setFurnishing(furn);
+        setFinishing(normalizeFinishing(prop.finishing));
+        setFurnishing(normalizeFurnishing(prop.furnishing));
 
         setStatus(String(prop.status || 'available'));
         setFeatured(Boolean(prop.featured));
@@ -304,12 +331,14 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
 
         // Amenities
         if (Array.isArray(prop.amenities)) {
-          setSelectedAmenities(prop.amenities.map((a: any) => typeof a === 'string' ? a : (a.slug || a.name || String(a.id))));
+          const mappedAmenities = prop.amenities.map((a: any) => typeof a === 'string' ? a : (a.name || a.slug || String(a.id)));
+          setSelectedAmenities(Array.from(new Set(mappedAmenities.filter(Boolean))));
         }
 
         // Tags
         if (Array.isArray(prop.tags)) {
-          setSelectedTags(prop.tags.map((t: any) => typeof t === 'string' ? t : (t.name || String(t.id))));
+          const mappedTags = prop.tags.map((t: any) => typeof t === 'string' ? t : (t.name || t.slug || String(t.id)));
+          setSelectedTags(Array.from(new Set(mappedTags.filter(Boolean))));
         }
 
         // Detailed Rooms (Deduplicated by ID or Name)
@@ -511,6 +540,10 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
     setIsSubmitting(true);
     setGeneralError(null);
 
+    const finalRooms = (operationType === 'rent' && rentalMode === 'rooms')
+      ? Math.max(detailedRooms.length, Number(rooms) || 0)
+      : (Number(rooms) || 0);
+
     const payload: any = {
       title: title.trim(),
       description: description.trim(),
@@ -530,7 +563,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       latitude: Number(latitude) || 31.4385,
       longitude: Number(longitude) || 31.6705,
       area: Number(area) || 0,
-      rooms: Number(rooms) || 0,
+      rooms: finalRooms,
       bathrooms: Number(bathrooms) || 0,
       floor: Number(floor) || 0,
       balconies: Number(balconies) || 0,
@@ -539,6 +572,8 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       audience_type: audienceType,
       status,
       featured,
+      amenities: selectedAmenities,
+      tags: selectedTags,
       rent_duration: operationType === 'rent' ? rentDuration : undefined,
       has_detailed_rooms: operationType === 'rent' && rentalMode === 'rooms',
       video_url: videoUrl ? videoUrl.trim() : undefined,
@@ -717,7 +752,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
           <div className="space-y-6 animate-fade-in">
             <div className="border-b border-slate-100 pb-4">
               <h2 className="text-lg font-black text-slate-900">1. المعلومات الأساسية والتصنيف</h2>
-              <p className="text-xs text-slate-500 mt-0.5">حدد عنوان العقار، نوع العرض، نوع العقار، والفئة المستهدفة</p>
+              <p className="text-xs text-slate-500 mt-0.5">حدد عنوان العقار، نوع العملية العقارية، نوع العقار، والفئة المستهدفة</p>
             </div>
 
             <div className="space-y-4">
@@ -738,7 +773,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
 
               {/* Operation Type (Sale vs Rent) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">نوع العرض *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">نوع العملية العقارية (بيع أو إيجار) *</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -1015,15 +1050,15 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
         {currentStep === 4 && (
           <div className="space-y-6 animate-fade-in">
             <div className="border-b border-slate-100 pb-4">
-              <h2 className="text-lg font-black text-slate-900">4. التسعير ونظام العرض</h2>
-              <p className="text-xs text-slate-500 mt-0.5">حدد السعر الإجمالي، أو خيارات الإيجار ونظام تأجير الغرف المنفصلة</p>
+              <h2 className="text-lg font-black text-slate-900">4. التسعير وخيارات الدفع</h2>
+              <p className="text-xs text-slate-500 mt-0.5">حدد سعر البيع الإجمالي أو قيمة الإيجار ونظام تأجير الغرف المنفصلة</p>
             </div>
 
             <div className="space-y-4">
               {/* Main Price */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  {operationType === 'sale' ? 'سعر البيع الإجمالي (بالجنيه المصري) *' : 'سعر الإيجار (بالجنيه المصري) *'}
+                  {operationType === 'sale' ? 'سعر البيع الإجمالي (بالجنيه المصري) *' : 'سعر الإيجار الإجمالي (بالجنيه المصري) *'}
                 </label>
                 <input
                   type="number"
@@ -1556,7 +1591,19 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                 <input
                   type="url"
                   value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
+                  onChange={async (e) => {
+                    const newUrl = e.target.value;
+                    setVideoUrl(newUrl);
+                    if (newUrl.trim()) {
+                      try {
+                        const thumb = await extractFirstFrameDataUrl(newUrl.trim());
+                        if (thumb) {
+                          setVideoThumbnailUrl(thumb);
+                          setImages(prev => prev.length === 0 ? [thumb] : prev);
+                        }
+                      } catch {}
+                    }
+                  }}
                   placeholder="https://..."
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 outline-none focus:border-[#8D6A28]"
                 />
@@ -1598,7 +1645,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                         setVideoUrl('');
                         setVideoThumbnailUrl('');
                       }}
-                      className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 cursor-pointer"
+                      className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
                       title="إزالة الفيديو"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -1610,16 +1657,16 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
           </div>
         )}
 
-        {/* ================= STEP 7: Review & Final Save ================= */}
+        {/* ================= STEP 7: Review & Final Submit ================= */}
         {currentStep === 7 && (
           <div className="space-y-6 animate-fade-in">
             <div className="border-b border-slate-100 pb-4">
-              <h2 className="text-lg font-black text-slate-900">7. المراجعة النهائية والتأكيد</h2>
-              <p className="text-xs text-slate-500 mt-0.5">راجع ملخص بيانات العقار وتأكد من صحة كافة التفاصيل قبل الحفظ</p>
+              <h2 className="text-lg font-black text-slate-900">7. مراجعة وتأكيد بيانات العقار</h2>
+              <p className="text-xs text-slate-500 mt-0.5">راجع ملخص العقار قبل الحفظ النهائي والنشر في المنصة</p>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Recap Box */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Box 1 */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">البيانات الأساسية</h4>
@@ -1666,7 +1713,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
               </div>
               <div>
                 <span className="text-slate-400 block">التشطيب:</span>
-                <span className="font-black text-slate-900">{finishing}</span>
+                <span className="font-black text-slate-900">{FINISHING_LABELS[finishing] || finishing}</span>
               </div>
             </div>
 

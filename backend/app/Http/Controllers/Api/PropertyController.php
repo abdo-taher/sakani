@@ -278,8 +278,8 @@ class PropertyController extends Controller
             'bathrooms' => 'required|integer',
             'floor' => 'nullable|integer',
             'balconies' => 'nullable|integer',
-            'finishing' => 'nullable|in:super_lux,lux,semi_finished,red_brick',
-            'furnishing' => 'nullable|in:furnished,unfurnished',
+            'finishing' => 'nullable|string',
+            'furnishing' => 'nullable|string',
             'audience_type' => 'nullable|string|in:families,young_men,female_students,all',
             'video' => 'nullable|file|mimes:mp4,mpeg,quicktime,avi,webm,flv,3gp,wmv|max:' . (config('video_upload.max_size', 104857600) / 1024),
             'video_url' => 'nullable|string',
@@ -296,8 +296,8 @@ class PropertyController extends Controller
             'rooms_data.*.description' => 'nullable|string',
             'rooms_data.*.price' => 'required|numeric|min:0',
             'rooms_data.*.area' => 'nullable|integer|min:1',
+            'amenities' => 'sometimes|array',
             'tags' => 'sometimes|array',
-            'tags.*' => 'exists:tags,id',
             
             // Images validation
             'images' => 'sometimes|array|max:20',
@@ -359,6 +359,11 @@ class PropertyController extends Controller
                 ];
             }
 
+            $roomsCount = (int) ($request->rooms ?? 0);
+            if ($request->boolean('has_detailed_rooms') && $request->filled('rooms_data') && is_array($request->rooms_data)) {
+                $roomsCount = max($roomsCount, count($request->rooms_data));
+            }
+
             $propertyData = [
                 'title' => $request->title,
                 'description' => $request->description,
@@ -378,13 +383,13 @@ class PropertyController extends Controller
                 'address' => $request->address,
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
-                'area' => $request->area,
-                'rooms' => $request->rooms,
-                'bathrooms' => $request->bathrooms,
-                'floor' => $request->floor,
-                'balconies' => $request->balconies,
-                'finishing' => $request->filled('finishing') ? $request->finishing : 'red_brick',
-                'furnishing' => $request->filled('furnishing') ? $request->furnishing : 'unfurnished',
+                'area' => $request->filled('area') ? (int)$request->area : null,
+                'rooms' => $roomsCount,
+                'bathrooms' => (int) ($request->bathrooms ?? 1),
+                'floor' => $request->filled('floor') ? (int)$request->floor : null,
+                'balconies' => $request->filled('balconies') ? (int)$request->balconies : null,
+                'finishing' => $this->normalizeFinishingValue($request->finishing),
+                'furnishing' => $this->normalizeFurnishingValue($request->furnishing),
                 'audience_type' => $request->filled('audience_type') ? $request->audience_type : 'families',
                 'video_thumbnail_url' => $request->video_thumbnail_url,
                 'video_thumbnail_public_id' => $request->video_thumbnail_public_id,
@@ -404,11 +409,13 @@ class PropertyController extends Controller
             $property = Property::create($propertyData);
     
             if ($request->filled('amenities')) {
-                $property->amenities()->sync($request->amenities);
+                $amenityIds = $this->resolveAmenityIds((array) $request->amenities);
+                $property->amenities()->sync($amenityIds);
             }
 
             if ($request->filled('tags')) {
-                $property->tags()->sync($request->tags);
+                $tagIds = $this->resolveTagIds((array) $request->tags);
+                $property->tags()->sync($tagIds);
             }
 
             // Create rooms inline if provided
@@ -666,8 +673,8 @@ class PropertyController extends Controller
             'bathrooms' => 'sometimes|required|integer|min:0',
             'floor' => 'sometimes|nullable|integer|min:0',
             'balconies' => 'sometimes|nullable|integer|min:0',
-            'finishing' => 'sometimes|nullable|in:super_lux,lux,semi_finished,red_brick',
-            'furnishing' => 'sometimes|nullable|in:furnished,unfurnished',
+            'finishing' => 'sometimes|nullable|string',
+            'furnishing' => 'sometimes|nullable|string',
             'audience_type' => 'sometimes|nullable|string|in:families,young_men,female_students,all',
             'video' => 'sometimes|file|mimes:mp4,mpeg,quicktime,avi,webm,flv,3gp,wmv|max:' . (config('video_upload.max_size', 104857600) / 1024),
             'video_url' => 'sometimes|nullable|string|max:500',
@@ -682,9 +689,7 @@ class PropertyController extends Controller
             'status' => 'sometimes|nullable|in:available,reserved,sold,rented',
             'featured' => 'sometimes|boolean',
             'amenities' => 'sometimes|array',
-            'amenities.*' => 'exists:amenities,id',
             'tags' => 'sometimes|array',
-            'tags.*' => 'exists:tags,id',
             'rooms_data' => 'sometimes|array',
             'rooms_data.*.name' => 'required|string|max:255',
             'rooms_data.*.description' => 'nullable|string',
@@ -702,6 +707,19 @@ class PropertyController extends Controller
             'submission_status', 'submitter_name', 'submitter_phone', 'submitter_notes',
             'admin_notes', 'featured', 'has_detailed_rooms'
         ]);
+
+        if ($request->has('finishing')) {
+            $updateData['finishing'] = $this->normalizeFinishingValue($request->finishing);
+        }
+        if ($request->has('furnishing')) {
+            $updateData['furnishing'] = $this->normalizeFurnishingValue($request->furnishing);
+        }
+        if ($request->has('area')) {
+            $updateData['area'] = $request->filled('area') ? (int)$request->area : null;
+        }
+        if ($request->boolean('has_detailed_rooms') && $request->filled('rooms_data') && is_array($request->rooms_data)) {
+            $updateData['rooms'] = max((int)($request->rooms ?? 0), count($request->rooms_data));
+        }
 
         // Handle video removal
         if ($request->boolean('remove_video')) {
@@ -859,12 +877,14 @@ class PropertyController extends Controller
 
         // Update amenities if provided
         if ($request->has('amenities')) {
-            $property->amenities()->sync($request->amenities);
+            $amenityIds = $this->resolveAmenityIds((array) $request->amenities);
+            $property->amenities()->sync($amenityIds);
         }
 
         // Update tags if provided
         if ($request->has('tags')) {
-            $property->tags()->sync($request->tags);
+            $tagIds = $this->resolveTagIds((array) $request->tags);
+            $property->tags()->sync($tagIds);
         }
 
         // Create or update rooms inline if provided without duplicates
@@ -1370,5 +1390,75 @@ class PropertyController extends Controller
         }
 
         return $property;
+    }
+
+    /**
+     * Normalize finishing string (Arabic or English) to enum slug
+     */
+    protected function normalizeFinishingValue(?string $val): string
+    {
+        if (empty($val)) return 'super_lux';
+        $str = mb_strtolower(trim($val));
+        if (str_contains($str, 'سوبر') || $str === 'super_lux') return 'super_lux';
+        if (str_contains($str, 'لوكس') || $str === 'lux') return 'lux';
+        if (str_contains($str, 'نصف') || str_contains($str, 'محارة') || $str === 'semi_finished') return 'semi_finished';
+        if (str_contains($str, 'طوب') || str_contains($str, 'هيكل') || $str === 'red_brick') return 'red_brick';
+        return in_array($str, ['super_lux', 'lux', 'semi_finished', 'red_brick']) ? $str : 'super_lux';
+    }
+
+    /**
+     * Normalize furnishing string (Arabic or English) to enum slug
+     */
+    protected function normalizeFurnishingValue(?string $val): string
+    {
+        if (empty($val)) return 'unfurnished';
+        $str = mb_strtolower(trim($val));
+        if ((str_contains($str, 'مفروش') && !str_contains($str, 'غير')) || $str === 'furnished') return 'furnished';
+        return 'unfurnished';
+    }
+
+    /**
+     * Resolve amenity IDs from mixed input (numeric IDs, slugs, or Arabic names)
+     */
+    protected function resolveAmenityIds(array $items): array
+    {
+        $ids = [];
+        foreach ($items as $item) {
+            if (empty($item)) continue;
+            if (is_numeric($item)) {
+                $ids[] = (int) $item;
+            } elseif (is_string($item)) {
+                $name = trim($item);
+                $amenity = \App\Models\Amenity::where('name', $name)->first();
+                if (!$amenity) {
+                    $amenity = \App\Models\Amenity::firstOrCreate(['name' => $name]);
+                }
+                $ids[] = $amenity->id;
+            }
+        }
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * Resolve tag IDs from mixed input (numeric IDs, slugs, or Arabic names)
+     */
+    protected function resolveTagIds(array $items): array
+    {
+        $ids = [];
+        foreach ($items as $item) {
+            if (empty($item)) continue;
+            if (is_numeric($item)) {
+                $ids[] = (int) $item;
+            } elseif (is_string($item)) {
+                $name = trim($item);
+                $tag = \App\Models\Tag::where('name', $name)->first();
+                if (!$tag) {
+                    $slug = \Illuminate\Support\Str::slug($name) ?: ('tag-' . substr(md5($name), 0, 8));
+                    $tag = \App\Models\Tag::firstOrCreate(['name' => $name], ['slug' => $slug]);
+                }
+                $ids[] = $tag->id;
+            }
+        }
+        return array_values(array_unique($ids));
     }
 }

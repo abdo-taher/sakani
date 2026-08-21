@@ -7,11 +7,15 @@ export const DEFAULT_SYSTEM_LOGO = '/default-property.svg';
 /**
  * Capture a frame from a video File or URL client-side and return a Blob (JPEG)
  */
-export async function captureVideoFrame(videoSource: File | Blob | string, seekTimeSec: number = 1.0): Promise<Blob | null> {
+export async function captureVideoFrame(videoSource: File | Blob | string, seekTimeSec: number = 0.5): Promise<Blob | null> {
   return new Promise((resolve) => {
     const video = document.createElement('video');
     video.muted = true;
+    video.defaultMuted = true;
     video.playsInline = true;
+    video.preload = 'auto';
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
 
     let objectUrl = '';
     if (typeof videoSource === 'string') {
@@ -24,22 +28,28 @@ export async function captureVideoFrame(videoSource: File | Blob | string, seekT
       video.src = objectUrl;
     }
 
+    let hasCaptured = false;
+    let timer: any = null;
+
     const cleanUp = () => {
+      if (timer) clearTimeout(timer);
       if (objectUrl) {
         try { URL.revokeObjectURL(objectUrl); } catch {}
       }
+      video.removeAttribute('src');
+      video.load();
     };
 
-    video.onloadedmetadata = () => {
-      const targetTime = Math.min(seekTimeSec, video.duration > 0 ? video.duration / 2 : 0.5);
-      video.currentTime = targetTime;
-    };
-
-    video.onseeked = () => {
+    const doCapture = () => {
+      if (hasCaptured) return;
       try {
+        const width = video.videoWidth || 640;
+        const height = video.videoHeight || 360;
+        if (width === 0 || height === 0) return;
+
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 360;
+        canvas.width = width;
+        canvas.height = height;
 
         const ctx = canvas.getContext('2d');
         if (!ctx) {
@@ -49,6 +59,7 @@ export async function captureVideoFrame(videoSource: File | Blob | string, seekT
         }
 
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        hasCaptured = true;
         canvas.toBlob((blob) => {
           cleanUp();
           resolve(blob);
@@ -59,10 +70,42 @@ export async function captureVideoFrame(videoSource: File | Blob | string, seekT
       }
     };
 
+    video.onloadedmetadata = () => {
+      const targetTime = Math.min(seekTimeSec, video.duration > 0 ? video.duration / 2 : 0.1);
+      try {
+        video.currentTime = targetTime;
+      } catch {
+        doCapture();
+      }
+    };
+
+    video.onseeked = () => doCapture();
+    video.onloadeddata = () => {
+      if (!hasCaptured && video.currentTime >= 0.1) doCapture();
+    };
+    video.oncanplay = () => {
+      if (!hasCaptured && video.currentTime >= 0.1) doCapture();
+    };
+
     video.onerror = () => {
       cleanUp();
       resolve(null);
     };
+
+    // Safety timeout: 4 seconds
+    timer = setTimeout(() => {
+      if (!hasCaptured) {
+        doCapture();
+        if (!hasCaptured) {
+          cleanUp();
+          resolve(null);
+        }
+      }
+    }, 4000);
+
+    try {
+      video.load();
+    } catch {}
   });
 }
 
@@ -86,7 +129,11 @@ export async function extractFirstFrameDataUrl(videoSource: File | Blob | string
   return new Promise((resolve) => {
     const video = document.createElement('video');
     video.muted = true;
+    video.defaultMuted = true;
     video.playsInline = true;
+    video.preload = 'auto';
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
 
     let objectUrl = '';
     if (typeof videoSource === 'string') {
@@ -99,22 +146,28 @@ export async function extractFirstFrameDataUrl(videoSource: File | Blob | string
       video.src = objectUrl;
     }
 
+    let hasCaptured = false;
+    let timer: any = null;
+
     const cleanUp = () => {
+      if (timer) clearTimeout(timer);
       if (objectUrl) {
         try { URL.revokeObjectURL(objectUrl); } catch {}
       }
+      video.removeAttribute('src');
+      video.load();
     };
 
-    video.onloadedmetadata = () => {
-      const targetTime = Math.min(seekTimeSec, video.duration > 0 ? video.duration / 2 : 0.1);
-      video.currentTime = targetTime;
-    };
-
-    video.onseeked = () => {
+    const doCapture = () => {
+      if (hasCaptured) return;
       try {
+        const width = video.videoWidth || 640;
+        const height = video.videoHeight || 360;
+        if (width === 0 || height === 0) return;
+
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 360;
+        canvas.width = width;
+        canvas.height = height;
 
         const ctx = canvas.getContext('2d');
         if (!ctx) {
@@ -124,6 +177,7 @@ export async function extractFirstFrameDataUrl(videoSource: File | Blob | string
         }
 
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        hasCaptured = true;
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         cleanUp();
         resolve(dataUrl);
@@ -133,10 +187,42 @@ export async function extractFirstFrameDataUrl(videoSource: File | Blob | string
       }
     };
 
+    video.onloadedmetadata = () => {
+      const targetTime = Math.min(seekTimeSec, video.duration > 0 ? video.duration / 2 : 0.1);
+      try {
+        video.currentTime = targetTime;
+      } catch {
+        doCapture();
+      }
+    };
+
+    video.onseeked = () => doCapture();
+    video.onloadeddata = () => {
+      if (!hasCaptured && video.currentTime >= 0.1) doCapture();
+    };
+    video.oncanplay = () => {
+      if (!hasCaptured && video.currentTime >= 0.1) doCapture();
+    };
+
     video.onerror = () => {
       cleanUp();
       resolve(null);
     };
+
+    // Safety timeout: 4 seconds
+    timer = setTimeout(() => {
+      if (!hasCaptured) {
+        doCapture();
+        if (!hasCaptured) {
+          cleanUp();
+          resolve(null);
+        }
+      }
+    }, 4000);
+
+    try {
+      video.load();
+    } catch {}
   });
 }
 
