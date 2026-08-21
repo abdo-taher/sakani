@@ -118,8 +118,8 @@ export const PropertyVideoThumbnail: React.FC<PropertyVideoThumbnailProps> = ({
           }}
           onError={() => {
             setUseVideoElement(false);
-            if (fallbackImage) setImageSrc(fallbackImage);
-            else setLoadError(true);
+            setImageSrc(FALLBACK_PROPERTY_IMAGE);
+            setLoadError(true);
           }}
         />
       ) : loadError ? (
