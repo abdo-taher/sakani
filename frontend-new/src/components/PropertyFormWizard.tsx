@@ -15,6 +15,8 @@ import { ApiService } from '../services/apiService';
 import { getAmenityDisplay } from '../utils/amenities';
 import { validatePropertyStep, normalizeEgyptianPhone } from '../utils/validation';
 import { LocationMapPicker } from './LocationMapPicker';
+import { PropertyVideoThumbnail } from './PropertyVideoThumbnail';
+import { PropertyMultiVideoPlayer } from './PropertyMultiVideoPlayer';
 import { generateAndUploadVideoThumbnail, resolveImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/media';
 import { PropertyFormSkeleton } from './Skeletons';
 import { evaluatePropertyOffer, getTodayDateString } from '../utils/offerUtils';
@@ -38,7 +40,7 @@ import {
   Layers,
   Plus,
   AlertCircle,
-  Eye,
+  Play,
   Check,
   MoveUp,
   MoveDown,
@@ -200,6 +202,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
   const [primaryImageIndex, setPrimaryImageIndex] = useState<number>(0);
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [videoThumbnailUrl, setVideoThumbnailUrl] = useState<string>('');
+  const [isVideoPreviewOpen, setIsVideoPreviewOpen] = useState(false);
 
   // Owner / Submitter
   const [ownerName, setOwnerName] = useState('');
@@ -351,6 +354,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
 
         setVideoUrl(prop.video_url || '');
         setVideoThumbnailUrl(prop.video_thumbnail_url || '');
+        setIsVideoPreviewOpen(false);
 
         // Amenities
         if (Array.isArray(prop.amenities)) {
@@ -479,6 +483,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
       const res = await ApiService.uploadMedia(file, 'sakani/properties/videos');
       if (res?.url) {
         setVideoUrl(res.url);
+        setIsVideoPreviewOpen(false);
 
         // 2. Generate and upload video thumbnail automatically
         try {
@@ -1633,6 +1638,7 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                     const newUrl = e.target.value;
                     setVideoUrl(newUrl);
                     setVideoThumbnailUrl('');
+                    setIsVideoPreviewOpen(false);
                   }}
                   placeholder="https://..."
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 outline-none focus:border-[#8D6A28]"
@@ -1641,39 +1647,36 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
 
               {videoUrl ? (
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    {videoThumbnailUrl ? (
-                      <img 
-                        src={resolveImageUrl(videoThumbnailUrl)} 
-                        alt="Video cover" 
-                        className="w-16 h-12 object-cover rounded-xl border border-slate-200" 
-                        onError={(e) => { e.currentTarget.src = FALLBACK_PROPERTY_IMAGE; }}
-                      />
-                    ) : (
-                      <div className="w-16 h-12 bg-purple-100 text-purple-700 rounded-xl flex items-center justify-center">
-                        <Film className="w-6 h-6" />
-                      </div>
-                    )}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <PropertyVideoThumbnail
+                      videoUrl={videoUrl}
+                      thumbnailUrl={videoThumbnailUrl || undefined}
+                      fallbackImage={images[primaryImageIndex] || FALLBACK_PROPERTY_IMAGE}
+                      className="w-24 h-16 shrink-0 rounded-xl border border-slate-200 bg-slate-900"
+                      playBadgeSize="sm"
+                      label="تشغيل"
+                      onClick={() => setIsVideoPreviewOpen(true)}
+                    />
                     <div>
                       <h4 className="text-xs font-black text-slate-900">تم تعيين الفيديو بنجاح</h4>
                       <p className="text-[11px] text-slate-500 font-mono line-clamp-1">{videoUrl}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <a
-                      href={videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => setIsVideoPreviewOpen((open) => !open)}
                       className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 flex items-center gap-1"
                     >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>معاينة</span>
-                    </a>
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>{isVideoPreviewOpen ? 'إخفاء المشغل' : 'تشغيل الفيديو'}</span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
                         setVideoUrl('');
                         setVideoThumbnailUrl('');
+                        setIsVideoPreviewOpen(false);
                       }}
                       className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
                       title="إزالة الفيديو"
@@ -1683,6 +1686,19 @@ export const PropertyFormWizard: React.FC<PropertyFormWizardProps> = ({
                   </div>
                 </div>
               ) : null}
+
+              {videoUrl && isVideoPreviewOpen && (
+                <div className="rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 shadow-inner animate-fade-in">
+                  <PropertyMultiVideoPlayer
+                    videoUrl={videoUrl}
+                    videoThumbnailUrl={videoThumbnailUrl || undefined}
+                    fallbackPoster={images[primaryImageIndex] || FALLBACK_PROPERTY_IMAGE}
+                    title="معاينة الفيديو قبل حفظ العقار"
+                    autoPlay
+                    embedded
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -209,13 +209,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = React.memo(({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                if (onQuickPreview) {
-                  onQuickPreview(property);
-                } else if (onSelectProperty) {
-                  onSelectProperty(property);
-                } else {
-                  navigate(`/properties/${property.id}?view=video`);
-                }
+                navigate(`/properties/${property.id}?view=video`);
               }}
               className="bg-slate-900/90 hover:bg-[#8D6A28] text-amber-300 hover:text-white border border-amber-400/40 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-bold shadow-2xs flex items-center gap-1 transition-all transform hover:scale-105 cursor-pointer backdrop-blur-md"
               title="مشاهدة فيديو المعاينة"
@@ -429,4 +423,3 @@ export const PropertyCard: React.FC<PropertyCardProps> = React.memo(({
     </div>
   );
 });
-
