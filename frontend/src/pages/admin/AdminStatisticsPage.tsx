@@ -173,8 +173,8 @@ export const AdminStatisticsPage: React.FC = () => {
     setIsResetting(false);
   };
 
-  const renderTrendBadge = (trend?: { percentage: number; direction: string; has_comparison: boolean }) => {
-    if (!trend || !trend.has_comparison) {
+  const renderTrendBadge = (trend?: { percentage?: number; direction?: string; has_comparison?: boolean }) => {
+    if (!trend || !trend.has_comparison || !trend.direction) {
       return (
         <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
           <span>—</span>

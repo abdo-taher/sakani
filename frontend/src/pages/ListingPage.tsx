@@ -100,9 +100,9 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     if (urlOperation === 'sale') return 'sale';
     if (urlOperation === 'rent' && urlMode === 'room') return 'rent_room';
     if (urlOperation === 'rent' && urlMode === 'full') return 'rent_whole';
-    if (urlOperation === 'rent') return 'rent_whole';
+    if (urlOperation === 'rent' && !urlAudience) return 'rent_whole';
     return 'all';
-  }, [urlOperation, urlMode, urlFurnishing, urlOffers]);
+  }, [urlOperation, urlMode, urlFurnishing, urlOffers, urlAudience]);
 
   // Local filter states
   const [selectedDistrict, setSelectedDistrict] = useState<string>(urlDistrict || initialFilters.district || 'all');
@@ -269,7 +269,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
 
       // 3.1 Audience Classification Filter
       if (audienceFilter !== 'all') {
-        if (p.audience_type && p.audience_type !== 'all' && p.audience_type !== audienceFilter) {
+        if (p.audience_type !== audienceFilter) {
           return false;
         }
       }

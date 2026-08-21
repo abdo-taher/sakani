@@ -369,7 +369,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       label: 'شقق للإيجار بالكامل',
       sublabel: 'سكن عائلي ومستقل بعقود موثقة',
       icon: HomeIcon,
-      count: properties.filter(p => p.operation_type === 'rent' && (!p.has_detailed_rooms || !p.detailed_rooms?.length)).length,
+      count: properties.filter(p => p.operation_type === 'rent' && (!p.has_detailed_rooms || !p.detailed_rooms || p.detailed_rooms.length === 0)).length,
       params: { operation: 'rent', mode: 'full' },
     },
     {
@@ -377,7 +377,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       label: 'إيجار بالغرف',
       sublabel: 'غرف مستقلة في شقق مجهزة ومفروشة',
       icon: DoorOpen,
-      count: properties.filter(p => p.operation_type === 'rent' && p.has_detailed_rooms && (p.detailed_rooms?.length || 0) > 0).length,
+      count: properties.filter(p => p.operation_type === 'rent' && Boolean(p.has_detailed_rooms) && Boolean(p.detailed_rooms && p.detailed_rooms.length > 0)).length,
       params: { operation: 'rent', mode: 'room' },
     },
     {
@@ -394,7 +394,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       sublabel: 'سكن هادئ وآمن بالقرب من الجامعات',
       icon: Users,
       count: properties.filter(p => p.audience_type === 'female_students').length,
-      params: { operation: 'rent', audience: 'female_students' },
+      params: { audience: 'female_students' },
     },
     {
       id: 'young_men',
@@ -402,7 +402,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       sublabel: 'خيارات مريحة ومناسبة للميزانية',
       icon: KeyRound,
       count: properties.filter(p => p.audience_type === 'young_men').length,
-      params: { operation: 'rent', audience: 'young_men' },
+      params: { audience: 'young_men' },
     },
     {
       id: 'sale_apartments',
