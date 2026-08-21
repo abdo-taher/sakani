@@ -248,8 +248,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
       }
 
       // Explicit Furnishing check
-      if (urlFurnishing === 'furnished') {
-        if (p.furnishing !== 'furnished') return false;
+      if (urlFurnishing && urlFurnishing !== 'all') {
+        if (p.furnishing !== urlFurnishing) return false;
       }
 
       // 2. District Filter
@@ -435,19 +435,22 @@ export const ListingPage: React.FC<ListingPageProps> = ({
         label: 'شقق للإيجار بالكامل',
         onRemove: () => handleTabChange('all'),
       });
-    } else if (activeListingTab === 'furnished' || urlFurnishing === 'furnished') {
-      chips.push({
-        id: 'furnished',
-        category: 'الفرش',
-        label: 'سكن مفروش بالكامل',
-        onRemove: () => handleTabChange('all'),
-      });
     } else if (urlOperation === 'rent') {
       chips.push({
         id: 'rent',
         category: 'نوع العرض',
         label: 'عقارات للإيجار',
         onRemove: () => handleTabChange('all'),
+      });
+    }
+
+    // Furnishing Chip (independent)
+    if (urlFurnishing && urlFurnishing !== 'all') {
+      chips.push({
+        id: 'furnishing',
+        category: 'الفرش',
+        label: urlFurnishing === 'furnished' ? 'مفروش بالكامل' : 'غير مفروش',
+        onRemove: () => updateUrlParams({ furnishing: null }),
       });
     }
 

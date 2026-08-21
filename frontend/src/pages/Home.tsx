@@ -55,7 +55,8 @@ import {
   X,
   QrCode,
   Smartphone,
-  Download
+  Download,
+  RotateCcw
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -120,12 +121,14 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [searchDistrict, setSearchDistrict] = useState<string>('all');
   const [searchType, setSearchType] = useState<string>('all');
   const [searchRentalMode, setSearchRentalMode] = useState<string>('all');
+  const [searchFurnishing, setSearchFurnishing] = useState<string>('all');
   const [searchMaxPrice, setSearchMaxPrice] = useState<string>('');
   const [searchAudience, setSearchAudience] = useState<string>('all');
   const [searchStatus, setSearchStatus] = useState<PropertyStatus | 'all'>('all');
   const [searchSort, setSearchSort] = useState<string>('availability');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState<boolean>(false);
   const [isMobileFilterPopupOpen, setIsMobileFilterPopupOpen] = useState<boolean>(false);
+  const [isSearchApplied, setIsSearchApplied] = useState<boolean>(false);
 
   // Video states
   const [isVideoMuted, setIsVideoMuted] = useState(true);
@@ -343,6 +346,19 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   const handleHeroSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
+    setIsSearchApplied(true);
+    setIsMobileFilterPopupOpen(false);
+
+    // Scroll to inline results container smoothly
+    setTimeout(() => {
+      const el = document.getElementById('home-search-results');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
+  };
+
+  const handleNavigateToFullListing = () => {
     const params = new URLSearchParams();
     if (searchKeyword.trim()) params.set('q', searchKeyword.trim());
     if (searchOperation === 'offers') {
@@ -350,17 +366,251 @@ export const HomePage: React.FC<HomePageProps> = ({
     } else if (searchOperation) {
       params.set('operation', searchOperation);
     }
+    if (searchRentalMode && searchRentalMode !== 'all') params.set('mode', searchRentalMode);
     if (searchDistrict && searchDistrict !== 'all') params.set('district', searchDistrict);
     if (searchType && searchType !== 'all') params.set('type', searchType);
-    if (searchMaxPrice) params.set('max_price', searchMaxPrice);
-    if (searchRentalMode && searchRentalMode !== 'all') params.set('mode', searchRentalMode);
+    if (searchFurnishing && searchFurnishing !== 'all') params.set('furnishing', searchFurnishing);
     if (searchAudience && searchAudience !== 'all') params.set('audience', searchAudience);
-    if (searchStatus !== 'all') params.set('status', searchStatus);
-    if (searchSort) params.set('sort', searchSort);
-    
-    navigate(`/properties?${params.toString()}`);
+    if (searchStatus && searchStatus !== 'all') params.set('status', searchStatus);
+    if (searchMaxPrice) params.set('max_price', searchMaxPrice);
+    if (searchSort && searchSort !== 'availability') params.set('sort', searchSort);
+
+    const qs = params.toString();
+    navigate(qs ? `/properties?${qs}` : '/properties');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const handleClearHomeFilters = () => {
+    setSearchKeyword('');
+    setSearchDistrict('all');
+    setSearchType('all');
+    setSearchRentalMode('all');
+    setSearchFurnishing('all');
+    setSearchAudience('all');
+    setSearchStatus('all');
+    setSearchMaxPrice('');
+    setSearchSort('availability');
+    setIsSearchApplied(false);
+  };
+
+  // Matching properties calculation for applied Home search & filters
+  const homeMatchingProperties = useMemo(() => {
+    if (!isSearchApplied) return [];
+
+    return properties.filter((p) => {
+      // 1. Operation & Rental Mode
+      if (searchOperation === 'offers') {
+        const offer = evaluatePropertyOffer(p);
+        if (!offer.isActive) return false;
+      } else if (searchOperation === 'sale') {
+        if (p.operation_type !== 'sale') return false;
+      } else if (searchOperation === 'rent') {
+        if (p.operation_type !== 'rent') return false;
+        if (searchRentalMode === 'full') {
+          if (p.has_detailed_rooms && p.detailed_rooms && p.detailed_rooms.length > 0) return false;
+        } else if (searchRentalMode === 'room') {
+          if (!p.has_detailed_rooms || !p.detailed_rooms || p.detailed_rooms.length === 0) return false;
+        }
+      }
+
+      // 2. Furnishing
+      if (searchFurnishing && searchFurnishing !== 'all') {
+        if (p.furnishing !== searchFurnishing) return false;
+      }
+
+      // 3. District / Location
+      if (searchDistrict && searchDistrict !== 'all') {
+        const dLower = searchDistrict.trim().toLowerCase();
+        const locId = String(p.location_id || '').toLowerCase();
+        const distName = String(p.district_name || '').toLowerCase();
+        if (locId !== dLower && distName !== dLower && !distName.includes(dLower) && !dLower.includes(distName)) {
+          return false;
+        }
+      }
+
+      // 4. Property Type
+      if (searchType && searchType !== 'all') {
+        if (p.property_type !== searchType) return false;
+      }
+
+      // 5. Audience
+      if (searchAudience && searchAudience !== 'all') {
+        if (p.audience_type && p.audience_type !== 'all' && p.audience_type !== searchAudience) {
+          return false;
+        }
+      }
+
+      // 6. Status
+      if (searchStatus && searchStatus !== 'all') {
+        if (p.status !== searchStatus) return false;
+      }
+
+      // 7. Max Price
+      if (searchMaxPrice && Number(searchMaxPrice) > 0) {
+        if (p.price > Number(searchMaxPrice)) return false;
+      }
+
+      // 8. Keyword Search
+      if (searchKeyword.trim()) {
+        const q = searchKeyword.toLowerCase().trim();
+        const matchTitle = p.title?.toLowerCase().includes(q);
+        const matchDesc = p.description?.toLowerCase().includes(q);
+        const matchRef = p.ref_id?.toLowerCase().includes(q);
+        const matchDist = p.district_name?.toLowerCase().includes(q);
+        const matchAddress = p.address?.toLowerCase().includes(q);
+        if (!matchTitle && !matchDesc && !matchRef && !matchDist && !matchAddress) {
+          return false;
+        }
+      }
+
+      return true;
+    }).sort((a, b) => {
+      if (searchSort === 'newest') {
+        return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
+      }
+      if (searchSort === 'price_asc') {
+        return a.price - b.price;
+      }
+      if (searchSort === 'price_desc') {
+        return b.price - a.price;
+      }
+      return (availabilityRank[a.status] ?? 99) - (availabilityRank[b.status] ?? 99);
+    });
+  }, [
+    isSearchApplied,
+    properties,
+    searchOperation,
+    searchRentalMode,
+    searchFurnishing,
+    searchDistrict,
+    searchType,
+    searchAudience,
+    searchStatus,
+    searchMaxPrice,
+    searchKeyword,
+    searchSort,
+  ]);
+
+  // Active Filter Summary Chips for Home
+  const activeHomeChips = useMemo(() => {
+    const chips: Array<{ id: string; label: string; onRemove: () => void }> = [];
+
+    if (searchKeyword.trim()) {
+      chips.push({
+        id: 'q',
+        label: `بحث: "${searchKeyword.trim()}"`,
+        onRemove: () => setSearchKeyword(''),
+      });
+    }
+
+    if (searchOperation === 'offers') {
+      chips.push({
+        id: 'operation',
+        label: 'عروض وتخفيضات',
+        onRemove: () => setSearchOperation('rent'),
+      });
+    } else if (searchOperation === 'sale') {
+      chips.push({
+        id: 'operation',
+        label: 'عقارات للبيع',
+        onRemove: () => setSearchOperation('rent'),
+      });
+    } else if (searchOperation === 'rent' && searchRentalMode === 'room') {
+      chips.push({
+        id: 'operation',
+        label: 'إيجار بالغرف المستقلة',
+        onRemove: () => setSearchRentalMode('all'),
+      });
+    } else if (searchOperation === 'rent' && searchRentalMode === 'full') {
+      chips.push({
+        id: 'operation',
+        label: 'شقق للإيجار بالكامل',
+        onRemove: () => setSearchRentalMode('all'),
+      });
+    }
+
+    if (searchDistrict && searchDistrict !== 'all') {
+      const dObj = districts.find(d => String(d.id) === String(searchDistrict));
+      chips.push({
+        id: 'district',
+        label: dObj ? dObj.name : searchDistrict,
+        onRemove: () => setSearchDistrict('all'),
+      });
+    }
+
+    if (searchType && searchType !== 'all') {
+      const typeLabelMap: Record<string, string> = {
+        apartment: 'شقة سكنية',
+        villa: 'فيلا مستقلة',
+        duplex: 'دوبلكس',
+        shop: 'محل تجاري',
+        office: 'مكتب إداري',
+        chalet: 'شاليه مصيفي',
+        studio: 'استوديو',
+      };
+      chips.push({
+        id: 'type',
+        label: typeLabelMap[searchType] || searchType,
+        onRemove: () => setSearchType('all'),
+      });
+    }
+
+    if (searchFurnishing && searchFurnishing !== 'all') {
+      chips.push({
+        id: 'furnishing',
+        label: searchFurnishing === 'furnished' ? 'مفروش بالكامل' : 'غير مفروش',
+        onRemove: () => setSearchFurnishing('all'),
+      });
+    }
+
+    if (searchAudience && searchAudience !== 'all') {
+      const audMap: Record<string, string> = {
+        female_students: 'طالبات بنات',
+        young_men: 'شباب وموظفون',
+        families: 'عائلات',
+      };
+      chips.push({
+        id: 'audience',
+        label: audMap[searchAudience] || searchAudience,
+        onRemove: () => setSearchAudience('all'),
+      });
+    }
+
+    if (searchStatus && searchStatus !== 'all') {
+      const statusMap: Record<string, string> = {
+        available: 'متاح للحجز',
+        reserved: 'محجوز',
+        rented: 'تم التأجير',
+        sold: 'تم البيع',
+      };
+      chips.push({
+        id: 'status',
+        label: statusMap[searchStatus] || searchStatus,
+        onRemove: () => setSearchStatus('all'),
+      });
+    }
+
+    if (searchMaxPrice && Number(searchMaxPrice) > 0) {
+      chips.push({
+        id: 'max_price',
+        label: `أقصى سعر: ${Number(searchMaxPrice).toLocaleString('ar-EG')} ج.م`,
+        onRemove: () => setSearchMaxPrice(''),
+      });
+    }
+
+    return chips;
+  }, [
+    searchKeyword,
+    searchOperation,
+    searchRentalMode,
+    searchDistrict,
+    districts,
+    searchType,
+    searchFurnishing,
+    searchAudience,
+    searchStatus,
+    searchMaxPrice,
+  ]);
 
   // Structured Smart Quick Discovery Options ("بتدور على إيه؟")
   const discoveryOptions = useMemo(() => [
@@ -415,13 +665,37 @@ export const HomePage: React.FC<HomePageProps> = ({
   ], [properties]);
 
   const handleDiscoveryCardClick = (item: typeof discoveryOptions[0]) => {
-    if (onSelectDiscovery) {
-      onSelectDiscovery(item.id, item.params);
-    } else {
-      const qs = new URLSearchParams(item.params).toString();
-      navigate(`/properties?${qs}`);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (item.params.operation) {
+      setSearchOperation(item.params.operation as any);
     }
+    if (item.params.mode) {
+      setSearchRentalMode(item.params.mode);
+    } else if (item.params.operation === 'rent' && !item.params.mode) {
+      setSearchRentalMode('all');
+    }
+    if (item.params.furnishing) {
+      setSearchFurnishing(item.params.furnishing);
+    } else {
+      setSearchFurnishing('all');
+    }
+    if (item.params.audience) {
+      setSearchAudience(item.params.audience);
+    } else {
+      setSearchAudience('all');
+    }
+    if (item.params.type) {
+      setSearchType(item.params.type);
+    } else {
+      setSearchType('all');
+    }
+
+    setIsSearchApplied(true);
+    setTimeout(() => {
+      const el = document.getElementById('home-search-results');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
   };
 
   // Best / Featured properties pool (prefer API, fallback to prop properties)
@@ -854,12 +1128,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                     <div className="relative">
                       <Sparkles className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D6A28] pointer-events-none" />
                       <select
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === 'furnished') {
-                            navigate('/properties?furnishing=furnished');
-                          }
-                        }}
+                        value={searchFurnishing}
+                        onChange={(e) => setSearchFurnishing(e.target.value)}
                         className="w-full pr-10 pl-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none"
                       >
                         <option value="all">مفروش وغير مفروش</option>
@@ -893,19 +1163,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <div className="flex items-end">
                     <button
                       type="button"
-                      onClick={() => {
-                        setSearchKeyword('');
-                        setSearchDistrict('all');
-                        setSearchType('all');
-                        setSearchRentalMode('all');
-                        setSearchMaxPrice('');
-                        setSearchAudience('all');
-                        setSearchStatus('all');
-                        setSearchSort('availability');
-                      }}
+                      onClick={handleClearHomeFilters}
                       className="w-full py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-600 transition cursor-pointer"
                     >
-                      إعادة ضبط الفلاتر
+                      مسح الفلاتر
                     </button>
                   </div>
                 </div>
@@ -1071,13 +1332,8 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="relative">
                 <Sparkles className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D6A28] pointer-events-none" />
                 <select
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === 'furnished') {
-                      setIsMobileFilterPopupOpen(false);
-                      navigate('/properties?furnishing=furnished');
-                    }
-                  }}
+                  value={searchFurnishing}
+                  onChange={(e) => setSearchFurnishing(e.target.value)}
                   className="w-full pr-10 pl-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none"
                 >
                   <option value="all">مفروش وغير مفروش</option>
@@ -1137,16 +1393,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
               <button
                 type="button"
-                onClick={() => {
-                  setSearchKeyword('');
-                  setSearchDistrict('all');
-                  setSearchType('all');
-                  setSearchRentalMode('all');
-                  setSearchMaxPrice('');
-                  setSearchAudience('all');
-                  setSearchStatus('all');
-                  setSearchSort('availability');
-                }}
+                onClick={handleClearHomeFilters}
                 className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-600 transition cursor-pointer text-center"
               >
                 إعادة ضبط
@@ -1170,6 +1417,119 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       {/* ----------------- SUBSEQUENT HOME SECTIONS CONTAINER ----------------- */}
       <div className="space-y-14 sm:space-y-20 mt-10 sm:mt-14 pb-16">
+        
+        {/* ----------------- 1.75 INLINE HOME SEARCH & FILTER RESULTS ----------------- */}
+        {isSearchApplied && (
+          <section id="home-search-results" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-2 animate-fade-in scroll-mt-6">
+            <div className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200 shadow-xs space-y-6">
+              
+              {/* Header & Result Count */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/60">
+                    <Search className="w-3.5 h-3.5" />
+                    <span>نتائج التصفية والبحث المخصص</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+                    عقارات مطابقة لاختياراتك
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                    تم العثور على <strong className="text-slate-900 font-bold">{homeMatchingProperties.length}</strong> عقار متاح
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleClearHomeFilters}
+                    className="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>مسح جميع الفلاتر</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNavigateToFullListing}
+                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <span>عرض بالصفحة الكاملة</span>
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Applied Filter Chips */}
+              {activeHomeChips.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="text-xs font-bold text-slate-400 pl-1">الفلاتر المطبقة:</span>
+                  {activeHomeChips.map((chip) => (
+                    <span
+                      key={chip.id}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-800 text-xs font-bold border border-slate-200/70 transition"
+                    >
+                      <span>{chip.label}</span>
+                      <button
+                        type="button"
+                        onClick={chip.onRemove}
+                        className="p-0.5 rounded-full hover:bg-slate-300 text-slate-500 hover:text-slate-900 transition cursor-pointer"
+                        title="إزالة الفلتر"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Matching Properties Grid */}
+              {homeMatchingProperties.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pt-2">
+                  {homeMatchingProperties.slice(0, 9).map((property) => (
+                    <div key={property.id} className="w-full">
+                      <PropertyCard
+                        property={property}
+                        isFavorite={favorites.includes(property.id)}
+                        onToggleFavorite={onToggleFavorite}
+                        onSelectProperty={onSelectProperty}
+                        onQuickPreview={onQuickPreview}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-50 rounded-2xl p-8 sm:p-10 text-center border border-slate-200 space-y-3">
+                  <HomeIcon className="w-10 h-10 text-slate-400 mx-auto" />
+                  <h3 className="text-base font-bold text-slate-900">لا توجد عقارات مطابقة تماماً لخياراتك الحالية</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+                    جرب تخفيف بعض الفلاتر (مثل توسيع الميزانية أو اختيار كل الأحياء) للعثور على خيارات أكثر
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleClearHomeFilters}
+                    className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold transition hover:bg-slate-800 cursor-pointer"
+                  >
+                    إعادة ضبط الفلاتر
+                  </button>
+                </div>
+              )}
+
+              {/* View All Button at bottom if results exceed 9 */}
+              {homeMatchingProperties.length > 0 && (
+                <div className="pt-4 border-t border-slate-100 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleNavigateToFullListing}
+                    className="px-6 py-3 rounded-2xl gold-gradient gold-gradient-hover text-white font-bold text-xs sm:text-sm shadow-xs transition flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>استعراض كافة النتائج في صفحة العقارات ({homeMatchingProperties.length} عقار)</span>
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+            </div>
+          </section>
+        )}
         
         {/* ----------------- 2. SMART QUICK DISCOVERY (بتدور على إيه؟) ----------------- */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1292,7 +1652,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               ))}
             </div>
 
-            {/* Availability status filter */}
+            {/* Availability status filter
             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
               {[
                 { id: 'all', label: 'كل الحالات' },
@@ -1310,7 +1670,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   {status.label}
                 </button>
               ))}
-            </div>
+            </div> */}
 
             {/* Properties Grid with Horizontal Mobile Scrolling */}
             {isLoading || isLoadingBestApi ? (
